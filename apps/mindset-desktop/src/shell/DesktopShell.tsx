@@ -23,6 +23,7 @@ import { LanguageSettingsModal } from '../components/settings/LanguageSettingsMo
 import { FloatingAiOrb } from '../components/floating-ai';
 import { GlobalCommandPalette } from '../components/command-palette';
 import { FocusInterruptionOverlay } from '../components/focus-guard';
+import { ScientificCalculatorModal, AccessibilityController } from '../components/utilities';
 import { useKernelStore } from '../stores/useKernelStore';
 import { navigationRouter } from '../navigation/navigationRouter';
 import { dbClient } from '../lib/dbClient';
@@ -51,6 +52,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
   const [isMemoryInspectorOpen, setIsMemoryInspectorOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeSuggestion, setActiveSuggestion] = useState<ProfileEvolutionSuggestion | null>(null);
 
@@ -104,6 +106,9 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
+      } else if (e.altKey && e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        setIsCalculatorOpen((prev) => !prev);
       } else if (e.key === 'Escape') {
         if (isStartMenuOpen) {
           e.preventDefault();
@@ -227,9 +232,24 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
         case '/mind':
           setIsMemoryInspectorOpen(true);
           break;
-        case '/settings':
-          setIsLanguageModalOpen(true);
+        case '/settings': {
+          const win = windows.find((w) => w.appId === 'settings');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('settings', { title: 'OS Settings Hub', icon: '⚙️' }, currentActivityId);
+          }
           break;
+        }
+        case '/app-hub': {
+          const win = windows.find((w) => w.appId === 'app-hub');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('app-hub', { title: 'MindSet App Hub', icon: '📦' }, currentActivityId);
+          }
+          break;
+        }
         case '/status':
         case '/devices':
           onOpenStatus();
@@ -339,7 +359,16 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
         }}
       />
 
-      {/* 12. Persistent Bottom Liquid Glass Taskbar Dock */}
+      {/* 12. Scientific Calculator & Physics Unit Converter Modal (Alt + C) */}
+      <ScientificCalculatorModal
+        isOpen={isCalculatorOpen}
+        onClose={() => setIsCalculatorOpen(false)}
+      />
+
+      {/* 13. WCAG 2.2 AA Accessibility Controller (Screen Reader, Magnifier, Live Captions, Alt + A) */}
+      <AccessibilityController />
+
+      {/* 14. Persistent Bottom Liquid Glass Taskbar Dock */}
       <TaskbarDock
         isStartMenuOpen={isStartMenuOpen}
         onToggleStartMenu={() => setIsStartMenuOpen(!isStartMenuOpen)}

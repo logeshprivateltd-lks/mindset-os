@@ -18,6 +18,9 @@ import { BalanceAiPage } from '../../pages/balance';
 import { JournalPage } from '../../pages/journal';
 import { InsightsPage } from '../../pages/insights';
 import { MoodCheckinModal } from '../../pages/mood';
+import { SettingsPage } from '../../pages/settings';
+import { AppHubPage } from '../../pages/app-hub';
+import { OfflineLecturePlayer } from '../../components/utilities/OfflineLecturePlayer';
 
 export interface AppMetadata {
   appId: string;
@@ -190,5 +193,35 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 880,
     defaultHeight: 620,
     description: 'Non-shaming distraction shield, gaming budget controls, and emergency VIP communication allowlist.',
+  },
+  settings: {
+    appId: 'settings',
+    title: 'OS Settings Hub',
+    icon: '⚙️',
+    subjectTag: 'System',
+    component: SettingsPage,
+    defaultWidth: 960,
+    defaultHeight: 640,
+    description: '10-domain configuration: Neuroaesthetic themes, display, audio, local AI, biometrics, and WCAG accessibility.',
+  },
+  'app-hub': {
+    appId: 'app-hub',
+    title: 'MindSet App Hub',
+    icon: '📦',
+    subjectTag: 'Software',
+    component: AppHubPage,
+    defaultWidth: 1040,
+    defaultHeight: 680,
+    description: 'Curated distraction-free software catalog for STEM, coding, and productivity with per-process permission controls.',
+  },
+  player: {
+    appId: 'player',
+    title: 'Offline Lecture Player',
+    icon: '🎬',
+    subjectTag: 'Media',
+    component: OfflineLecturePlayer,
+    defaultWidth: 920,
+    defaultHeight: 620,
+    description: 'Distraction-free local video player with 0.75x–2.5x speed control and timestamp bookmarking to study notes.',
   },
 };

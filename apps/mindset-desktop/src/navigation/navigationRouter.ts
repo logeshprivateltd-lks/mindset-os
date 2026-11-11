@@ -22,7 +22,8 @@ export type CanonicalRoute =
   | '/status'
   | '/focus'
   | '/focus-guard'
-  | '/balance';
+  | '/balance'
+  | '/app-hub';
 
 export interface RouteNavigationEvent {
   route: CanonicalRoute;
@@ -176,6 +177,12 @@ export const CANONICAL_ROUTES_META: Record<
     icon: '🌿',
     description: '4-7-8 breathwork, free-time gap planner, 12-hobby explorer, and intentional play',
     category: 'wellbeing',
+  },
+  '/app-hub': {
+    label: 'MindSet App Hub',
+    icon: '📦',
+    description: 'Curated distraction-free software catalog for STEM, coding, and productivity',
+    category: 'system',
   },
 };
 
