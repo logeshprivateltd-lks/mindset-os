@@ -483,5 +483,100 @@ export interface TerminalCommandResult {
   execution_time_ms: number;
 }
 
+// ============================================================================
+// 12. ATOMIC OTA UPDATER & RECOVERY SUB-SYSTEM DTOs
+// ============================================================================
+
+export type UpdateChannelType = 'core_os' | 'critical_security' | 'ai_prompts' | 'offline_bundle';
+
+export interface OSVersionInfo {
+  os_name: string;
+  os_version: string;
+  codename: string;
+  kernel_version: string;
+  build_id: string;
+  active_slot: string;
+  inactive_slot: string;
+  ostree_commit: string;
+  signature_key_fingerprint: string;
+  last_checked_at: string;
+  update_in_progress: boolean;
+  staged_update?: UpdatePackageInfo | null;
+}
+
+export interface UpdatePackageInfo {
+  id: string;
+  channel: string;
+  version: string;
+  title: string;
+  release_notes: string[];
+  size_bytes: number;
+  checksum_sha256: string;
+  signature_ed25519: string;
+  published_at: string;
+  requires_reboot: boolean;
+  diff_type: string; // 'delta' | 'binary_patch' | 'json_manifest' | 'full_image'
+  is_staged: boolean;
+  is_applied: boolean;
+}
+
+export interface UpdateStageProgress {
+  update_id: string;
+  stage: string; // 'verifying_manifest' | 'downloading' | 'verifying_signature' | 'staging_ab_slot' | 'ready_to_apply' | 'applied' | 'failed'
+  progress_percent: number;
+  bytes_downloaded: number;
+  total_bytes: number;
+  status_message: string;
+  signature_valid: boolean;
+}
+
+export interface OfflineBundleManifest {
+  bundle_name: string;
+  target_channel: string;
+  version: string;
+  created_by: string;
+  description: string;
+  file_count: number;
+  total_size_bytes: number;
+  signature_valid: boolean;
+}
+
+export interface SystemSnapshot {
+  id: string;
+  label: string;
+  created_at: string;
+  os_version: string;
+  size_bytes: number;
+  checksum_sha256: string;
+  is_automatic: boolean;
+  database_count: number;
+  files_count: number;
+}
+
+export interface RecoveryActionResult {
+  success: boolean;
+  action: string;
+  message: string;
+  details: string[];
+  timestamp: string;
+  rollback_window_seconds?: number | null;
+}
+
+export interface DatabaseRepairReport {
+  databases_checked: string[];
+  integrity_status: string; // 'clean' | 'repaired' | 'corrupted'
+  wal_truncated_mb: number;
+  vacuum_recovered_bytes: number;
+  indexes_rebuilt: number;
+}
+
+export interface DriverResetReport {
+  wifi_adapter_reloaded: boolean;
+  display_mode_reset: boolean;
+  audio_sink_defaulted: boolean;
+  details: string;
+}
+
+
 
 

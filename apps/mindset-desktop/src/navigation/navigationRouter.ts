@@ -23,7 +23,9 @@ export type CanonicalRoute =
   | '/focus'
   | '/focus-guard'
   | '/balance'
-  | '/app-hub';
+  | '/app-hub'
+  | '/updater'
+  | '/recovery';
 
 export interface RouteNavigationEvent {
   route: CanonicalRoute;
@@ -182,6 +184,18 @@ export const CANONICAL_ROUTES_META: Record<
     label: 'MindSet App Hub',
     icon: '📦',
     description: 'Curated distraction-free software catalog for STEM, coding, and productivity',
+    category: 'system',
+  },
+  '/updater': {
+    label: 'Atomic OTA Updater',
+    icon: '🚀',
+    description: 'Dual-layer delta updater with Ed25519 signatures, ostree A/B slots, and 3s rollback',
+    category: 'system',
+  },
+  '/recovery': {
+    label: 'MindSet Recovery Console',
+    icon: '🛟',
+    description: 'Pre-boot standalone rescue environment for encrypted snapshots, SQLite repairs, and driver resets',
     category: 'system',
   },
 };

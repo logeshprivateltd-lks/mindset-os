@@ -22,6 +22,8 @@ import { SettingsPage } from '../../pages/settings';
 import { AppHubPage } from '../../pages/app-hub';
 import { DeviceManagerPage } from '../../pages/devices';
 import { SystemStatusPage } from '../../pages/status';
+import { AtomicUpdaterPage } from '../../pages/updater';
+import { RecoveryModePage } from '../../pages/recovery';
 import { OfflineLecturePlayer } from '../../components/utilities/OfflineLecturePlayer';
 
 export interface AppMetadata {
@@ -245,5 +247,25 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 1060,
     defaultHeight: 700,
     description: 'btop++ telemetry monitor, <120 MB OS Shell ceiling verification, cgroups v2 limiter, and self-healing doctor.',
+  },
+  updater: {
+    appId: 'updater',
+    title: 'Atomic OTA Updater',
+    icon: '🚀',
+    subjectTag: 'System',
+    component: AtomicUpdaterPage,
+    defaultWidth: 1040,
+    defaultHeight: 680,
+    description: 'Dual-layer Tauri 2 delta updater with Ed25519 signature checks, ostree A/B slots, and 3-second rollback.',
+  },
+  recovery: {
+    appId: 'recovery',
+    title: 'MindSet Recovery Console',
+    icon: '🛟',
+    subjectTag: 'System',
+    component: RecoveryModePage,
+    defaultWidth: 1040,
+    defaultHeight: 680,
+    description: 'Pre-boot standalone rescue environment for encrypted snapshots, SQLite repairs, and driver safe-mode resets.',
   },
 };

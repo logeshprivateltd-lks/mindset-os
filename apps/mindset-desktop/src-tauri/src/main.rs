@@ -10,6 +10,7 @@ mod fs;
 mod kernel;
 mod monitor;
 mod storage;
+mod updater;
 
 use ai::*;
 use auth::AuthEngine;
@@ -18,6 +19,7 @@ use db::DatabaseManager;
 use devices::*;
 use fs::*;
 use monitor::*;
+use updater::*;
 use kernel::{
     BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, MindSetKernel, ServiceHealth,
 };
@@ -257,6 +259,19 @@ async fn main() {
             monitor_execute_doctor_action,
             monitor_run_full_system_doctor,
             terminal_execute_command,
+            // Atomic OTA Updater & Recovery Commands (/updater & /recovery)
+            updater_get_version_info,
+            updater_check_for_updates,
+            updater_download_and_stage,
+            updater_apply_update,
+            updater_install_offline_bundle,
+            recovery_list_snapshots,
+            recovery_create_snapshot,
+            recovery_restore_snapshot,
+            recovery_rollback_update,
+            recovery_repair_databases,
+            recovery_reset_drivers,
+            recovery_perform_factory_reset,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,

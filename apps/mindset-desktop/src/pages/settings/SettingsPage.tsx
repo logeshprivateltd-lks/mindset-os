@@ -10,6 +10,7 @@ import { Button, useThemeStore, ThemeId, DensityMode, FontScale, AnimationIntens
 import { useKernelStore } from '../../stores/useKernelStore';
 import { dbClient } from '../../lib/dbClient';
 import { LanguageSettingsPanel } from '../../components/settings/LanguageSettingsPanel';
+import { navigationRouter } from '../../navigation/navigationRouter';
 import type { UserProfile } from '@mindset/db-schema';
 
 export type SettingsDomain =
@@ -909,11 +910,19 @@ export const SettingsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <span className="text-xs text-[var(--text-muted)]">Check for system updates:</span>
-                <Button variant="primary" size="sm" onClick={() => showToast('✓ System is up-to-date (v1.0.0-aurora)')} className="text-xs font-semibold px-4">
-                  Check Updates
-                </Button>
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--border-subtle)]">
+                <div>
+                  <span className="text-xs font-semibold block text-white">System Maintenance & OTA Updates</span>
+                  <span className="text-[11px] text-[var(--text-muted)]">A/B deployment slots, ostree rollback watchdog & recovery console</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => navigationRouter.navigate('/recovery')} className="text-xs font-semibold px-3 text-amber-300 border-amber-600/40 hover:bg-amber-950/30">
+                    Rescue & Recovery
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={() => navigationRouter.navigate('/updater')} className="text-xs font-semibold px-4">
+                    Open OTA Updater
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

@@ -268,6 +268,24 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
+        case '/updater': {
+          const win = windows.find((w) => w.appId === 'updater');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('updater', { title: 'Atomic OTA Updater', icon: '🚀' }, currentActivityId);
+          }
+          break;
+        }
+        case '/recovery': {
+          const win = windows.find((w) => w.appId === 'recovery');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('recovery', { title: 'MindSet Recovery Console', icon: '🛟' }, currentActivityId);
+          }
+          break;
+        }
       }
     });
 
