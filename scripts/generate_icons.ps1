@@ -40,3 +40,4 @@ $bmp32.Dispose()
 [System.IO.File]::WriteAllBytes((Join-Path $dir "icon.icns"), (New-Object byte[] 64))
 
 Write-Output "Icons generated successfully in $dir"
+
