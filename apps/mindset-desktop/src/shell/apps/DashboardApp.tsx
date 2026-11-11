@@ -11,3 +11,4 @@ export const DashboardApp: React.FC = () => {
   const { lockSystem } = useKernelStore();
   return <Dashboard onLock={lockSystem} />;
 };
+

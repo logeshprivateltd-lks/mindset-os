@@ -57,4 +57,4 @@ Monitors completed goals, changed study patterns, or shifted sleep/wake hours lo
 
 Surfaces a non-intrusive card: "Your priorities or routine may have evolved since setup. Would you like to update your focus goals?"
 
-Never mutates user_profile silently—all updates require explicit user confirmation.
+Never mutates user_profile silently—all updates require explicit user confirmation. 

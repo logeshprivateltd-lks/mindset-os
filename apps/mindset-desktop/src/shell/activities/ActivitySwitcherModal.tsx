@@ -141,3 +141,4 @@ export const ActivitySwitcherModal: React.FC = () => {
     </div>
   );
 };
+

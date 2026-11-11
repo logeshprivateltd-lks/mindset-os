@@ -434,3 +434,4 @@ export const OsWindowFrame: React.FC<OsWindowFrameProps> = ({ window: win, child
     </div>
   );
 };
+

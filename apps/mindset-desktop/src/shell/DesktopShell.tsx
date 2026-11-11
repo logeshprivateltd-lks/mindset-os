@@ -1,11 +1,13 @@
 /**
  * MindSet OS Master Desktop Shell Component
  * Coordinates the Desktop Canvas, Multi-Window Manager, KDE Plasma Activities,
- * Snap Layouts, Start Menu, and Persistent Taskbar Dock.
+ * Snap Layouts, Start Menu, Living Profile Evolution, and Persistent Taskbar Dock.
  * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import type { UserProfile } from '@mindset/db-schema';
+import { LivingProfileEngine, ProfileEvolutionSuggestion } from '@mindset/identity-engine';
 import { useWindowManagerStore } from './wm/useWindowManagerStore';
 import { OsWindowFrame } from './wm/OsWindowFrame';
 import { SnapLayoutOverlay } from './wm/SnapLayoutOverlay';
@@ -15,17 +17,51 @@ import { StartMenuOverlay } from './StartMenuOverlay';
 import { ActivitySwitcherModal } from './activities/ActivitySwitcherModal';
 import { useActivityStore } from './activities/useActivityStore';
 import { APP_REGISTRY } from './apps/AppRegistry';
+import { MemoryInspectorModal } from '../components/MemoryInspectorModal';
+import { LivingProfileSuggestionCard } from '../components/LivingProfileSuggestionCard';
+import { dbClient } from '../lib/dbClient';
 
 export interface DesktopShellProps {
   onLock: () => void;
   onOpenStatus: () => void;
+  onOpenOnboarding?: () => void;
 }
 
-export const DesktopShell: React.FC<DesktopShellProps> = ({ onLock, onOpenStatus }) => {
+export const DesktopShell: React.FC<DesktopShellProps> = ({
+  onLock,
+  onOpenStatus,
+  onOpenOnboarding,
+}) => {
   const { windows, openWindow } = useWindowManagerStore();
   const { currentActivityId, toggleSwitcher } = useActivityStore();
 
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
+  const [isMemoryInspectorOpen, setIsMemoryInspectorOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [activeSuggestion, setActiveSuggestion] = useState<ProfileEvolutionSuggestion | null>(null);
+
+  const livingEngine = useMemo(() => new LivingProfileEngine(), []);
+
+  // Fetch initial profile & check for completed tasks to trigger living profile evolution
+  useEffect(() => {
+    dbClient.profile.get().then(async (p) => {
+      if (p) {
+        setUserProfile(p);
+        // Check completed tasks to see if any milestone suggestion is needed
+        try {
+          const completedTasks = await dbClient.tasks.list('completed');
+          if (completedTasks && completedTasks.length > 0) {
+            const suggestion = livingEngine.detectMilestoneEvolution(p, completedTasks);
+            if (suggestion) {
+              setActiveSuggestion(suggestion);
+            }
+          }
+        } catch {
+          // Ignore
+        }
+      }
+    });
+  }, [livingEngine]);
 
   // Auto-launch Command Center on first boot
   useEffect(() => {
@@ -38,16 +74,19 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLock, onOpenStatus
     }
   }, [openWindow, windows.length]);
 
-  // Global hotkeys for Desktop Shell
+  // Global hotkeys for Desktop Shell:
+  // Super + Tab -> Activity Switcher
+  // Ctrl + M / Super + M -> AI Memory Inspector
+  // Escape -> close Start Menu
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Super + Tab -> Activity Switcher
       if ((e.metaKey || e.altKey) && e.key === 'Tab') {
         e.preventDefault();
         toggleSwitcher();
-      }
-      // Escape closes Start Menu
-      else if (e.key === 'Escape' && isStartMenuOpen) {
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        setIsMemoryInspectorOpen((prev) => !prev);
+      } else if (e.key === 'Escape' && isStartMenuOpen) {
         e.preventDefault();
         setIsStartMenuOpen(false);
       }
@@ -86,21 +125,43 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({ onLock, onOpenStatus
         })}
       </div>
 
-      {/* 3. Snap Layout Translucent Liquid Glass Preview Overlay */}
+      {/* 3. Living User Profile Non-Intrusive Evolution Suggestion */}
+      {activeSuggestion && userProfile && (
+        <div className="absolute top-12 right-6 z-40 pointer-events-auto">
+          <LivingProfileSuggestionCard
+            suggestion={activeSuggestion}
+            profile={userProfile}
+            onActionComplete={(updated) => {
+              if (updated) setUserProfile(updated);
+              setActiveSuggestion(null);
+            }}
+          />
+        </div>
+      )}
+
+      {/* 4. Snap Layout Translucent Liquid Glass Preview Overlay */}
       <SnapLayoutOverlay />
 
-      {/* 4. KDE Plasma Activity Switcher Modal (Super + Tab) */}
+      {/* 5. KDE Plasma Activity Switcher Modal (Super + Tab) */}
       <ActivitySwitcherModal />
 
-      {/* 5. Start Menu Launcher Overlay (Super) */}
+      {/* 6. Start Menu Launcher Overlay (Super) */}
       <StartMenuOverlay
         isOpen={isStartMenuOpen}
         onClose={() => setIsStartMenuOpen(false)}
         onLock={onLock}
         onOpenStatus={onOpenStatus}
+        onOpenMemoryInspector={() => setIsMemoryInspectorOpen(true)}
+        onOpenOnboarding={onOpenOnboarding}
       />
 
-      {/* 6. Persistent Bottom Liquid Glass Taskbar Dock */}
+      {/* 7. Sovereign AI Memory Inspector Modal (Ctrl + M) */}
+      <MemoryInspectorModal
+        isOpen={isMemoryInspectorOpen}
+        onClose={() => setIsMemoryInspectorOpen(false)}
+      />
+
+      {/* 8. Persistent Bottom Liquid Glass Taskbar Dock */}
       <TaskbarDock
         isStartMenuOpen={isStartMenuOpen}
         onToggleStartMenu={() => setIsStartMenuOpen(!isStartMenuOpen)}

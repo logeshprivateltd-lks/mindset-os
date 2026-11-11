@@ -249,6 +249,9 @@ importers:
       '@mindset/db-schema':
         specifier: workspace:*
         version: link:../db-schema
+      '@mindset/i18n-locales':
+        specifier: workspace:*
+        version: link:../i18n-locales
     devDependencies:
       typescript:
         specifier: ^5.8.2

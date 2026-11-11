@@ -14,6 +14,8 @@ export interface StartMenuOverlayProps {
   onClose: () => void;
   onLock: () => void;
   onOpenStatus: () => void;
+  onOpenMemoryInspector?: () => void;
+  onOpenOnboarding?: () => void;
 }
 
 export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
@@ -21,6 +23,8 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
   onClose,
   onLock,
   onOpenStatus,
+  onOpenMemoryInspector,
+  onOpenOnboarding,
 }) => {
   const { openWindow } = useWindowManagerStore();
   const { currentActivityId, switchActivity } = useActivityStore();
@@ -141,6 +145,34 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-1.5">
+            {onOpenMemoryInspector && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenMemoryInspector();
+                  onClose();
+                }}
+                title="AI Memory Inspector (3-Tier Epistemic Memory)"
+                className="p-2 rounded-lg bg-[var(--surface-primary)] hover:bg-[var(--surface-elevated)] text-[var(--accent-primary)] border border-[var(--border-subtle)] transition-colors"
+              >
+                🧠
+              </button>
+            )}
+
+            {onOpenOnboarding && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenOnboarding();
+                  onClose();
+                }}
+                title="Re-run Setup Wizard (/onboarding)"
+                className="p-2 rounded-lg bg-[var(--surface-primary)] hover:bg-[var(--surface-elevated)] text-[var(--accent-secondary)] border border-[var(--border-subtle)] transition-colors"
+              >
+                ✨
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -170,3 +202,4 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
     </div>
   );
 };
+

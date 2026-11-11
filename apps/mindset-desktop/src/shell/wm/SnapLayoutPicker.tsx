@@ -118,3 +118,4 @@ export const SnapLayoutPicker: React.FC<SnapLayoutPickerProps> = ({ onSelectZone
     </div>
   );
 };
+

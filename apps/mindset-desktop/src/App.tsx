@@ -4,13 +4,14 @@
  * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
  */
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useKernelStore } from './stores/useKernelStore';
 import { TitleBar } from '@mindset/ui-core';
 import { BootSplashGate } from './components/BootSplashGate';
 import { SmartLockOverlay } from './pages/auth/SmartLockOverlay';
 import { DesktopShell } from './shell/DesktopShell';
 import { StatusViewerModal } from './components/StatusViewerModal';
+import { OnboardingWizard } from './pages/onboarding/OnboardingWizard';
 
 export const App: React.FC = () => {
   const {
@@ -27,6 +28,10 @@ export const App: React.FC = () => {
     fetchKernelStatus,
     initEventListeners,
   } = useKernelStore();
+
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(() => {
+    return localStorage.getItem('mindset_onboarding_completed') !== 'true';
+  });
 
   // Periodic Kernel Status Refresh & initial auth check
   useEffect(() => {
@@ -51,6 +56,7 @@ export const App: React.FC = () => {
   // Super + L / Ctrl + L / Ctrl + Alt + L to lock
   // Alt + B to toggle Privacy Blur Guard
   // Ctrl + S / Meta + S to open /status modal
+  // Ctrl + Shift + O to open /onboarding setup wizard
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey || (e.altKey && e.ctrlKey)) && e.key.toLowerCase() === 'l') {
@@ -62,6 +68,9 @@ export const App: React.FC = () => {
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         setIsStatusViewOpen(!isStatusViewOpen);
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        setIsOnboardingOpen((prev) => !prev);
       }
     };
 
@@ -117,11 +126,14 @@ export const App: React.FC = () => {
         <main className="flex-1 relative overflow-hidden">
           {isLocked ? (
             <SmartLockOverlay onUnlock={() => setIsLocked(false)} />
+          ) : isOnboardingOpen ? (
+            <OnboardingWizard onComplete={() => setIsOnboardingOpen(false)} />
           ) : (
             <>
               <DesktopShell
                 onLock={lockSystem}
                 onOpenStatus={() => setIsStatusViewOpen(true)}
+                onOpenOnboarding={() => setIsOnboardingOpen(true)}
               />
               {/* Instant Privacy Blur Overlay (Alt + B) */}
               {isPrivacyBlurred && (
