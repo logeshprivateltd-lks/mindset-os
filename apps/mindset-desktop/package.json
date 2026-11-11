@@ -15,6 +15,7 @@
     "@mindset/db-schema": "workspace:*",
     "@mindset/i18n-locales": "workspace:*",
     "@mindset/identity-engine": "workspace:*",
+    "@mindset/laya-router": "workspace:*",
     "@mindset/ui-core": "workspace:*",
     "@tauri-apps/api": "^2.2.0",
     "i18next": "^27.1.1",

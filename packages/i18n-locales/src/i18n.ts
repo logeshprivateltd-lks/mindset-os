@@ -58,3 +58,4 @@ export function getCurrentLanguage(): SupportedLocale {
 export default i18n;
 export { i18n };
 export { useTranslation, Trans, I18nextProvider } from 'react-i18next';
+

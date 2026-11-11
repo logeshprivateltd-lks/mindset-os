@@ -1,12 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod ai;
 mod auth;
 mod commands;
 mod db;
 mod kernel;
 mod storage;
 
+use ai::*;
 use auth::AuthEngine;
 use commands::*;
 use db::DatabaseManager;
@@ -144,6 +146,7 @@ async fn main() {
         })
         .manage(Arc::clone(&kernel))
         .manage(Arc::clone(&auth))
+        .manage(ActiveModelState::new())
         .manage(AppState {
             kernel,
             auth,
@@ -195,6 +198,15 @@ async fn main() {
             is_system_locked,
             is_privacy_blurred,
             get_auth_status,
+            // Laya AI Subsystem Commands
+            ai_chat_stream,
+            ai_generate_embedding,
+            ai_list_local_models,
+            ai_set_active_model,
+            ai_get_active_model,
+            ai_unload_model,
+            ai_restart_ollama,
+            ai_execute_structured_tool_call,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,

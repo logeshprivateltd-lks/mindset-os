@@ -98,3 +98,4 @@ export const kn: TranslationDictionary = {
     uacElevateTitle: 'ನಿರ್ವಾಹಕರ ಅನುಮತಿ ಅಗತ್ಯವಿದೆ',
   },
 };
+

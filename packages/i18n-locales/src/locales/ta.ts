@@ -98,3 +98,4 @@ export const ta: TranslationDictionary = {
     uacElevateTitle: 'நிர்வாக அனுமதி தேவைப்படுகிறது',
   },
 };
+

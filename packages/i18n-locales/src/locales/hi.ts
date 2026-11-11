@@ -98,3 +98,4 @@ export const hi: TranslationDictionary = {
     uacElevateTitle: 'प्रशासक अनुमति आवश्यक है',
   },
 };
+

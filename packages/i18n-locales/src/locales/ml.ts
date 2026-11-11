@@ -98,3 +98,4 @@ export const ml: TranslationDictionary = {
     uacElevateTitle: 'അഡ്മിനിസ്ട്രേറ്റർ അനുമതി ആവശ്യമാണ്',
   },
 };
+

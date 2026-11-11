@@ -98,3 +98,4 @@ export const te: TranslationDictionary = {
     uacElevateTitle: 'నిర్వాహక అనుమతి అవసరం',
   },
 };
+

@@ -184,6 +184,9 @@ importers:
       '@mindset/identity-engine':
         specifier: workspace:*
         version: link:../../packages/identity-engine
+      '@mindset/laya-router':
+        specifier: workspace:*
+        version: link:../../packages/laya-router
       '@mindset/ui-core':
         specifier: workspace:*
         version: link:../../packages/ui-core
@@ -265,6 +268,25 @@ importers:
       '@mindset/i18n-locales':
         specifier: workspace:*
         version: link:../i18n-locales
+    devDependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
+  packages/laya-router:
+    dependencies:
+      '@mindset/db-schema':
+        specifier: workspace:*
+        version: link:../db-schema
+      '@mindset/i18n-locales':
+        specifier: workspace:*
+        version: link:../i18n-locales
+      '@mindset/identity-engine':
+        specifier: workspace:*
+        version: link:../identity-engine
+      '@tauri-apps/api':
+        specifier: ^2.2.0
+        version: 2.12.4
     devDependencies:
       typescript:
         specifier: ^5.8.2

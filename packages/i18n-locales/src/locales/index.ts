@@ -37,3 +37,4 @@ export const I18N_RESOURCES = {
 };
 
 export { en, ta, hi, te, ml, kn, bn, mr };
+

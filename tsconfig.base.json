@@ -27,7 +27,9 @@
       "@mindset/balance-engine": ["./packages/balance-engine/src/index.ts"],
       "@mindset/balance-engine/*": ["./packages/balance-engine/src/*"],
       "@mindset/i18n-locales": ["./packages/i18n-locales/src/index.ts"],
-      "@mindset/i18n-locales/*": ["./packages/i18n-locales/src/*"]
+      "@mindset/i18n-locales/*": ["./packages/i18n-locales/src/*"],
+      "@mindset/laya-router": ["./packages/laya-router/src/index.ts"],
+      "@mindset/laya-router/*": ["./packages/laya-router/src/*"]
     }
   }
 }
