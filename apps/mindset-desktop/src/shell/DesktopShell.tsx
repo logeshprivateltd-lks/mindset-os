@@ -22,6 +22,8 @@ import { LivingProfileSuggestionCard } from '../components/LivingProfileSuggesti
 import { LanguageSettingsModal } from '../components/settings/LanguageSettingsModal';
 import { FloatingAiOrb } from '../components/floating-ai';
 import { GlobalCommandPalette } from '../components/command-palette';
+import { FocusInterruptionOverlay } from '../components/focus-guard';
+import { useKernelStore } from '../stores/useKernelStore';
 import { navigationRouter } from '../navigation/navigationRouter';
 import { dbClient } from '../lib/dbClient';
 
@@ -38,6 +40,12 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
 }) => {
   const { windows, openWindow, bringToFront } = useWindowManagerStore();
   const { currentActivityId, toggleSwitcher } = useActivityStore();
+  const {
+    isFocusInterruptionOpen,
+    interruptedAppName,
+    priorityGoal,
+    dismissFocusInterruption,
+  } = useKernelStore();
 
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [isMemoryInspectorOpen, setIsMemoryInspectorOpen] = useState(false);
@@ -180,6 +188,24 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
+        case '/focus': {
+          const win = windows.find((w) => w.appId === 'focus');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('focus', { title: 'Immersive Focus', icon: '⏳' }, currentActivityId);
+          }
+          break;
+        }
+        case '/focus-guard': {
+          const win = windows.find((w) => w.appId === 'focus-guard');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('focus-guard', { title: 'Focus Guard & Shield', icon: '🛡️' }, currentActivityId);
+          }
+          break;
+        }
         case '/mind':
         case '/insights':
           setIsMemoryInspectorOpen(true);
@@ -279,7 +305,24 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
         onClose={() => setIsCommandPaletteOpen(false)}
       />
 
-      {/* 11. Persistent Bottom Liquid Glass Taskbar Dock */}
+      {/* 11. Non-Shaming Focus Guard Interruption Screen */}
+      <FocusInterruptionOverlay
+        isOpen={isFocusInterruptionOpen}
+        blockedAppName={interruptedAppName}
+        currentTaskTitle={priorityGoal}
+        onReturnToPrevious={dismissFocusInterruption}
+        onOpenStudyTask={() => {
+          dismissFocusInterruption();
+          const focusWin = windows.find((w) => w.appId === 'focus');
+          if (focusWin) {
+            bringToFront(focusWin.id);
+          } else {
+            openWindow('focus', { title: 'Immersive Focus', icon: '⏳' }, currentActivityId);
+          }
+        }}
+      />
+
+      {/* 12. Persistent Bottom Liquid Glass Taskbar Dock */}
       <TaskbarDock
         isStartMenuOpen={isStartMenuOpen}
         onToggleStartMenu={() => setIsStartMenuOpen(!isStartMenuOpen)}

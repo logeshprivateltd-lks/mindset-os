@@ -33,6 +33,8 @@ export interface KernelStoreState {
   priorityGoal: string;
   activeFocusMinutes: number;
   isFocusActive: boolean;
+  isFocusInterruptionOpen: boolean;
+  interruptedAppName: string;
 
   // Actions
   fetchKernelStatus: () => Promise<void>;
@@ -52,6 +54,9 @@ export interface KernelStoreState {
   setIsStatusViewOpen: (open: boolean) => void;
   setPriorityGoal: (goal: string) => void;
   toggleFocusSession: () => void;
+  setFocusActive: (active: boolean) => void;
+  triggerFocusInterruption: (appName?: string) => void;
+  dismissFocusInterruption: () => void;
 }
 
 export const useKernelStore = create<KernelStoreState>((set, get) => ({
@@ -127,6 +132,8 @@ export const useKernelStore = create<KernelStoreState>((set, get) => ({
   priorityGoal: 'Complete MindSet OS Kernel Calibrations & Low-RAM Audit',
   activeFocusMinutes: 45,
   isFocusActive: false,
+  isFocusInterruptionOpen: false,
+  interruptedAppName: 'Restricted Application',
 
   fetchKernelStatus: async () => {
     try {
@@ -319,4 +326,12 @@ export const useKernelStore = create<KernelStoreState>((set, get) => ({
     set((state) => ({
       isFocusActive: !state.isFocusActive,
     })),
+
+  setFocusActive: (active: boolean) => set({ isFocusActive: active }),
+
+  triggerFocusInterruption: (appName = 'Restricted Application') =>
+    set({ isFocusInterruptionOpen: true, interruptedAppName: appName }),
+
+  dismissFocusInterruption: () =>
+    set({ isFocusInterruptionOpen: false }),
 }));

@@ -15,6 +15,7 @@ import { FileExplorerPage, RagDocumentTutor } from '../../pages/files';
 import { HabitsPage } from '../../pages/habits';
 import { TimelinePage } from '../../pages/timeline';
 import { GoalsAndSyllabusView, SmartPlannerPage } from '../../pages/tasks';
+import { FocusSessionPage, FocusGuardDashboard } from '../../pages/focus';
 
 export interface AppMetadata {
   appId: string;
@@ -147,5 +148,25 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 920,
     defaultHeight: 620,
     description: 'Configurable recurring schedule template with drag-and-drop task time-blocking.',
+  },
+  focus: {
+    appId: 'focus',
+    title: 'Immersive Focus Session',
+    icon: '⏳',
+    subjectTag: 'Focus',
+    component: FocusSessionPage,
+    defaultWidth: 960,
+    defaultHeight: 640,
+    description: 'Fullscreen distraction-free Aurora countdown timer with offline Web Audio ambient sound synthesizer.',
+  },
+  'focus-guard': {
+    appId: 'focus-guard',
+    title: 'Focus Guard & Distraction Shield',
+    icon: '🛡️',
+    subjectTag: 'Protection',
+    component: FocusGuardDashboard,
+    defaultWidth: 880,
+    defaultHeight: 620,
+    description: 'Non-shaming distraction shield, gaming budget controls, and emergency VIP communication allowlist.',
   },
 };

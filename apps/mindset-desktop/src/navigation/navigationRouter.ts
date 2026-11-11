@@ -19,7 +19,9 @@ export type CanonicalRoute =
   | '/files'
   | '/devices'
   | '/settings'
-  | '/status';
+  | '/status'
+  | '/focus'
+  | '/focus-guard';
 
 export interface RouteNavigationEvent {
   route: CanonicalRoute;
@@ -155,6 +157,18 @@ export const CANONICAL_ROUTES_META: Record<
     icon: '📊',
     description: 'Rust service health registry, RAM breakdown, and hardware probe',
     category: 'system',
+  },
+  '/focus': {
+    label: 'Immersive Focus',
+    icon: '⏳',
+    description: 'Distraction-free fullscreen Aurora countdown with Web Audio synthesizer',
+    category: 'productivity',
+  },
+  '/focus-guard': {
+    label: 'Focus Guard & Shield',
+    icon: '🛡️',
+    description: 'Non-shaming distraction shield, gaming budget limits, and VIP allowlist',
+    category: 'productivity',
   },
 };
 
