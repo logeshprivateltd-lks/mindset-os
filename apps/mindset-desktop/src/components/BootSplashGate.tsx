@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useKernelStore } from '../stores/useKernelStore';
+import { RecoveryModePage } from '../pages/recovery';
 import type { KernelBootPhase } from '@mindset/db-schema';
 
 interface BootSplashGateProps {
@@ -56,6 +57,25 @@ export const BootSplashGate: React.FC<BootSplashGateProps> = ({ children }) => {
 
   const [fadeComplete, setFadeComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isRecoveryActive, setIsRecoveryActive] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search || '';
+      return search.includes('recovery=true') || search.includes('--recovery');
+    }
+    return false;
+  });
+
+  // Listen for recovery hotkey (F8 or Alt + R) during boot splash
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F8' || (e.altKey && e.key.toLowerCase() === 'r')) {
+        e.preventDefault();
+        setIsRecoveryActive(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Initialize kernel event listener and initial status poll
   useEffect(() => {
@@ -87,6 +107,10 @@ export const BootSplashGate: React.FC<BootSplashGateProps> = ({ children }) => {
       return () => clearTimeout(timer);
     }
   }, [isReady, bootPhase]);
+
+  if (isRecoveryActive) {
+    return <RecoveryModePage />;
+  }
 
   if (fadeComplete) {
     return <>{children}</>;
@@ -208,6 +232,22 @@ export const BootSplashGate: React.FC<BootSplashGateProps> = ({ children }) => {
           <span className="font-mono text-[#9CA3AF] text-[10px]">
             {hardware?.wifi_adapter_name || 'Generic Network'}
           </span>
+        </div>
+
+        {/* Standalone Recovery Mode Shortcut */}
+        <div className="pt-2 flex items-center justify-between text-[11px] text-[#9CA3AF] border-t border-[#1F2937]/60">
+          <span className="flex items-center gap-1.5">
+            <span className="px-1.5 py-0.5 rounded bg-[#1F2937] text-amber-300 font-mono text-[10px]">F8</span>
+            <span>or</span>
+            <span className="px-1.5 py-0.5 rounded bg-[#1F2937] text-amber-300 font-mono text-[10px]">Alt + R</span>
+            <span>for Standalone Recovery</span>
+          </span>
+          <button
+            onClick={() => setIsRecoveryActive(true)}
+            className="text-amber-400 hover:text-amber-300 transition-colors font-medium hover:underline text-[11px]"
+          >
+            Launch Recovery Console →
+          </button>
         </div>
       </div>
     </div>

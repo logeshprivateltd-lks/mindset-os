@@ -577,6 +577,38 @@ export interface DriverResetReport {
   details: string;
 }
 
+export interface OstreeDeploymentInfo {
+  active_commit: string;
+  rollback_commit: string;
+  deployment_source: string;
+  is_healthy: boolean;
+  watchdog_armed: boolean;
+  watchdog_seconds_remaining: number;
+  pre_update_snapshot_id?: string | null;
+}
+
+export interface RollbackExecutionResult {
+  success: boolean;
+  previous_commit: string;
+  active_commit: string;
+  message: string;
+  execution_time_ms: number;
+  user_data_preserved: boolean;
+}
+
+export interface OfflinePatchResult {
+  success: boolean;
+  bundle_name: string;
+  channel: string;
+  version: string;
+  author_authority: string;
+  signature_ed25519: string;
+  signature_valid: boolean;
+  components_applied: number;
+  message: string;
+  applied_at: string;
+}
+
 
 
 

@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@mindset/ui-core';
 import { monitorClient } from '../../lib/monitorClient';
 import { useKernelStore } from '../../stores/useKernelStore';
+import { navigationRouter } from '../../navigation/navigationRouter';
 import { MindSetTerminal } from '../../components/terminal';
 import type {
   SystemResourceSnapshot,
@@ -203,6 +204,15 @@ export const SystemStatusPage: React.FC = () => {
             className="text-xs bg-cyan-500 hover:bg-cyan-400 text-black font-semibold shadow-lg shadow-cyan-500/20"
           >
             🩺 System Doctor
+          </Button>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigationRouter.navigate('/recovery')}
+            className="text-xs border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+          >
+            🛟 Standalone Recovery
           </Button>
         </div>
       </div>

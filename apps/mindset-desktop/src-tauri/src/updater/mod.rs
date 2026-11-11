@@ -1,13 +1,22 @@
 //! MindSet OS — Atomic OTA Updater & Recovery Subsystem
 //! Copyright (c) 2026 LKS PVT LTD. All rights reserved.
 
+pub mod atomic_rollback;
 pub mod atomic_updater;
+pub mod ota_updater;
 pub mod recovery_engine;
 
+#[allow(unused_imports)]
+pub use atomic_rollback::{AtomicRollbackManager, OstreeDeploymentInfo, RollbackExecutionResult};
 #[allow(unused_imports)]
 pub use atomic_updater::{
     AtomicUpdater, OfflineBundleManifest, OSVersionInfo, UpdateChannel, UpdatePackageInfo,
     UpdateStageProgress, CURRENT_OS_VERSION, LKS_ED25519_ROOT_FINGERPRINT,
+};
+#[allow(unused_imports)]
+pub use ota_updater::{
+    OfflinePatchResult, OSVersionDetails, OtaUpdater, PatchChannel, PatchPackageInfo, PatchProgress,
+    LKS_ED25519_ROOT_KEY,
 };
 #[allow(unused_imports)]
 pub use recovery_engine::{
@@ -54,6 +63,26 @@ pub async fn updater_install_offline_bundle(
 ) -> Result<OfflineBundleManifest, String> {
     let updater = AtomicUpdater::default_instance();
     updater.install_offline_bundle(&bundle_path)
+}
+
+#[command]
+pub async fn updater_apply_offline_usb_patch(
+    bundle_path: String,
+) -> Result<OfflinePatchResult, String> {
+    let ota = OtaUpdater::default_instance();
+    ota.apply_offline_usb_patch(&bundle_path)
+}
+
+#[command]
+pub async fn updater_get_ostree_status() -> Result<OstreeDeploymentInfo, String> {
+    let rollback_mgr = AtomicRollbackManager::default_instance();
+    Ok(rollback_mgr.query_ostree_status())
+}
+
+#[command]
+pub async fn updater_trigger_atomic_rollback() -> Result<RollbackExecutionResult, String> {
+    let rollback_mgr = AtomicRollbackManager::default_instance();
+    rollback_mgr.execute_atomic_rollback()
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +132,29 @@ pub async fn recovery_repair_databases(
 pub async fn recovery_reset_drivers() -> Result<DriverResetReport, String> {
     let engine = RecoveryEngine::default_instance();
     engine.reset_hardware_drivers()
+}
+
+#[command]
+pub async fn recovery_reset_network_and_firewall() -> Result<RecoveryActionResult, String> {
+    let engine = RecoveryEngine::default_instance();
+    engine.reset_network_and_firewall()
+}
+
+#[command]
+pub async fn recovery_apply_offline_patch(
+    bundle_path: String,
+) -> Result<RecoveryActionResult, String> {
+    let engine = RecoveryEngine::default_instance();
+    engine.apply_offline_security_patch(&bundle_path)
+}
+
+#[command]
+pub async fn recovery_export_emergency_data_archive(
+    target_path: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<RecoveryActionResult, String> {
+    let engine = RecoveryEngine::default_instance();
+    engine.export_emergency_data_archive(target_path, state.db.clone())
 }
 
 #[command]

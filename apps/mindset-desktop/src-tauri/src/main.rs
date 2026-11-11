@@ -132,6 +132,9 @@ async fn main() {
     let db_arc = Arc::new(db);
     let registry_arc = Arc::new(tokio::sync::Mutex::new(registry));
 
+    // Signal SYSTEM_READY to Atomic Rollback Watchdog
+    AtomicRollbackManager::signal_system_ready();
+
     let kernel = MindSetKernel::new(
         Arc::clone(&bus),
         Arc::clone(&registry_arc),
@@ -265,12 +268,18 @@ async fn main() {
             updater_download_and_stage,
             updater_apply_update,
             updater_install_offline_bundle,
+            updater_apply_offline_usb_patch,
+            updater_get_ostree_status,
+            updater_trigger_atomic_rollback,
             recovery_list_snapshots,
             recovery_create_snapshot,
             recovery_restore_snapshot,
             recovery_rollback_update,
             recovery_repair_databases,
             recovery_reset_drivers,
+            recovery_reset_network_and_firewall,
+            recovery_apply_offline_patch,
+            recovery_export_emergency_data_archive,
             recovery_perform_factory_reset,
             // System Telemetry Commands
             get_service_health,
