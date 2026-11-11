@@ -21,6 +21,7 @@ import { MoodCheckinModal } from '../../pages/mood';
 import { SettingsPage } from '../../pages/settings';
 import { AppHubPage } from '../../pages/app-hub';
 import { DeviceManagerPage } from '../../pages/devices';
+import { SystemStatusPage } from '../../pages/status';
 import { OfflineLecturePlayer } from '../../components/utilities/OfflineLecturePlayer';
 
 export interface AppMetadata {
@@ -234,5 +235,15 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 1040,
     defaultHeight: 680,
     description: 'Hardware topology, USB peripherals, Wi-Fi driver diagnostics, power governors, and media fallback routing.',
+  },
+  status: {
+    appId: 'status',
+    title: 'Task Manager & Resource Monitor',
+    icon: '📊',
+    subjectTag: 'System',
+    component: SystemStatusPage,
+    defaultWidth: 1060,
+    defaultHeight: 700,
+    description: 'btop++ telemetry monitor, <120 MB OS Shell ceiling verification, cgroups v2 limiter, and self-healing doctor.',
   },
 };

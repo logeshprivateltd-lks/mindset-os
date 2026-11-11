@@ -971,3 +971,4 @@ export const DeviceManagerPage: React.FC = () => {
     </div>
   );
 };
+

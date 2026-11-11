@@ -412,4 +412,76 @@ export interface MediaRoutingReport {
   timestamp_utc: string;
 }
 
+// -------------------------------------------------------------------------
+// Task Manager, btop++ Resource Monitor & Terminal DTOs (/status)
+// -------------------------------------------------------------------------
+
+export interface ProcessInfo {
+  pid: number;
+  name: string;
+  cpu_percent: number;
+  memory_rss_mb: number;
+  category: 'MindSet Core' | 'Local AI (Ollama)' | 'Study App' | 'Background Service' | string;
+  disk_read_bytes_sec: number;
+  disk_written_bytes_sec: number;
+  is_capped: boolean;
+  cgroup_limit_ram_mb?: number | null;
+  cgroup_limit_cpu_percent?: number | null;
+}
+
+export interface SystemResourceSnapshot {
+  os_shell_rss_mb: number;
+  ollama_ai_rss_mb: number;
+  total_system_memory_mb: number;
+  free_system_memory_mb: number;
+  available_for_ollama_mb: number;
+  os_shell_ceiling_mb: number; // 120.0 MB
+  cpu_total_percent: number;
+  cpu_cores_percent: number[];
+  disk_read_mbs: number;
+  disk_write_mbs: number;
+  processes: ProcessInfo[];
+  timestamp_utc: string;
+}
+
+export interface ResourceLimitResult {
+  pid: number;
+  success: boolean;
+  applied_ram_mb?: number | null;
+  applied_cpu_percent?: number | null;
+  mechanism: string;
+  message: string;
+}
+
+export interface DoctorActionResult {
+  routine: string;
+  success: boolean;
+  freed_mb: number;
+  message: string;
+  timestamp_utc: string;
+}
+
+export interface DoctorCheckItem {
+  name: string;
+  status: 'Healthy' | 'Optimized' | 'Warning' | string;
+  detail: string;
+}
+
+export interface FullDoctorReport {
+  health_score: number;
+  status: 'Optimal' | 'Degraded' | 'Action Required' | string;
+  checks: DoctorCheckItem[];
+  actions_recommended: string[];
+  total_freed_mb: number;
+  timestamp_utc: string;
+}
+
+export interface TerminalCommandResult {
+  command: string;
+  output: string;
+  exit_code: number;
+  execution_time_ms: number;
+}
+
+
 

@@ -8,6 +8,7 @@ mod db;
 mod devices;
 mod fs;
 mod kernel;
+mod monitor;
 mod storage;
 
 use ai::*;
@@ -16,6 +17,7 @@ use commands::*;
 use db::DatabaseManager;
 use devices::*;
 use fs::*;
+use monitor::*;
 use kernel::{
     BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, MindSetKernel, ServiceHealth,
 };
@@ -248,6 +250,13 @@ async fn main() {
             devices_set_power_governor_profile,
             devices_get_media_routing,
             devices_select_media_device,
+            // Process & Resource Monitor Commands (/status)
+            monitor_get_system_resources,
+            monitor_apply_cgroups_limit,
+            monitor_remove_cgroups_limit,
+            monitor_execute_doctor_action,
+            monitor_run_full_system_doctor,
+            terminal_execute_command,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,

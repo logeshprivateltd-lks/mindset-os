@@ -259,9 +259,15 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
-        case '/status':
-          onOpenStatus();
+        case '/status': {
+          const win = windows.find((w) => w.appId === 'status');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('status', { title: 'Task Manager & Resource Monitor', icon: '📊' }, currentActivityId);
+          }
           break;
+        }
       }
     });
 
