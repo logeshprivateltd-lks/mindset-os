@@ -1,13 +1,24 @@
+/**
+ * MindSet OS Balance Engine
+ * 9-Dimension Scheduling, Free-Time Detection, Energy/Mood Matching & Micro-Break Planning
+ * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
+ */
+
 import type { MoodCheckin } from '@mindset/db-schema';
 
-export interface FreeTimeWindow {
+export * from './types';
+export * from './FreeTimeDetector';
+export * from './ActivityRecommender';
+export * from './SmartFreeTimePlanner';
+
+export interface LegacyFreeTimeWindow {
   startTime: string;
   durationMinutes: number;
   recommendedActivity: string;
 }
 
 export class BalanceEngine {
-  static evaluateFreeTime(availableMinutes: number, currentMood?: MoodCheckin): FreeTimeWindow {
+  static evaluateFreeTime(availableMinutes: number, currentMood?: MoodCheckin): LegacyFreeTimeWindow {
     let activity = 'Gentle walk or brief hydration break';
     
     if (currentMood) {
@@ -27,4 +38,3 @@ export class BalanceEngine {
     };
   }
 }
-

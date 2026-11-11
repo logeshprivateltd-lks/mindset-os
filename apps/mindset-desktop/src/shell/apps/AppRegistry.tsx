@@ -8,14 +8,16 @@ import React from 'react';
 import { StudyReaderApp } from './StudyReaderApp';
 import { TerminalApp } from './TerminalApp';
 import { TasksGoalsApp } from './TasksGoalsApp';
-import { JournalNotesApp } from './JournalNotesApp';
-import { BalanceRelaxApp } from './BalanceRelaxApp';
 import { DashboardApp } from './DashboardApp';
 import { FileExplorerPage, RagDocumentTutor } from '../../pages/files';
 import { HabitsPage } from '../../pages/habits';
 import { TimelinePage } from '../../pages/timeline';
 import { GoalsAndSyllabusView, SmartPlannerPage } from '../../pages/tasks';
 import { FocusSessionPage, FocusGuardDashboard } from '../../pages/focus';
+import { BalanceAiPage } from '../../pages/balance';
+import { JournalPage } from '../../pages/journal';
+import { InsightsPage } from '../../pages/insights';
+import { MoodCheckinModal } from '../../pages/mood';
 
 export interface AppMetadata {
   appId: string;
@@ -71,23 +73,43 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
   },
   journal: {
     appId: 'journal',
-    title: 'Daily Journal & Habits',
+    title: 'Daily Journal & Gratitude',
     icon: '✍️',
     subjectTag: 'Reflection',
-    component: JournalNotesApp,
-    defaultWidth: 800,
-    defaultHeight: 560,
-    description: 'Distraction-free Markdown journaling with non-punitive streak tracking.',
+    component: JournalPage,
+    defaultWidth: 920,
+    defaultHeight: 620,
+    description: 'Distraction-free Markdown journaling with daily gratitude prompts and local SQLite encryption.',
   },
   balance: {
     appId: 'balance',
     title: 'MindSet Balance AI',
     icon: '🌿',
     subjectTag: 'Wellbeing',
-    component: BalanceRelaxApp,
+    component: BalanceAiPage,
+    defaultWidth: 960,
+    defaultHeight: 640,
+    description: '4-7-8 cortisol breathwork, smart free-time planner, 12-hobby explorer, and intentional play.',
+  },
+  insights: {
+    appId: 'insights',
+    title: 'Weekly Life-Balance Analytics',
+    icon: '📊',
+    subjectTag: 'Analytics',
+    component: InsightsPage,
+    defaultWidth: 960,
+    defaultHeight: 640,
+    description: 'Interactive Recharts 9-dimension life balance radar, focus trends, and supportive Coach observations.',
+  },
+  mood: {
+    appId: 'mood',
+    title: 'Private Mood & Energy Check-in',
+    icon: '🌈',
+    subjectTag: 'Wellbeing',
+    component: MoodCheckinModal,
     defaultWidth: 640,
-    defaultHeight: 520,
-    description: '4-7-8 cortisol-reducing breathwork guide and restorative ambient sounds.',
+    defaultHeight: 540,
+    description: '9-mood and 4-energy private state check-in with restorative guidance and SQLite logging.',
   },
   files: {
     appId: 'files',

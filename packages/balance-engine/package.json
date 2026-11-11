@@ -5,6 +5,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
+    "test": "pnpm dlx tsx test/balanceEngine.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "echo @mindset/balance-engine lint clean"
   },

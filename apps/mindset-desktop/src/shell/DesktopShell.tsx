@@ -180,11 +180,20 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           break;
         }
         case '/mood': {
+          const win = windows.find((w) => w.appId === 'mood');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('mood', { title: 'Private Mood & Energy Check-in', icon: '🌈' }, currentActivityId);
+          }
+          break;
+        }
+        case '/balance': {
           const win = windows.find((w) => w.appId === 'balance');
           if (win) {
             bringToFront(win.id);
           } else {
-            openWindow('balance', { title: 'MindSet Balance', icon: '🌿' }, currentActivityId);
+            openWindow('balance', { title: 'MindSet Balance AI', icon: '🌿' }, currentActivityId);
           }
           break;
         }
@@ -206,8 +215,16 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
+        case '/insights': {
+          const win = windows.find((w) => w.appId === 'insights');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('insights', { title: 'Weekly Life-Balance Analytics', icon: '📊' }, currentActivityId);
+          }
+          break;
+        }
         case '/mind':
-        case '/insights':
           setIsMemoryInspectorOpen(true);
           break;
         case '/settings':

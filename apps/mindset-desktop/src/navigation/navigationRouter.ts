@@ -21,7 +21,8 @@ export type CanonicalRoute =
   | '/settings'
   | '/status'
   | '/focus'
-  | '/focus-guard';
+  | '/focus-guard'
+  | '/balance';
 
 export interface RouteNavigationEvent {
   route: CanonicalRoute;
@@ -169,6 +170,12 @@ export const CANONICAL_ROUTES_META: Record<
     icon: '🛡️',
     description: 'Non-shaming distraction shield, gaming budget limits, and VIP allowlist',
     category: 'productivity',
+  },
+  '/balance': {
+    label: 'MindSet Balance AI',
+    icon: '🌿',
+    description: '4-7-8 breathwork, free-time gap planner, 12-hobby explorer, and intentional play',
+    category: 'wellbeing',
   },
 };
 
