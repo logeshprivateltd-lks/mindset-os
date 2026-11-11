@@ -4,6 +4,7 @@
 mod ai;
 mod auth;
 mod commands;
+mod connect;
 mod db;
 mod devices;
 mod fs;
@@ -15,6 +16,7 @@ mod updater;
 use ai::*;
 use auth::AuthEngine;
 use commands::*;
+use connect::*;
 use db::DatabaseManager;
 use devices::*;
 use fs::*;
@@ -281,6 +283,28 @@ async fn main() {
             recovery_apply_offline_patch,
             recovery_export_emergency_data_archive,
             recovery_perform_factory_reset,
+            // MindSet Connect 6-Module Cross-Device Commands
+            connect_generate_pairing_qr,
+            connect_list_trusted_devices,
+            connect_approve_pairing,
+            connect_revoke_device,
+            connect_get_sync_status,
+            connect_get_active_conflicts,
+            connect_resolve_conflict,
+            connect_browse_remote_folder,
+            connect_preview_remote_file,
+            connect_request_remote_delete,
+            connect_get_continuity_state,
+            connect_broadcast_continuity_state,
+            connect_get_active_focus,
+            connect_sync_focus_session,
+            connect_sync_clipboard,
+            connect_send_clicker_action,
+            connect_get_hardware_bridge_status,
+            connect_toggle_webcam_stream,
+            connect_toggle_mic_stream,
+            connect_ingest_scanned_document,
+            connect_get_security_audit_logs,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,

@@ -25,7 +25,8 @@ export type CanonicalRoute =
   | '/balance'
   | '/app-hub'
   | '/updater'
-  | '/recovery';
+  | '/recovery'
+  | '/connect';
 
 export interface RouteNavigationEvent {
   route: CanonicalRoute;
@@ -196,6 +197,12 @@ export const CANONICAL_ROUTES_META: Record<
     label: 'MindSet Recovery Console',
     icon: '🛟',
     description: 'Pre-boot standalone rescue environment for encrypted snapshots, SQLite repairs, and driver resets',
+    category: 'system',
+  },
+  '/connect': {
+    label: 'MindSet Connect',
+    icon: '📱',
+    description: '6-Module cross-device mesh for phone webcam, Whisper mic, continuity handoff, and selective sync',
     category: 'system',
   },
 };

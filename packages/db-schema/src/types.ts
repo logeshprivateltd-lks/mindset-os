@@ -609,6 +609,243 @@ export interface OfflinePatchResult {
   applied_at: string;
 }
 
+// ----------------------------------------------------------------------------
+// MindSet Connect 6-Module Cross-Device Interfaces (Prompt 22)
+// ----------------------------------------------------------------------------
+
+export type ConnectDeviceType = 'desktop' | 'mobile' | 'tablet';
+export type ConnectConnectionMode = 'local_wifi' | 'tailscale_wireguard' | 'offline_cached';
+
+export interface ConnectDevicePermissions {
+  can_sync_tasks: boolean;
+  can_sync_vault: boolean;
+  can_receive_sensor_feed: boolean;
+  can_trigger_focus_mode: boolean;
+  can_browse_remote_fs: boolean;
+  can_sync_clipboard: boolean;
+}
+
+export interface QrPairingPayload {
+  version: number;
+  session_id: string;
+  host_device_id: string;
+  host_device_name: string;
+  public_key_ed25519: string;
+  local_ip_addresses: string[];
+  port: number;
+  one_time_challenge: string;
+  expires_at: string;
+}
+
+export interface ConnectTrustedDevice {
+  device_id: string;
+  device_name: string;
+  device_type: ConnectDeviceType;
+  public_key_ed25519: string;
+  ip_address: string;
+  connection_mode: ConnectConnectionMode;
+  is_online: boolean;
+  permissions: ConnectDevicePermissions;
+  paired_at: string;
+  last_seen_at: string;
+  is_revoked: boolean;
+}
+
+export interface DeviceRevocationRecord {
+  device_id: string;
+  revoked_at: string;
+  reason: string;
+  revoke_remote_tokens: boolean;
+}
+
+export type ConflictResolutionChoice = 'keep_mine' | 'keep_theirs' | 'keep_both';
+
+export interface SyncConflictItem {
+  conflict_id: string;
+  resource_type: string;
+  resource_id: string;
+  resource_title: string;
+  local_hlc: string;
+  local_updated_at: string;
+  remote_hlc: string;
+  remote_device_id: string;
+  remote_updated_at: string;
+  local_preview: string;
+  remote_preview: string;
+  resolution?: ConflictResolutionChoice | null;
+  preserved_conflict_filename?: string | null;
+}
+
+export interface SelectiveFolderSyncStatus {
+  folder_name: string;
+  local_path: string;
+  remote_path: string;
+  is_enabled: boolean;
+  last_synced_at?: string | null;
+  files_in_sync: number;
+  pending_uploads: number;
+  pending_downloads: number;
+  active_conflicts: number;
+}
+
+export interface RemoteFileEntry {
+  name: string;
+  path: string;
+  size_bytes: number;
+  is_dir: boolean;
+  modified_at: string;
+  mime_type: string;
+  is_study_pdf: boolean;
+  is_scanned_note: boolean;
+  last_read_page?: number | null;
+}
+
+export interface RemoteBrowseResponse {
+  success: boolean;
+  entries: RemoteFileEntry[];
+  current_directory: string;
+  total_count: number;
+  permissions_read_only: boolean;
+  error?: string | null;
+}
+
+export interface RemoteFilePreviewResponse {
+  success: boolean;
+  file_name: string;
+  size_bytes: number;
+  mime_type: string;
+  preview_base64_or_text: string;
+  is_truncated: boolean;
+  error?: string | null;
+}
+
+export interface RemoteDeleteConfirmationGate {
+  file_path: string;
+  requested_by_device_id: string;
+  confirmation_token: string;
+  requires_biometric_auth: boolean;
+}
+
+export type ContinuityItemType =
+  | 'pdf_textbook'
+  | 'journal_draft'
+  | 'active_task'
+  | 'syllabus_node'
+  | 'screen_solver_session';
+
+export interface ContinuityStateHandoff {
+  session_id: string;
+  source_device_id: string;
+  source_device_name: string;
+  item_type: ContinuityItemType;
+  title: string;
+  resource_identifier: string;
+  last_read_page?: number | null;
+  total_pages?: number | null;
+  scroll_offset_ratio?: number | null;
+  draft_content?: string | null;
+  active_subject?: string | null;
+  timestamp_utc: string;
+}
+
+export type FocusProfileType =
+  | 'deep_study'
+  | 'exam_sprint'
+  | 'light_review'
+  | 'intentional_free_time';
+
+export interface CrossDeviceFocusEvent {
+  event_id: string;
+  initiating_device_id: string;
+  initiating_device_name: string;
+  is_focus_active: boolean;
+  profile: FocusProfileType;
+  task_title: string;
+  start_time_utc: string;
+  duration_minutes: number;
+  remaining_seconds: number;
+  is_strict_lockdown: boolean;
+  allow_emergency_calls: boolean;
+  paused: boolean;
+  timestamp_utc: string;
+}
+
+export interface ClipboardSyncPayload {
+  payload_id: string;
+  source_device_id: string;
+  source_device_name: string;
+  content: string;
+  is_sensitive_filtered: boolean;
+  filter_reason?: string | null;
+  timestamp_utc: string;
+}
+
+export type StreamState = 'disconnected' | 'connecting' | 'streaming' | 'paused' | 'error';
+
+export interface WirelessWebcamStatus {
+  is_active: boolean;
+  state: StreamState;
+  streaming_device_id?: string | null;
+  streaming_device_name?: string | null;
+  resolution: string;
+  fps: number;
+  latency_ms: number;
+  battery_percent?: number | null;
+  use_front_camera: boolean;
+  stream_url_or_endpoint?: string | null;
+}
+
+export interface WirelessMicrophoneStatus {
+  is_active: boolean;
+  state: StreamState;
+  streaming_device_id?: string | null;
+  streaming_device_name?: string | null;
+  sample_rate_hz: number;
+  latency_ms: number;
+  noise_suppression: boolean;
+  audio_level_db: number;
+}
+
+export interface ScannedDocumentPayload {
+  scan_id: string;
+  source_device_id: string;
+  document_title: string;
+  subject_tag: string;
+  total_pages: number;
+  images_base64: string[];
+  auto_deskewed: boolean;
+  contrast_boosted: boolean;
+  target_vault_path: string;
+  trigger_rag_ingestion: boolean;
+  timestamp_utc: string;
+}
+
+export interface FolderAccessPolicy {
+  policy_id: string;
+  folder_path: string;
+  display_name: string;
+  allowed_device_ids: string[];
+  allow_read: boolean;
+  allow_write: boolean;
+  allow_delete: boolean;
+  require_biometric_gate_for_delete: boolean;
+  restricted_file_extensions: string[];
+}
+
+export type SecurityAuditSeverity = 'info' | 'warning' | 'security_alert';
+
+export interface ConnectAuditEntry {
+  audit_id: string;
+  event_type: string;
+  severity: SecurityAuditSeverity;
+  actor_device_id: string;
+  actor_device_name: string;
+  target_resource?: string | null;
+  ip_address?: string | null;
+  description: string;
+  timestamp_utc: string;
+}
+
 
 
 

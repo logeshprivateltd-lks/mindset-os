@@ -24,6 +24,7 @@ import { DeviceManagerPage } from '../../pages/devices';
 import { SystemStatusPage } from '../../pages/status';
 import { AtomicUpdaterPage } from '../../pages/updater';
 import { RecoveryModePage } from '../../pages/recovery';
+import { MindSetConnectPage } from '../../pages/connect/MindSetConnectPage';
 import { OfflineLecturePlayer } from '../../components/utilities/OfflineLecturePlayer';
 
 export interface AppMetadata {
@@ -267,5 +268,15 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 1040,
     defaultHeight: 680,
     description: 'Pre-boot standalone rescue environment for encrypted snapshots, SQLite repairs, and driver safe-mode resets.',
+  },
+  connect: {
+    appId: 'connect',
+    title: 'MindSet Connect Cross-Device Hub',
+    icon: '📱',
+    subjectTag: 'System',
+    component: MindSetConnectPage,
+    defaultWidth: 1080,
+    defaultHeight: 700,
+    description: '6-Module cross-device service for wireless webcam/mic streaming, continuity state handoff, and selective sync.',
   },
 };

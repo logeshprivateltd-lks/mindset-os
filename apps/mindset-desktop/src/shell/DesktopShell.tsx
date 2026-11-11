@@ -286,6 +286,15 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
+        case '/connect': {
+          const win = windows.find((w) => w.appId === 'connect');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('connect', { title: 'MindSet Connect Cross-Device Hub', icon: '📱' }, currentActivityId);
+          }
+          break;
+        }
       }
     });
 
