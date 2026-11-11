@@ -41,3 +41,4 @@ pub async fn get_kernel_event_history(
 ) -> Result<Vec<KernelEvent>, String> {
     Ok(kernel.get_event_history(limit.unwrap_or(50)))
 }
+

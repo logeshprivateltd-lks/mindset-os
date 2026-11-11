@@ -129,6 +129,23 @@ export interface VecMemoryFallback {
   created_at: string;
 }
 
+export interface VectorSearchResult {
+  id: string;
+  source_type: string;
+  source_id: string;
+  distance: number;
+  similarity: number;
+}
+
+export interface DbIntegrityReport {
+  core_integrity: string;
+  oplog_integrity: string;
+  core_size_bytes: number;
+  oplog_size_bytes: number;
+  repaired: boolean;
+  timestamp_utc: string;
+}
+
 // -------------------------------------------------------------------------
 // sync_oplog.sqlite Interfaces (Deterministic HLC Peer-to-Peer Sync)
 // -------------------------------------------------------------------------

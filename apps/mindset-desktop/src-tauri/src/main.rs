@@ -8,10 +8,7 @@ mod kernel;
 mod storage;
 
 use auth::{AuthEngine, AuthSession, BiometricMatchResult};
-use commands::{
-    control_kernel_service, get_kernel_event_history, get_kernel_status,
-    trigger_emergency_ram_purge,
-};
+use commands::*;
 use db::DatabaseManager;
 use kernel::{
     BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, MindSetKernel, ServiceHealth,
@@ -184,10 +181,37 @@ async fn main() {
             start_time,
         })
         .invoke_handler(tauri::generate_handler![
+            // Kernel Commands
             get_kernel_status,
             control_kernel_service,
             trigger_emergency_ram_purge,
             get_kernel_event_history,
+            // Database Commands
+            db_get_profile,
+            db_update_profile,
+            db_update_permissions,
+            db_list_tasks,
+            db_create_task,
+            db_update_task,
+            db_complete_task,
+            db_delete_task,
+            db_list_habits,
+            db_create_habit,
+            db_update_habit,
+            db_record_habit_completion,
+            db_delete_habit,
+            db_list_journals,
+            db_create_journal,
+            db_list_moods,
+            db_create_mood,
+            db_list_focus_sessions,
+            db_start_focus_session,
+            db_end_focus_session,
+            db_insert_vector,
+            db_search_vectors,
+            db_purge_vector_cache,
+            db_run_integrity_check_and_repair,
+            // Telemetry & Auth Commands
             get_service_health,
             get_system_telemetry,
             get_priority_task,
@@ -195,6 +219,7 @@ async fn main() {
             authenticate_with_biometric,
             trigger_lock_screen,
             is_system_locked,
+            // Window Controls
             window_minimize,
             window_maximize,
             window_close

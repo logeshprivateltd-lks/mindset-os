@@ -1,9 +1,21 @@
 //! MindSet OS Low-RAM SQLite Storage Engine
+//! Manages local_core.sqlite, sync_oplog.sqlite, and HLC delta replication
 //! Copyright (c) 2026 LKS PVT LTD. All rights reserved.
 
+pub mod hlc_oplog;
+pub mod migrations;
+pub mod repositories;
+
+#[allow(unused_imports)]
+pub use hlc_oplog::{apply_remote_oplog_batch, execute_with_oplog, HybridLogicalClock, OplogEntry};
+#[allow(unused_imports)]
+pub use migrations::MigrationManager;
+#[allow(unused_imports)]
+pub use repositories::*;
+
 use crate::storage::MindSetPaths;
-use chrono::Utc;
-use rusqlite::{params, Connection};
+use rusqlite::Connection;
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
 use tracing::info;
@@ -14,245 +26,32 @@ pub enum DbError {
     Sqlite(#[from] rusqlite::Error),
     #[error("Database migration failed: {0}")]
     MigrationFailed(String),
+    #[error("Lock acquisition error: {0}")]
+    LockError(String),
 }
 
 pub struct DatabaseManager {
     core_conn: Arc<Mutex<Connection>>,
     oplog_conn: Arc<Mutex<Connection>>,
+    hlc: Arc<Mutex<HybridLogicalClock>>,
+    pub core_path: PathBuf,
+    pub oplog_path: PathBuf,
 }
 
 impl DatabaseManager {
-    /// Initialize both local_core and sync_oplog databases with low-RAM pragmas
+    /// Initialize both local_core and sync_oplog databases with low-RAM pragmas and migrations
     pub fn initialize(paths: &MindSetPaths) -> Result<Self, DbError> {
-        let core = Connection::open(&paths.local_core_db)?;
+        let mut core = Connection::open(&paths.local_core_db)?;
         let oplog = Connection::open(&paths.sync_oplog_db)?;
 
         Self::apply_low_ram_pragmas(&core)?;
         Self::apply_low_ram_pragmas(&oplog)?;
 
-        let manager = Self {
-            core_conn: Arc::new(Mutex::new(core)),
-            oplog_conn: Arc::new(Mutex::new(oplog)),
-        };
+        // Execute verified migrations on local_core
+        MigrationManager::run_migrations(&paths.local_core_db, &mut core)?;
 
-        manager.migrate_local_core()?;
-        manager.migrate_sync_oplog()?;
-
-        info!("MindSet SQLite engines initialized with low-RAM profile (<40MB RSS)");
-        Ok(manager)
-    }
-
-    fn apply_low_ram_pragmas(conn: &Connection) -> Result<(), DbError> {
-        conn.execute_batch(
-            r#"
-            PRAGMA journal_mode = WAL;
-            PRAGMA synchronous = NORMAL;
-            PRAGMA temp_store = MEMORY;
-            PRAGMA mmap_size = 33554432;  -- 32 MB Memory-Mapped I/O cap
-            PRAGMA cache_size = -8000;     -- 8 MB page cache limit
-            PRAGMA foreign_keys = ON;
-            PRAGMA busy_timeout = 5000;
-            "#,
-        )?;
-        Ok(())
-    }
-
-    fn migrate_local_core(&self) -> Result<(), DbError> {
-        let conn = self.core_conn.lock().unwrap();
-
-        conn.execute_batch(
-            r#"
-            CREATE TABLE IF NOT EXISTS schema_migrations (
-                version INTEGER PRIMARY KEY,
-                applied_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS user_profile (
-                user_id TEXT PRIMARY KEY,
-                display_name TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'student',
-                interface_lang TEXT NOT NULL DEFAULT 'en',
-                ai_lang TEXT NOT NULL DEFAULT 'ta',
-                conversation_style TEXT NOT NULL DEFAULT 'tanglish',
-                goals_json TEXT NOT NULL DEFAULT '[]',
-                focus_areas_json TEXT NOT NULL DEFAULT '[]',
-                routine_json TEXT NOT NULL DEFAULT '{}',
-                preferences_json TEXT NOT NULL DEFAULT '{}',
-                interests_json TEXT NOT NULL DEFAULT '[]',
-                permissions_json TEXT NOT NULL DEFAULT '{}',
-                updated_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS auth_credentials (
-                user_id TEXT PRIMARY KEY,
-                password_hash TEXT NOT NULL,
-                pin_hash TEXT,
-                face_embedding_blob BLOB,
-                fingerprint_enrolled INTEGER NOT NULL DEFAULT 0,
-                auto_lock_minutes INTEGER NOT NULL DEFAULT 5,
-                failed_attempts INTEGER NOT NULL DEFAULT 0,
-                locked_until TEXT,
-                FOREIGN KEY(user_id) REFERENCES user_profile(user_id) ON DELETE CASCADE
-            );
-
-            CREATE TABLE IF NOT EXISTS tasks_and_goals (
-                id TEXT PRIMARY KEY,
-                parent_goal_id TEXT,
-                title TEXT NOT NULL,
-                subject_tag TEXT,
-                priority INTEGER NOT NULL DEFAULT 2,
-                status TEXT NOT NULL DEFAULT 'pending',
-                target_score_weight REAL DEFAULT 1.0,
-                scheduled_start TEXT,
-                scheduled_end TEXT,
-                completed_at TEXT,
-                xp_reward INTEGER NOT NULL DEFAULT 10,
-                updated_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS habits (
-                id TEXT PRIMARY KEY,
-                title TEXT NOT NULL,
-                category TEXT NOT NULL DEFAULT 'wellness',
-                frequency_json TEXT NOT NULL DEFAULT '{"type":"daily"}',
-                current_streak INTEGER NOT NULL DEFAULT 0,
-                best_streak INTEGER NOT NULL DEFAULT 0,
-                last_completed_date TEXT,
-                updated_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS journal_entries (
-                id TEXT PRIMARY KEY,
-                title TEXT,
-                content_md TEXT NOT NULL,
-                gratitude_items_json TEXT NOT NULL DEFAULT '[]',
-                mood_tag TEXT,
-                energy_level TEXT,
-                is_encrypted INTEGER NOT NULL DEFAULT 0,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS mood_checkins (
-                id TEXT PRIMARY KEY,
-                mood TEXT NOT NULL,
-                energy_tier TEXT NOT NULL,
-                context_note TEXT,
-                active_activity TEXT,
-                created_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS focus_sessions (
-                id TEXT PRIMARY KEY,
-                profile_mode TEXT NOT NULL,
-                planned_minutes INTEGER NOT NULL,
-                actual_minutes INTEGER NOT NULL DEFAULT 0,
-                task_id TEXT,
-                interruption_count INTEGER NOT NULL DEFAULT 0,
-                completed INTEGER NOT NULL DEFAULT 0,
-                started_at TEXT NOT NULL,
-                ended_at TEXT,
-                FOREIGN KEY(task_id) REFERENCES tasks_and_goals(id) ON DELETE SET NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS timeline_events (
-                id TEXT PRIMARY KEY,
-                event_type TEXT NOT NULL,
-                title TEXT NOT NULL,
-                metadata_json TEXT NOT NULL DEFAULT '{}',
-                created_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS rag_documents (
-                id TEXT PRIMARY KEY,
-                file_path TEXT NOT NULL,
-                title TEXT NOT NULL,
-                subject_tag TEXT,
-                total_pages INTEGER NOT NULL DEFAULT 1,
-                last_read_page INTEGER NOT NULL DEFAULT 1,
-                indexed_at TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS rag_chunks (
-                id TEXT PRIMARY KEY,
-                document_id TEXT NOT NULL,
-                page_number INTEGER NOT NULL,
-                chunk_index INTEGER NOT NULL,
-                content TEXT NOT NULL,
-                FOREIGN KEY(document_id) REFERENCES rag_documents(id) ON DELETE CASCADE
-            );
-
-            CREATE TABLE IF NOT EXISTS vec_memory_fallback (
-                id TEXT PRIMARY KEY,
-                embedding_json TEXT NOT NULL,
-                source_type TEXT NOT NULL,
-                source_id TEXT NOT NULL,
-                created_at TEXT NOT NULL
-            );
-            "#,
-        )?;
-
-        // Ensure default student profile exists
-        let profile_exists: bool = conn
-            .query_row(
-                "SELECT EXISTS(SELECT 1 FROM user_profile WHERE user_id = 'default_student')",
-                [],
-                |row| row.get(0),
-            )
-            .unwrap_or(false);
-
-        if !profile_exists {
-            let now = Utc::now().to_rfc3339();
-            conn.execute(
-                r#"
-                INSERT INTO user_profile (
-                    user_id, display_name, role, interface_lang, ai_lang, 
-                    conversation_style, goals_json, focus_areas_json, routine_json, 
-                    preferences_json, interests_json, permissions_json, updated_at
-                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
-                "#,
-                params![
-                    "default_student",
-                    "MindSet Scholar",
-                    "student",
-                    "en",
-                    "ta",
-                    "tanglish",
-                    r#"["Master Core Mathematics", "Score 98% in Physics", "Daily 45-min Deep Focus"]"#,
-                    r#"["Mathematics", "Quantum Mechanics", "System Architecture"]"#,
-                    r#"{"wake_time":"05:30","sleep_time":"22:30","deep_work_slots":["06:00-08:00","18:00-20:00"]}"#,
-                    r#"{"soundscape":"rain_forest","ambient_volume":0.4}"#,
-                    r#"["Astronomy", "Rust Programming", "Cognitive Neuroscience"]"#,
-                    r#"{"strict_focus_mode":true,"allow_break_override":false}"#,
-                    now
-                ],
-            )?;
-
-            // Insert initial default task
-            conn.execute(
-                r#"
-                INSERT OR IGNORE INTO tasks_and_goals (
-                    id, parent_goal_id, title, subject_tag, priority, status, 
-                    target_score_weight, scheduled_start, scheduled_end, xp_reward, updated_at
-                ) VALUES (?1, NULL, ?2, ?3, ?4, 'in_progress', 1.0, ?5, NULL, 50, ?5)
-                "#,
-                params![
-                    "task_initial_orientation",
-                    "Complete MindSet OS Workspace Setup & Focus Calibration",
-                    "Orientation",
-                    1, // Priority 1 (Urgent/Crucial)
-                    now
-                ],
-            )?;
-        }
-
-        Ok(())
-    }
-
-    fn migrate_sync_oplog(&self) -> Result<(), DbError> {
-        let conn = self.oplog_conn.lock().unwrap();
-
-        conn.execute_batch(
+        // Initialize sync_oplog schema
+        oplog.execute_batch(
             r#"
             CREATE TABLE IF NOT EXISTS oplog_entries (
                 op_id TEXT PRIMARY KEY,
@@ -280,6 +79,91 @@ impl DatabaseManager {
             "#,
         )?;
 
+        // Ensure default student profile exists in local_core
+        Self::seed_initial_profile(&core)?;
+
+        let hlc = Arc::new(Mutex::new(HybridLogicalClock::new("desktop-node-01")));
+
+        info!("MindSet SQLite engines initialized with low-RAM profile (<40MB RSS)");
+
+        Ok(Self {
+            core_conn: Arc::new(Mutex::new(core)),
+            oplog_conn: Arc::new(Mutex::new(oplog)),
+            hlc,
+            core_path: paths.local_core_db.clone(),
+            oplog_path: paths.sync_oplog_db.clone(),
+        })
+    }
+
+    fn apply_low_ram_pragmas(conn: &Connection) -> Result<(), DbError> {
+        conn.execute_batch(
+            r#"
+            PRAGMA journal_mode = WAL;
+            PRAGMA synchronous = NORMAL;
+            PRAGMA temp_store = MEMORY;
+            PRAGMA mmap_size = 33554432;  -- 32 MB Memory-Mapped I/O cap
+            PRAGMA cache_size = -8000;     -- 8 MB page cache limit
+            PRAGMA foreign_keys = ON;
+            PRAGMA busy_timeout = 5000;
+            "#,
+        )?;
+        Ok(())
+    }
+
+    fn seed_initial_profile(conn: &Connection) -> Result<(), DbError> {
+        let profile_exists: bool = conn
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM user_profile WHERE user_id = 'default_student')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap_or(false);
+
+        if !profile_exists {
+            let now = chrono::Utc::now().to_rfc3339();
+            conn.execute(
+                r#"
+                INSERT INTO user_profile (
+                    user_id, display_name, role, interface_lang, ai_lang, 
+                    conversation_style, goals_json, focus_areas_json, routine_json, 
+                    preferences_json, interests_json, permissions_json, updated_at
+                ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)
+                "#,
+                rusqlite::params![
+                    "default_student",
+                    "MindSet Scholar",
+                    "student",
+                    "en",
+                    "ta",
+                    "tanglish",
+                    r#"["Master Core Mathematics", "Score 98% in Physics", "Daily 45-min Deep Focus"]"#,
+                    r#"["Mathematics", "Quantum Mechanics", "System Architecture"]"#,
+                    r#"{"wake_time":"05:30","sleep_time":"22:30","deep_work_slots":["06:00-08:00","18:00-20:00"]}"#,
+                    r#"{"soundscape":"rain_forest","ambient_volume":0.4}"#,
+                    r#"["Astronomy", "Rust Programming", "Cognitive Neuroscience"]"#,
+                    r#"{"strict_focus_mode":true,"allow_break_override":false}"#,
+                    now
+                ],
+            )?;
+
+            // Insert initial default task
+            conn.execute(
+                r#"
+                INSERT OR IGNORE INTO tasks_and_goals (
+                    id, parent_goal_id, title, subject_tag, priority, status, 
+                    target_score_weight, scheduled_start, scheduled_end, xp_reward, updated_at
+                ) VALUES (?1, NULL, ?2, ?3, ?4, 'in_progress', 1.0, ?5, NULL, 50, ?5)
+                "#,
+                rusqlite::params![
+                    "task_initial_orientation",
+                    "Complete MindSet OS Workspace Setup & Focus Calibration",
+                    "Orientation",
+                    1,
+                    now
+                ],
+            )?;
+        }
+
         Ok(())
     }
 
@@ -290,5 +174,171 @@ impl DatabaseManager {
     pub fn get_oplog_connection(&self) -> Arc<Mutex<Connection>> {
         Arc::clone(&self.oplog_conn)
     }
+
+    pub fn get_hlc(&self) -> Arc<Mutex<HybridLogicalClock>> {
+        Arc::clone(&self.hlc)
+    }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::kernel::EventBus;
+
+    fn setup_test_databases() -> (DatabaseManager, std::path::PathBuf) {
+        let temp_dir = std::env::temp_dir().join(format!("mindset_db_test_{}", uuid::Uuid::new_v4()));
+        let db_dir = temp_dir.join("db");
+        let core_db = db_dir.join("local_core.sqlite");
+        let oplog_db = db_dir.join("sync_oplog.sqlite");
+
+        let paths = MindSetPaths {
+            base_dir: temp_dir.clone(),
+            db_dir,
+            vault_laptop_dir: temp_dir.join("vault/my-laptop"),
+            vault_phone_dir: temp_dir.join("vault/my-phone"),
+            vault_textbooks_dir: temp_dir.join("vault/textbooks"),
+            certs_dir: temp_dir.join("certs"),
+            local_core_db: core_db,
+            sync_oplog_db: oplog_db,
+        };
+
+        paths.initialize_filesystem().expect("Init filesystem");
+        let db = DatabaseManager::initialize(&paths).expect("Init db");
+        (db, temp_dir)
+    }
+
+    #[test]
+    fn test_initial_db_setup_and_profile_seeding() {
+        let (db, _temp) = setup_test_databases();
+        let core = db.get_core_connection();
+        let lock = core.lock().unwrap();
+
+        let profile = profile_repo::get_profile(&lock, "default_student")
+            .expect("Fetch profile")
+            .expect("Profile should exist");
+
+        assert_eq!(profile.user_id, "default_student");
+        assert_eq!(profile.display_name, "MindSet Scholar");
+    }
+
+    #[test]
+    fn test_task_crud_and_completion_timeline() {
+        let (db, _temp) = setup_test_databases();
+        let bus = EventBus::new(16);
+        let core = db.get_core_connection();
+        let oplog = db.get_oplog_connection();
+        let hlc = db.get_hlc();
+
+        let task = TaskOrGoal {
+            id: "task-test-01".to_string(),
+            parent_goal_id: None,
+            title: "Study Differential Equations".to_string(),
+            subject_tag: Some("Math".to_string()),
+            priority: 1,
+            status: "in_progress".to_string(),
+            target_score_weight: 1.0,
+            scheduled_start: Some("2026-11-11T09:00:00Z".to_string()),
+            scheduled_end: Some("2026-11-11T11:00:00Z".to_string()),
+            completed_at: None,
+            xp_reward: 35,
+            updated_at: "".to_string(),
+        };
+
+        // Create task
+        {
+            let core_lock = core.lock().unwrap();
+            let oplog_lock = oplog.lock().unwrap();
+            tasks_repo::create_task(
+                &core_lock,
+                &oplog_lock,
+                &hlc,
+                Some(&bus),
+                task,
+            )
+            .expect("Create task");
+        }
+
+        // Verify task exists in core and in oplog
+        {
+            let oplog_lock = oplog.lock().unwrap();
+            let count: i64 = oplog_lock
+                .query_row(
+                    "SELECT COUNT(*) FROM oplog_entries WHERE row_id = 'task-test-01'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Query oplog");
+            assert_eq!(count, 1);
+        }
+
+        // Complete task and check timeline entry
+        {
+            let core_lock = core.lock().unwrap();
+            let oplog_lock = oplog.lock().unwrap();
+            let completed = tasks_repo::complete_task(
+                &core_lock,
+                &oplog_lock,
+                &hlc,
+                Some(&bus),
+                "task-test-01",
+            )
+            .expect("Complete task");
+            assert_eq!(completed.status, "completed");
+            assert!(completed.completed_at.is_some());
+
+            let timeline_count: i64 = core_lock
+                .query_row(
+                    "SELECT COUNT(*) FROM timeline_events WHERE event_type = 'task_completion'",
+                    [],
+                    |row| row.get(0),
+                )
+                .expect("Query timeline");
+            assert!(timeline_count >= 1);
+        }
+    }
+
+    #[test]
+    fn test_vector_search_and_similarity() {
+        let (db, _temp) = setup_test_databases();
+        let core = db.get_core_connection();
+        let lock = core.lock().unwrap();
+
+        // 3-dimensional normalized test vectors
+        let vec_a = vec![1.0, 0.0, 0.0];
+        let vec_b = vec![0.9, 0.1, 0.0];
+        let vec_c = vec![0.0, 1.0, 0.0];
+
+        vector_repo::insert_vector_embedding(&lock, "doc-a", "textbook", "ch1", &vec_a).unwrap();
+        vector_repo::insert_vector_embedding(&lock, "doc-b", "textbook", "ch2", &vec_b).unwrap();
+        vector_repo::insert_vector_embedding(&lock, "doc-c", "textbook", "ch3", &vec_c).unwrap();
+
+        let query = vec![1.0, 0.0, 0.0];
+        let results = vector_repo::search_similar_vectors(&lock, &query, 2, None).unwrap();
+
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].id, "doc-a");
+        assert!((results[0].similarity - 1.0).abs() < 1e-4);
+        assert_eq!(results[1].id, "doc-b");
+    }
+
+    #[test]
+    fn test_diagnostics_integrity_check() {
+        let (db, _temp) = setup_test_databases();
+        let core = db.get_core_connection();
+        let oplog = db.get_oplog_connection();
+
+        let core_lock = core.lock().unwrap();
+        let oplog_lock = oplog.lock().unwrap();
+
+        let report = diagnostics_repo::run_db_integrity_check_and_repair(
+            &core_lock,
+            &oplog_lock,
+            &db.core_path,
+            &db.oplog_path,
+        )
+        .expect("Integrity check");
+
+        assert_eq!(report.core_integrity, "ok");
+        assert_eq!(report.oplog_integrity, "ok");
+    }
+}

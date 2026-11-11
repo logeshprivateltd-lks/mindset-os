@@ -213,3 +213,4 @@ export const BootSplashGate: React.FC<BootSplashGateProps> = ({ children }) => {
     </div>
   );
 };
+
