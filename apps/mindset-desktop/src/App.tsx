@@ -1,62 +1,44 @@
-import React, { useEffect, useState } from 'react';
-import { useKernelStore } from './stores/kernelStore';
+import React, { useEffect } from 'react';
+import { useKernelStore } from './stores/useKernelStore';
 import { TitleBar } from '@mindset/ui-core';
-import { BootSequencer } from './components/BootSequencer';
+import { BootSplashGate } from './components/BootSplashGate';
 import { LockScreen } from './components/LockScreen';
 import { Dashboard } from './components/Dashboard';
+import { StatusViewerModal } from './components/StatusViewerModal';
 
 export const App: React.FC = () => {
   const {
     bootPhase,
     isLocked,
     rssMb,
-    setBootPhase,
+    isStatusViewOpen,
     setIsLocked,
-    setTelemetry,
+    setIsStatusViewOpen,
+    fetchKernelStatus,
   } = useKernelStore();
 
-  const [hasBooted, setHasBooted] = useState(false);
-
-  // Tauri IPC invocations with fallback
+  // Periodic Kernel Status Refresh
   useEffect(() => {
-    // Dynamic import to support both Tauri native and standard web development
-    const fetchTelemetry = async () => {
-      try {
-        const { invoke } = await import('@tauri-apps/api/core');
-        const telemetry = await invoke<{
-          process_rss_mb: number;
-          system_used_percent: number;
-          total_memory_mb: number;
-          uptime_secs: number;
-        }>('get_system_telemetry');
-
-        setTelemetry(
-          telemetry.process_rss_mb,
-          telemetry.system_used_percent,
-          telemetry.total_memory_mb,
-          telemetry.uptime_secs
-        );
-      } catch {
-        // Running in pure web mode or before Tauri connects
-      }
-    };
-
-    const interval = setInterval(fetchTelemetry, 3000);
+    fetchKernelStatus();
+    const interval = setInterval(fetchKernelStatus, 3000);
     return () => clearInterval(interval);
-  }, [setTelemetry]);
+  }, [fetchKernelStatus]);
 
-  // Global hotkey: Ctrl+L / Meta+L to lock screen
+  // Global hotkeys: Ctrl+L / Meta+L to lock, Ctrl+S / Meta+S to open /status
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
         e.preventDefault();
         setIsLocked(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        setIsStatusViewOpen(!isStatusViewOpen);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setIsLocked]);
+  }, [isStatusViewOpen, setIsLocked, setIsStatusViewOpen]);
 
   const handleMinimize = async () => {
     try {
@@ -85,34 +67,32 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleBootComplete = () => {
-    setBootPhase('SYSTEM_READY');
-    setHasBooted(true);
-  };
-
   return (
-    <div className="min-h-screen bg-[#07090D] text-[#F9FAFB] flex flex-col font-sans select-none overflow-x-hidden">
-      {/* Frameless Window Custom Titlebar */}
-      <TitleBar
-        title="MindSet OS — Powered by LKS PVT LTD"
-        subtitle="Aurora Core v0.1.0"
-        memoryUsageMb={rssMb}
-        kernelPhase={bootPhase}
-        onMinimize={handleMinimize}
-        onMaximize={handleMaximize}
-        onClose={handleClose}
-      />
+    <BootSplashGate>
+      <div className="min-h-screen bg-[#07090D] text-[#F9FAFB] flex flex-col font-sans select-none overflow-x-hidden">
+        {/* Frameless Window Custom Titlebar */}
+        <TitleBar
+          title="MindSet OS — Powered by LKS PVT LTD"
+          subtitle="Aurora Core v0.1.0"
+          memoryUsageMb={rssMb}
+          kernelPhase={bootPhase}
+          onMinimize={handleMinimize}
+          onMaximize={handleMaximize}
+          onClose={handleClose}
+        />
 
-      {/* Main OS Surface */}
-      <main className="flex-1 relative overflow-y-auto">
-        {!hasBooted && bootPhase !== 'SYSTEM_READY' ? (
-          <BootSequencer onComplete={handleBootComplete} />
-        ) : isLocked ? (
-          <LockScreen onUnlock={() => setIsLocked(false)} />
-        ) : (
-          <Dashboard onLock={() => setIsLocked(true)} />
-        )}
-      </main>
-    </div>
+        {/* Main OS Surface */}
+        <main className="flex-1 relative overflow-y-auto">
+          {isLocked ? (
+            <LockScreen onUnlock={() => setIsLocked(false)} />
+          ) : (
+            <Dashboard onLock={() => setIsLocked(true)} />
+          )}
+        </main>
+
+        {/* /status Interactive Inspection & Control Modal */}
+        <StatusViewerModal />
+      </div>
+    </BootSplashGate>
   );
 };

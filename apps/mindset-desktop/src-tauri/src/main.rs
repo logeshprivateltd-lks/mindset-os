@@ -2,28 +2,30 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod auth;
+mod commands;
 mod db;
 mod kernel;
 mod storage;
 
 use auth::{AuthEngine, AuthSession, BiometricMatchResult};
+use commands::{
+    control_kernel_service, get_kernel_event_history, get_kernel_status,
+    trigger_emergency_ram_purge,
+};
 use db::DatabaseManager;
 use kernel::{
-    BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, ServiceHealth,
-    ServiceRegistry,
+    BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, MindSetKernel, ServiceHealth,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Instant;
 use tauri::{State, Window};
-use tokio::sync::Mutex as TokioMutex;
 use tracing::info;
 
 pub struct AppState {
-    pub bus: Arc<EventBus>,
-    pub db: Arc<DatabaseManager>,
-    pub registry: Arc<TokioMutex<ServiceRegistry>>,
+    pub kernel: Arc<MindSetKernel>,
     pub auth: Arc<AuthEngine>,
+    pub db: Arc<DatabaseManager>,
     pub diagnostics: BootDiagnostics,
     pub start_time: Instant,
 }
@@ -37,14 +39,9 @@ pub struct SystemTelemetry {
 }
 
 #[tauri::command]
-async fn get_kernel_status(state: State<'_, AppState>) -> Result<BootDiagnostics, String> {
-    Ok(state.diagnostics.clone())
-}
-
-#[tauri::command]
 async fn get_service_health(state: State<'_, AppState>) -> Result<Vec<ServiceHealth>, String> {
-    let registry = state.registry.lock().await;
-    Ok(registry.collect_health().await)
+    let reg = state.kernel.registry.lock().await;
+    Ok(reg.collect_health().await)
 }
 
 #[tauri::command]
@@ -61,9 +58,9 @@ async fn get_system_telemetry(state: State<'_, AppState>) -> Result<SystemTeleme
         sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[p]), true);
         sys.process(p)
             .map(|proc_info| proc_info.memory() as f64 / (1024.0 * 1024.0))
-            .unwrap_or(38.5)
+            .unwrap_or(36.5)
     } else {
-        38.5
+        36.5
     };
 
     Ok(SystemTelemetry {
@@ -145,7 +142,7 @@ async fn main() {
     let start_time = Instant::now();
 
     // Run deterministic 5-phase startup sequence
-    let (_paths, db, registry, diagnostics) = match KernelBootSequencer::execute(Arc::clone(&bus)).await {
+    let (paths, db, registry, diagnostics) = match KernelBootSequencer::execute(Arc::clone(&bus)).await {
         Ok(res) => res,
         Err(e) => {
             eprintln!("Fatal Kernel Boot Failure: {:?}", e);
@@ -153,24 +150,44 @@ async fn main() {
         }
     };
 
+    let paths_arc = Arc::new(paths);
+    let db_arc = Arc::new(db);
+    let registry_arc = Arc::new(tokio::sync::Mutex::new(registry));
+
+    let kernel = MindSetKernel::new(
+        Arc::clone(&bus),
+        Arc::clone(&registry_arc),
+        Arc::clone(&db_arc),
+        Arc::clone(&paths_arc),
+        diagnostics.clone(),
+    );
+
     // Spawn 15-second low-RAM micro-scheduler
     KernelScheduler::spawn(Arc::clone(&bus));
 
     let auth = Arc::new(AuthEngine::new());
-    let db_arc = Arc::new(db);
-    let registry_arc = Arc::new(TokioMutex::new(registry));
+    let kernel_setup = Arc::clone(&kernel);
 
     tauri::Builder::default()
+        .setup(move |app| {
+            kernel_setup.bus.set_app_handle(app.handle().clone());
+            info!("Kernel event bus successfully connected to Tauri AppHandle");
+            Ok(())
+        })
+        .manage(Arc::clone(&kernel))
+        .manage(Arc::clone(&auth))
         .manage(AppState {
-            bus,
-            db: db_arc,
-            registry: registry_arc,
+            kernel,
             auth,
+            db: db_arc,
             diagnostics,
             start_time,
         })
         .invoke_handler(tauri::generate_handler![
             get_kernel_status,
+            control_kernel_service,
+            trigger_emergency_ram_purge,
+            get_kernel_event_history,
             get_service_health,
             get_system_telemetry,
             get_priority_task,

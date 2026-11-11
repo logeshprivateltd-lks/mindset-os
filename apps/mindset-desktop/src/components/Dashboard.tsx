@@ -14,6 +14,7 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
     isFocusActive,
     activeFocusMinutes,
     toggleFocusSession,
+    setIsStatusViewOpen,
   } = useKernelStore();
 
   return (
@@ -50,7 +51,12 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
             <span className="text-3xl font-mono font-bold text-[#FFD078]">{uptimeSecs}</span>
             <span className="text-sm text-[#9CA3AF]">secs</span>
           </div>
-          <p className="text-[11px] text-[#9CA3AF] mt-1 font-medium">Tick: 15s scheduler interval</p>
+          <button
+            onClick={() => setIsStatusViewOpen(true)}
+            className="w-full mt-2 py-1 px-2 rounded bg-[#182235] hover:bg-[#202B40] text-[11px] text-[#8B9CFF] font-medium border border-[#202B40] transition-all flex items-center justify-center space-x-1"
+          >
+            <span>⚙️ Open /status</span>
+          </button>
         </AuroraCard>
 
         <AuroraCard>
@@ -164,10 +170,18 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
         <AuroraCard className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between border-b border-[#1F2937] pb-2">
             <div>
-              <h3 className="text-sm font-semibold text-[#F9FAFB]">Kernel Service Registry</h3>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-semibold text-[#F9FAFB]">Kernel Service Registry</h3>
+                <button
+                  onClick={() => setIsStatusViewOpen(true)}
+                  className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#8B9CFF]/10 text-[#8B9CFF] hover:bg-[#8B9CFF]/20 transition-all"
+                >
+                  Manage (/status) →
+                </button>
+              </div>
               <p className="text-xs text-[#9CA3AF]">Cooperative asynchronous Tokio micro-actors</p>
             </div>
-            <StatusBadge status="healthy" label="5/5 Services Operational" />
+            <StatusBadge status="healthy" label={`${services.length}/${services.length} Services Operational`} />
           </div>
 
           <div className="space-y-2">
@@ -183,7 +197,7 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
                 <div className="flex items-center space-x-4">
                   <span className="text-[#9CA3AF] font-mono">RAM: ~{svc.estimated_ram_kb} KB</span>
                   <span className="px-2 py-0.5 rounded bg-[#65E6C4]/10 text-[#65E6C4] font-medium">
-                    {svc.status}
+                    {typeof svc.status === 'string' ? svc.status : Object.keys(svc.status)[0]}
                   </span>
                 </div>
               </div>

@@ -166,6 +166,8 @@ export interface HardwareCapabilities {
   has_fingerprint: boolean;
   has_bluetooth: boolean;
   has_wifi_monitor: boolean;
+  wifi_adapter_name?: string | null;
+  is_external_wifi?: boolean;
   detected_at_utc: string;
 }
 
@@ -176,11 +178,48 @@ export type KernelBootPhase =
   | 'SERVICE_REGISTER'
   | 'SYSTEM_READY';
 
+export type ServiceStatusKind = 'Healthy' | 'Degraded' | 'Stopped' | 'Critical';
+
 export interface ServiceHealthReport {
   name: string;
-  status: 'Healthy' | 'Degraded' | 'Stopped' | 'Critical';
+  status: ServiceStatusKind | { Degraded: string } | { Critical: string };
   status_message?: string;
   estimated_ram_kb: number;
   last_heartbeat_utc: string;
 }
+
+export interface RamBreakdown {
+  os_shell_mb: number;
+  ollama_mb: number;
+  free_system_mb: number;
+  total_system_mb: number;
+  system_used_percent: number;
+}
+
+export interface KernelStatusResponse {
+  boot_stage: string;
+  uptime_secs: number;
+  hardware: HardwareCapabilities;
+  ram_breakdown: RamBreakdown;
+  services: ServiceHealthReport[];
+}
+
+export interface EmergencyPurgeResult {
+  freed_mb: number;
+  current_rss_mb: number;
+  timestamp_utc: string;
+}
+
+export type KernelEvent =
+  | { type: 'SystemReady'; payload: { uptime_ms: number; hardware: HardwareCapabilities } }
+  | { type: 'ServiceStateChanged'; payload: { service_name: string; status: string } }
+  | { type: 'FocusSessionStateChanged'; payload: { session_id: string; state: string; elapsed_secs: number } }
+  | { type: 'TaskCompleted'; payload: { task_id: string; xp_earned: number } }
+  | { type: 'MoodLogged'; payload: { mood: string; energy_tier: string } }
+  | { type: 'FreeTimeWindowDetected'; payload: { start_time: string; duration_minutes: number } }
+  | { type: 'RamThresholdWarning'; payload: { process_rss_mb: number; system_used_percent: number } }
+  | { type: 'EmergencyRamPurgeExecuted'; payload: { reclaimed_bytes: number; os_shell_rss_mb: number } }
+  | { type: 'HardwareStateChanged'; payload: { capabilities: HardwareCapabilities } }
+  | { type: 'SecurityLockTriggered'; payload: { reason: string } }
+  | { type: 'SyncOplogAppended'; payload: { op_id: string; row_id: string; table_name: string } };
 
