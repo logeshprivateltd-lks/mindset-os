@@ -1,6 +1,22 @@
+/**
+ * MindSet OS Dashboard
+ * Integrates 5-Theme Neuroaesthetic UI Engine, 3-Tier Attention Hierarchy,
+ * Tabular Numeral Timers, Progress Rings, and Skill Tree Milestones.
+ * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
+ */
+
 import React, { useState } from 'react';
 import { useKernelStore } from '../stores/kernelStore';
-import { AuroraCard, Button, StatusBadge } from '@mindset/ui-core';
+import {
+  GlassSurface,
+  PriorityCard,
+  ProgressRing,
+  SkillTreeNode,
+  TabularTimer,
+  AccessibleStatusBadge,
+  ThemeSelector,
+  Button,
+} from '@mindset/ui-core';
 import { useUac } from './security/useUac';
 import { UacModal } from './security/UacModal';
 
@@ -24,6 +40,10 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
   const { requestElevation, modalProps } = useUac();
   const [elevationGrantedMsg, setElevationGrantedMsg] = useState<string | null>(null);
 
+  // Skill tree interactive state
+  const [skillNodeState, setSkillNodeState] = useState<'locked' | 'unlocked' | 'active' | 'completed'>('active');
+  const [earnedXpToast, setEarnedXpToast] = useState<number | null>(null);
+
   const handleTestUac = async () => {
     const granted = await requestElevation(
       'Modify Focus Guard Kernel Policy & Low-Level Packet Filter',
@@ -35,50 +55,73 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
     }
   };
 
+  const handleMilestoneComplete = (_id: string) => {
+    setSkillNodeState('completed');
+    setEarnedXpToast(75);
+    setTimeout(() => setEarnedXpToast(null), 4000);
+  };
+
   return (
-    <div className="pt-12 pb-6 px-6 max-w-6xl mx-auto space-y-6 select-none">
+    <div className="pt-12 pb-10 px-4 md:px-8 max-w-6xl mx-auto space-y-6 select-none transition-colors">
       {/* Top Banner: Telemetry & Memory Watchdog */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <AuroraCard>
-          <div className="text-[11px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
-            OS Shell RSS (Ceiling: 120MB)
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1: OS Shell RSS */}
+        <GlassSurface variant="solid-card" className="p-4">
+          <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider font-semibold">
+            OS Shell RSS (Cap: 120MB)
           </div>
           <div className="flex items-baseline space-x-2 mt-2">
-            <span className="text-3xl font-mono font-bold text-[#65E6C4]">{rssMb.toFixed(1)}</span>
-            <span className="text-sm text-[#9CA3AF]">MB</span>
+            <span className="text-3xl font-mono font-bold tabular-nums text-[var(--accent-secondary)]">
+              {rssMb.toFixed(1)}
+            </span>
+            <span className="text-sm text-[var(--text-muted)]">MB</span>
           </div>
-          <p className="text-[11px] text-[#65E6C4] mt-1 font-medium">✓ Strictly within 120 MB budget</p>
-        </AuroraCard>
+          <p className="text-[11px] text-[var(--accent-secondary)] mt-1 font-medium">
+            ✓ Strictly within 120 MB budget
+          </p>
+        </GlassSurface>
 
-        <AuroraCard>
-          <div className="text-[11px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+        {/* Metric 2: System RAM */}
+        <GlassSurface variant="solid-card" className="p-4">
+          <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider font-semibold">
             System RAM Utilization
           </div>
           <div className="flex items-baseline space-x-2 mt-2">
-            <span className="text-3xl font-mono font-bold text-[#F9FAFB]">{systemUsedPercent.toFixed(1)}%</span>
-            <span className="text-sm text-[#9CA3AF]">of {(totalMemoryMb / 1024).toFixed(0)} GB</span>
+            <span className="text-3xl font-mono font-bold tabular-nums text-[var(--text-dominant)]">
+              {systemUsedPercent.toFixed(1)}%
+            </span>
+            <span className="text-sm text-[var(--text-muted)]">
+              of {(totalMemoryMb / 1024).toFixed(0)} GB
+            </span>
           </div>
-          <p className="text-[11px] text-[#8B9CFF] mt-1 font-medium">8.0 GB+ reserved for Ollama LLM</p>
-        </AuroraCard>
+          <p className="text-[11px] text-[var(--accent-primary)] mt-1 font-medium">
+            8.0 GB+ reserved for Ollama LLM
+          </p>
+        </GlassSurface>
 
-        <AuroraCard>
-          <div className="text-[11px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+        {/* Metric 3: Kernel Uptime & Zero-Jitter Clock */}
+        <GlassSurface variant="solid-card" className="p-4">
+          <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider font-semibold">
             Kernel Uptime & Loop
           </div>
           <div className="flex items-baseline space-x-2 mt-2">
-            <span className="text-3xl font-mono font-bold text-[#FFD078]">{uptimeSecs}</span>
-            <span className="text-sm text-[#9CA3AF]">secs</span>
+            <span className="text-3xl font-mono font-bold tabular-nums text-[var(--accent-achievement)]">
+              {uptimeSecs}
+            </span>
+            <span className="text-sm text-[var(--text-muted)]">secs</span>
           </div>
           <button
+            type="button"
             onClick={() => setIsStatusViewOpen(true)}
-            className="w-full mt-2 py-1 px-2 rounded bg-[#182235] hover:bg-[#202B40] text-[11px] text-[#8B9CFF] font-medium border border-[#202B40] transition-all flex items-center justify-center space-x-1"
+            className="w-full mt-2 py-1 px-2 rounded bg-[var(--surface-secondary)] hover:bg-[var(--surface-elevated)] text-[11px] text-[var(--accent-primary)] font-medium border border-[var(--border-subtle)] transition-all flex items-center justify-center space-x-1"
           >
             <span>⚙️ Open /status</span>
           </button>
-        </AuroraCard>
+        </GlassSurface>
 
-        <AuroraCard>
-          <div className="text-[11px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
+        {/* Metric 4: Security & Privacy Controls */}
+        <GlassSurface variant="solid-card" className="p-4">
+          <div className="text-[11px] text-[var(--text-muted)] uppercase tracking-wider font-semibold">
             Security & Smart Lock
           </div>
           <div className="mt-2 space-y-1.5">
@@ -103,190 +146,260 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
               </Button>
             </div>
             <button
+              type="button"
               onClick={handleTestUac}
-              className="w-full py-1 px-2 rounded bg-[#182235] hover:bg-[#202B40] text-[10px] text-[#8B9CFF] font-medium border border-[#202B40] hover:border-[#8B9CFF]/40 transition-all flex items-center justify-center space-x-1"
+              className="w-full py-1 px-2 rounded bg-[var(--surface-secondary)] hover:bg-[var(--surface-elevated)] text-[10px] text-[var(--accent-primary)] font-medium border border-[var(--border-subtle)] hover:border-[var(--accent-primary)]/40 transition-all flex items-center justify-center space-x-1"
             >
               <span>🛡️ Test UAC Elevation</span>
             </button>
           </div>
           {elevationGrantedMsg ? (
-            <p className="text-[10px] text-[#65E6C4] mt-1.5 text-center font-medium animate-fadeIn">
+            <p className="text-[10px] text-[var(--accent-secondary)] mt-1.5 text-center font-medium animate-fadeIn">
               ✓ {elevationGrantedMsg}
             </p>
           ) : (
-            <p className="text-[10px] text-[#9CA3AF] mt-1.5 text-center">
+            <p className="text-[10px] text-[var(--text-muted)] mt-1.5 text-center">
               {isUacElevated ? '🛡️ UAC Admin Elevated' : 'Multi-Modal Biometrics / PIN'}
             </p>
           )}
-        </AuroraCard>
+        </GlassSurface>
       </div>
 
-      {/* Main Row: Priority Goal & Deep Work Controller */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <AuroraCard elevated className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between border-b border-[#202B40] pb-3">
-            <div>
-              <span className="text-xs font-semibold text-[#8B9CFF] uppercase tracking-wider">Priority 1 Active Objective</span>
-              <h2 className="text-lg font-semibold text-[#F9FAFB] mt-0.5">{priorityGoal}</h2>
-            </div>
-            <span className="px-2.5 py-1 rounded bg-[#FFD078]/10 text-[#FFD078] border border-[#FFD078]/30 text-xs font-semibold">
-              XP +50
-            </span>
-          </div>
-
-          <div className="p-4 rounded-lg bg-[#111827] border border-[#1F2937] flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="text-xs text-[#9CA3AF]">Deep Work Calibration ({activeFocusMinutes}m Block)</div>
-              <div className="text-sm font-semibold text-[#F9FAFB]">
-                {isFocusActive ? 'Session In Progress (Focus Guard Engaged)' : `Ready to Begin ${activeFocusMinutes}-min Deep Block`}
+      {/* Main Focus Row: 3-Tier Visual Hierarchy */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Tier 1 Focal Anchor (Priority 1) */}
+        <div className="lg:col-span-2 space-y-4">
+          <PriorityCard
+            priority={1}
+            title={priorityGoal}
+            subtitle="Today's Primary Academic Milestone • Distraction-free Study Mode active"
+            subjectTag="Engineering Mathematics"
+            xpReward={50}
+            progressPercent={75}
+            primaryAction={{
+              label: isFocusActive ? 'End Focus Session' : 'Start Deep Work (45m Block)',
+              icon: isFocusActive ? '⏹' : '▶',
+              onClick: toggleFocusSession,
+            }}
+            secondaryAction={{
+              label: 'View Syllabus Tree',
+              icon: '🗺️',
+              onClick: () => {},
+            }}
+          >
+            {/* Live Zero-Jitter Tabular Countdown Timer Pill */}
+            <div className="p-3.5 rounded-xl bg-[var(--surface-primary)] border border-[var(--border-subtle)] flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent-secondary)]">
+                  {isFocusActive ? 'Focus Guard Active' : 'Calibrated Focus Block'}
+                </span>
+                <p className="text-xs text-[var(--text-muted)]">
+                  DNS and process quarantine engaged during session
+                </p>
               </div>
-              <div className="text-xs text-[#65E6C4]">Distraction Policy: Strict Process & DNS Filtering</div>
-            </div>
 
-            <Button
-              variant={isFocusActive ? 'danger' : 'accent'}
-              onClick={toggleFocusSession}
-              className="min-w-32"
-            >
-              {isFocusActive ? 'End Session' : 'Start Deep Work'}
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 text-center text-xs">
-            <div className="p-2.5 rounded bg-[#111827] border border-[#1F2937]">
-              <span className="text-[#9CA3AF] block">Mode</span>
-              <span className="font-semibold text-[#8B9CFF] mt-0.5 block">DeepWork</span>
-            </div>
-            <div className="p-2.5 rounded bg-[#111827] border border-[#1F2937]">
-              <span className="text-[#9CA3AF] block">Daily Streak</span>
-              <span className="font-semibold text-[#FFD078] mt-0.5 block">🔥 7 Days</span>
-            </div>
-            <div className="p-2.5 rounded bg-[#111827] border border-[#1F2937]">
-              <span className="text-[#9CA3AF] block">Target Blocks</span>
-              <span className="font-semibold text-[#65E6C4] mt-0.5 block">3 of 4 Done</span>
-            </div>
-          </div>
-        </AuroraCard>
-
-        {/* Database & Storage Status */}
-        <AuroraCard className="space-y-4">
-          <div className="border-b border-[#1F2937] pb-2">
-            <h3 className="text-sm font-semibold text-[#F9FAFB]">SQLite Low-RAM Engines</h3>
-            <p className="text-xs text-[#9CA3AF]">Zero-bloat native storage architecture</p>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            <div className="p-2.5 rounded bg-[#182235] border border-[#202B40]">
-              <div className="flex items-center justify-between font-semibold text-[#F9FAFB]">
-                <span>local_core.sqlite</span>
-                <span className="text-[#65E6C4]">WAL Active</span>
+              <div className="flex items-center space-x-3 px-3 py-1.5 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border-subtle)]">
+                <span className="w-2 h-2 rounded-full animate-ping bg-[var(--accent-secondary)]" />
+                <TabularTimer
+                  secondsRemaining={activeFocusMinutes * 60}
+                  isRunning={isFocusActive}
+                  size="md"
+                  format="mm:ss"
+                />
               </div>
-              <p className="text-[11px] text-[#9CA3AF] mt-1">
-                32MB mmap cap • 8MB page cache • Tasks, Habits, Vectors
-              </p>
             </div>
+          </PriorityCard>
 
-            <div className="p-2.5 rounded bg-[#182235] border border-[#202B40]">
-              <div className="flex items-center justify-between font-semibold text-[#F9FAFB]">
-                <span>sync_oplog.sqlite</span>
-                <span className="text-[#8B9CFF]">HLC Engine</span>
-              </div>
-              <p className="text-[11px] text-[#9CA3AF] mt-1">
-                Deterministic peer sync • Ed25519 signatures • Zero conflict
-              </p>
-            </div>
+          {/* Tier 2 Milestone Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <PriorityCard
+              priority={2}
+              title="Differential Equations: First-Order ODEs"
+              subtitle="Module 3: Separation of Variables & Integrating Factors"
+              subjectTag="Math II"
+              status="In Progress"
+              primaryAction={{
+                label: 'Continue Module →',
+                onClick: () => {},
+              }}
+            />
 
-            <div className="p-2.5 rounded bg-[#182235] border border-[#202B40]">
-              <div className="flex items-center justify-between font-semibold text-[#F9FAFB]">
-                <span>Vault Hierarchy</span>
-                <span className="text-[#FFD078]">~/.mindset_data/</span>
-              </div>
-              <p className="text-[11px] text-[#9CA3AF] mt-1">
-                my-laptop • my-phone • textbooks • certs
-              </p>
-            </div>
+            <PriorityCard
+              priority={2}
+              title="Modern Physics: Photoelectric Effect"
+              subtitle="Module 1: Work Function & Photon Stopping Potential"
+              subjectTag="Physics"
+              status="Ready"
+              primaryAction={{
+                label: 'Launch Reader →',
+                onClick: () => {},
+              }}
+            />
           </div>
-        </AuroraCard>
+
+          {/* Tier 3 Ambient Cadence Queue */}
+          <div className="space-y-2 pt-1">
+            <PriorityCard
+              priority={3}
+              title="Sync offline flashcard decks with mobile client"
+              subtitle="Scheduled: 18:00 UTC • Local SQLite HLC sync"
+              primaryAction={{
+                label: 'Sync Now',
+                onClick: () => {},
+              }}
+            />
+            <PriorityCard
+              priority={3}
+              title="Evening Reflection & Mood Log"
+              subtitle="Forest Zen suggestion will be offered at 20:00"
+              primaryAction={{
+                label: 'Open Journal',
+                onClick: () => {},
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Right Sidebar: Progress Ring & Interactive Skill Tree Node */}
+        <div className="space-y-5">
+          {/* Daily Progress Radial Ring */}
+          <GlassSurface variant="solid-card" className="p-5 flex flex-col items-center text-center space-y-3">
+            <div className="w-full flex items-center justify-between text-xs pb-2 border-b border-[var(--border-subtle)]">
+              <span className="font-bold text-[var(--text-dominant)]">Daily Syllabus Target</span>
+              <span className="font-mono text-xs text-[var(--accent-secondary)]">3 of 4 Blocks</span>
+            </div>
+
+            <ProgressRing
+              progress={75}
+              size={96}
+              strokeWidth={7}
+              label="75% Complete"
+              sublabel="3 Deep Blocks Concluded"
+              accentColor="var(--accent-secondary)"
+              glow
+            />
+
+            <div className="w-full grid grid-cols-2 gap-2 pt-2 border-t border-[var(--border-subtle)] text-center text-xs">
+              <div className="p-2 rounded bg-[var(--surface-secondary)]">
+                <span className="text-[10px] text-[var(--text-muted)] block">Streak (Non-Punitive)</span>
+                <span className="font-bold font-mono text-[var(--accent-achievement)]">🔥 7 Days</span>
+              </div>
+              <div className="p-2 rounded bg-[var(--surface-secondary)]">
+                <span className="text-[10px] text-[var(--text-muted)] block">XP Earned Today</span>
+                <span className="font-bold font-mono text-[var(--accent-primary)]">+250 XP</span>
+              </div>
+            </div>
+          </GlassSurface>
+
+          {/* Interactive Skill Tree Node (Cosmic Arcade / Gamified Dopamine) */}
+          <GlassSurface variant="solid-card" className="p-5 space-y-3">
+            <div className="flex items-center justify-between text-xs pb-2 border-b border-[var(--border-subtle)]">
+              <div>
+                <span className="font-bold text-[var(--text-dominant)]">Skill Tree Milestone</span>
+                <p className="text-[10px] text-[var(--text-muted)]">Ethical mastery micro-feedback</p>
+              </div>
+              <span className="text-xs">🕹️</span>
+            </div>
+
+            <SkillTreeNode
+              id="node-ode-01"
+              title="Separation of Variables Mastery"
+              category="Calculus & ODEs"
+              level={2}
+              status={skillNodeState}
+              xpReward={75}
+              progress={skillNodeState === 'completed' ? 100 : 65}
+              onComplete={handleMilestoneComplete}
+            />
+
+            {earnedXpToast && (
+              <div className="p-2 rounded-lg bg-[var(--surface-elevated)] border border-[var(--accent-achievement)] text-center text-xs text-[var(--accent-achievement)] font-bold animate-fadeIn">
+                🎉 Milestone Mastered! +{earnedXpToast} XP Awarded
+              </div>
+            )}
+          </GlassSurface>
+
+          {/* Sensory Hardware Probe Status */}
+          <GlassSurface variant="solid-card" className="p-4 space-y-3">
+            <div className="border-b border-[var(--border-subtle)] pb-2 flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-dominant)]">
+                Hardware Probe
+              </h3>
+              <AccessibleStatusBadge status="healthy" label="Online" size="sm" />
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between p-2 rounded bg-[var(--surface-secondary)]">
+                <span className="text-[var(--text-dominant)]">Webcam (Face Unlock)</span>
+                <span className={hardware?.has_webcam ? 'text-[var(--accent-secondary)]' : 'text-[var(--text-muted)]'}>
+                  {hardware?.has_webcam ? 'Active (<300ms)' : 'Not Found'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded bg-[var(--surface-secondary)]">
+                <span className="text-[var(--text-dominant)]">Microphone</span>
+                <span className={hardware?.has_mic ? 'text-[var(--accent-secondary)]' : 'text-[var(--text-muted)]'}>
+                  {hardware?.has_mic ? 'Active' : 'Not Found'}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded bg-[var(--surface-secondary)]">
+                <span className="text-[var(--text-dominant)]">Biometrics (fprintd)</span>
+                <span className={hardware?.has_fingerprint ? 'text-[var(--accent-secondary)]' : 'text-[var(--text-muted)]'}>
+                  {hardware?.has_fingerprint ? 'Enrolled' : 'Silent Fallback'}
+                </span>
+              </div>
+            </div>
+          </GlassSurface>
+        </div>
       </div>
 
-      {/* Services Registry Matrix & Hardware Probe */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <AuroraCard className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between border-b border-[#1F2937] pb-2">
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-sm font-semibold text-[#F9FAFB]">Kernel Service Registry</h3>
-                <button
-                  onClick={() => setIsStatusViewOpen(true)}
-                  className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#8B9CFF]/10 text-[#8B9CFF] hover:bg-[#8B9CFF]/20 transition-all"
-                >
-                  Manage (/status) →
-                </button>
-              </div>
-              <p className="text-xs text-[#9CA3AF]">Cooperative asynchronous Tokio micro-actors</p>
-            </div>
-            <StatusBadge status="healthy" label={`${services.length}/${services.length} Services Operational`} />
-          </div>
+      {/* Full 5-Theme Neuroaesthetic Configuration Engine */}
+      <ThemeSelector className="mt-6" />
 
-          <div className="space-y-2">
-            {services.map((svc) => (
-              <div
-                key={svc.name}
-                className="flex items-center justify-between p-2.5 rounded-lg bg-[#182235] border border-[#202B40] text-xs"
+      {/* Services Registry Matrix Status */}
+      <GlassSurface variant="solid-card" className="p-5 space-y-4">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] pb-2">
+          <div>
+            <div className="flex items-center space-x-2">
+              <h3 className="text-sm font-semibold text-[var(--text-dominant)]">
+                Kernel Cooperative Micro-Actors
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsStatusViewOpen(true)}
+                className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--surface-elevated)] text-[var(--accent-primary)] hover:bg-[var(--surface-elevated)]/80 transition-all border border-[var(--border-subtle)]"
               >
-                <div className="flex items-center space-x-2">
-                  <span className="text-[#65E6C4]">●</span>
-                  <span className="font-semibold text-[#F9FAFB]">{svc.name}</span>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-[#9CA3AF] font-mono">RAM: ~{svc.estimated_ram_kb} KB</span>
-                  <span className="px-2 py-0.5 rounded bg-[#65E6C4]/10 text-[#65E6C4] font-medium">
-                    {typeof svc.status === 'string' ? svc.status : Object.keys(svc.status)[0]}
-                  </span>
-                </div>
+                Inspect Telemetry (/status) →
+              </button>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              Scheduled via single 15-second tokio interval loop
+            </p>
+          </div>
+          <AccessibleStatusBadge
+            status="healthy"
+            label={`${services.length}/${services.length} Services Operational`}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+          {services.map((svc) => (
+            <div
+              key={svc.name}
+              className="flex items-center justify-between p-2.5 rounded-lg bg-[var(--surface-secondary)] border border-[var(--border-subtle)] text-xs"
+            >
+              <div className="flex items-center space-x-2 truncate">
+                <span className="text-[var(--accent-secondary)]">●</span>
+                <span className="font-semibold text-[var(--text-dominant)] truncate">{svc.name}</span>
               </div>
-            ))}
-          </div>
-        </AuroraCard>
-
-        {/* Sensory Hardware Probe Status */}
-        <AuroraCard className="space-y-4">
-          <div className="border-b border-[#1F2937] pb-2">
-            <h3 className="text-sm font-semibold text-[#F9FAFB]">Hardware Probe</h3>
-            <p className="text-xs text-[#9CA3AF]">Auto-detected during HARDWARE_PROBE</p>
-          </div>
-
-          <div className="space-y-2 text-xs">
-            <div className="flex items-center justify-between p-2 rounded bg-[#182235]">
-              <span className="text-[#E5E7EB]">Webcam (DirectShow / V4L2)</span>
-              <span className={hardware?.has_webcam ? 'text-[#65E6C4]' : 'text-[#6B7280]'}>
-                {hardware?.has_webcam ? 'Active' : 'Not Found'}
+              <span className="text-[var(--text-muted)] font-mono shrink-0 pl-2">
+                ~{svc.estimated_ram_kb} KB
               </span>
             </div>
-
-            <div className="flex items-center justify-between p-2 rounded bg-[#182235]">
-              <span className="text-[#E5E7EB]">Microphone (WASAPI / ALSA)</span>
-              <span className={hardware?.has_mic ? 'text-[#65E6C4]' : 'text-[#6B7280]'}>
-                {hardware?.has_mic ? 'Active' : 'Not Found'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2 rounded bg-[#182235]">
-              <span className="text-[#E5E7EB]">Biometrics (fprintd / WinBio)</span>
-              <span className={hardware?.has_fingerprint ? 'text-[#65E6C4]' : 'text-[#9CA3AF]'}>
-                {hardware?.has_fingerprint ? 'Enrolled' : 'Graceful Fallback'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2 rounded bg-[#182235]">
-              <span className="text-[#E5E7EB]">Bluetooth Controller</span>
-              <span className={hardware?.has_bluetooth ? 'text-[#65E6C4]' : 'text-[#6B7280]'}>
-                {hardware?.has_bluetooth ? 'Active' : 'Disabled'}
-              </span>
-            </div>
-          </div>
-        </AuroraCard>
-      </div>
+          ))}
+        </div>
+      </GlassSurface>
 
       {/* UAC Elevation Confirmation Modal */}
       <UacModal {...modalProps} />

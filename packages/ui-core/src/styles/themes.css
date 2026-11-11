@@ -1,0 +1,286 @@
+/**
+ * MindSet OS 5-Theme Neuroaesthetic CSS Tokens & Appearance Engine
+ * Themes: aurora-focus (default), solar-bloom, forest-zen, cosmic-arcade, paper-studio
+ * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
+ */
+
+:root,
+[data-theme="aurora-focus"] {
+  --bg-base: #07090D;
+  --surface-primary: #111827;
+  --surface-secondary: #182235;
+  --surface-elevated: #202B40;
+
+  --accent-primary: #8B9CFF;
+  --accent-secondary: #65E6C4;
+  --accent-achievement: #FFD078;
+  --accent-creative: #FF8EAA;
+  --accent-danger: #FF6B6B;
+
+  --text-dominant: #F9FAFB;
+  --text-muted: #9CA3AF;
+  --text-dim: #6B7280;
+
+  --border-subtle: #1F2937;
+  --border-elevated: #374151;
+  --border-glow: rgba(139, 156, 255, 0.28);
+
+  --glass-bg: rgba(17, 24, 39, 0.72);
+  --glass-border: rgba(139, 156, 255, 0.18);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  --color-scheme: dark;
+}
+
+[data-theme="solar-bloom"] {
+  --bg-base: #FAF7EE;
+  --surface-primary: #FFFFFF;
+  --surface-secondary: #F3EEDD;
+  --surface-elevated: #E8DFCA;
+
+  --accent-primary: #E06D14;
+  --accent-secondary: #3B9B78;
+  --accent-achievement: #D48806;
+  --accent-creative: #E05273;
+  --accent-danger: #D9383A;
+
+  --text-dominant: #1C1917;
+  --text-muted: #6B6358;
+  --text-dim: #948C7E;
+
+  --border-subtle: #E7DEC8;
+  --border-elevated: #D8CEB5;
+  --border-glow: rgba(224, 109, 20, 0.22);
+
+  --glass-bg: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(224, 109, 20, 0.16);
+  --glass-shadow: 0 8px 24px rgba(180, 160, 130, 0.25);
+
+  --color-scheme: light;
+}
+
+[data-theme="forest-zen"] {
+  --bg-base: #09120E;
+  --surface-primary: #11201A;
+  --surface-secondary: #172C24;
+  --surface-elevated: #1F3A30;
+
+  --accent-primary: #52C794;
+  --accent-secondary: #82D9B3;
+  --accent-achievement: #E5BE65;
+  --accent-creative: #69B4D9;
+  --accent-danger: #E66868;
+
+  --text-dominant: #F2F7F4;
+  --text-muted: #8BA398;
+  --text-dim: #5C7367;
+
+  --border-subtle: #1F382E;
+  --border-elevated: #2B4D3F;
+  --border-glow: rgba(82, 199, 148, 0.25);
+
+  --glass-bg: rgba(17, 32, 26, 0.76);
+  --glass-border: rgba(82, 199, 148, 0.18);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+
+  --color-scheme: dark;
+}
+
+[data-theme="cosmic-arcade"] {
+  --bg-base: #080514;
+  --surface-primary: #120E29;
+  --surface-secondary: #1C163D;
+  --surface-elevated: #271F52;
+
+  --accent-primary: #D847FF;
+  --accent-secondary: #00F0FF;
+  --accent-achievement: #FFE600;
+  --accent-creative: #FF3366;
+  --accent-danger: #FF2A6D;
+
+  --text-dominant: #FDFBFF;
+  --text-muted: #A198C2;
+  --text-dim: #6E6393;
+
+  --border-subtle: #2D235E;
+  --border-elevated: #3E3082;
+  --border-glow: rgba(216, 71, 255, 0.35);
+
+  --glass-bg: rgba(18, 14, 41, 0.78);
+  --glass-border: rgba(216, 71, 255, 0.25);
+  --glass-shadow: 0 8px 32px rgba(10, 4, 30, 0.75);
+
+  --color-scheme: dark;
+}
+
+[data-theme="paper-studio"] {
+  --bg-base: #F5F2EB;
+  --surface-primary: #FAF8F5;
+  --surface-secondary: #EAE5DB;
+  --surface-elevated: #DDD7CB;
+
+  --accent-primary: #2B303A;
+  --accent-secondary: #5C6479;
+  --accent-achievement: #9C6644;
+  --accent-creative: #A85A48;
+  --accent-danger: #B83A3A;
+
+  --text-dominant: #191B1F;
+  --text-muted: #636773;
+  --text-dim: #8E929E;
+
+  --border-subtle: #D5CEBF;
+  --border-elevated: #C5BCAB;
+  --border-glow: rgba(43, 48, 58, 0.18);
+
+  --glass-bg: rgba(250, 248, 245, 0.88);
+  --glass-border: rgba(43, 48, 58, 0.14);
+  --glass-shadow: 0 8px 24px rgba(160, 150, 135, 0.22);
+
+  --color-scheme: light;
+}
+
+/* -------------------------------------------------------------
+   Interface Density Modes
+   ------------------------------------------------------------- */
+[data-density="compact"] {
+  --density-row-h: 1.75rem; /* 28px */
+  --density-pad-card: 0.625rem; /* 10px */
+  --density-gap: 0.5rem; /* 8px */
+  --density-btn-py: 0.25rem;
+  --density-btn-px: 0.625rem;
+}
+
+:root,
+[data-density="comfortable"] {
+  --density-row-h: 2.25rem; /* 36px */
+  --density-pad-card: 1rem; /* 16px */
+  --density-gap: 0.75rem; /* 12px */
+  --density-btn-py: 0.4rem;
+  --density-btn-px: 0.85rem;
+}
+
+[data-density="spacious"] {
+  --density-row-h: 3rem; /* 48px */
+  --density-pad-card: 1.5rem; /* 24px */
+  --density-gap: 1.25rem; /* 20px */
+  --density-btn-py: 0.6rem;
+  --density-btn-px: 1.15rem;
+}
+
+/* -------------------------------------------------------------
+   Scalable Font Size Modes
+   ------------------------------------------------------------- */
+[data-font-scale="sm"] {
+  --app-font-size: 13px;
+}
+
+:root,
+[data-font-scale="md"] {
+  --app-font-size: 14px;
+}
+
+[data-font-scale="lg"] {
+  --app-font-size: 16px;
+}
+
+[data-font-scale="xl"] {
+  --app-font-size: 18px;
+}
+
+/* -------------------------------------------------------------
+   High Contrast & Accessibility Overrides (WCAG 2.2 AA)
+   ------------------------------------------------------------- */
+[data-high-contrast="true"] {
+  --border-subtle: #4B5563 !important;
+  --border-elevated: #6B7280 !important;
+  --text-muted: var(--text-dominant) !important;
+  --glass-bg: var(--surface-primary) !important;
+  --glass-border: var(--text-dominant) !important;
+}
+
+/* -------------------------------------------------------------
+   Strict Animation Boundaries (120ms - 250ms) & Reduced Motion
+   ------------------------------------------------------------- */
+:root {
+  --anim-btn: 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-micro: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-card: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-route: 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* -------------------------------------------------------------
+   Neuroaesthetic Semantic Utility Classes
+   ------------------------------------------------------------- */
+.theme-bg {
+  background-color: var(--bg-base);
+  color: var(--text-dominant);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.theme-surface-primary {
+  background-color: var(--surface-primary);
+  border-color: var(--border-subtle);
+  color: var(--text-dominant);
+}
+
+.theme-surface-secondary {
+  background-color: var(--surface-secondary);
+  border-color: var(--border-subtle);
+  color: var(--text-dominant);
+}
+
+.theme-surface-elevated {
+  background-color: var(--surface-elevated);
+  border-color: var(--border-elevated);
+  color: var(--text-dominant);
+}
+
+.theme-glass-nav {
+  background-color: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--glass-shadow);
+}
+
+.theme-glass-modal {
+  background-color: var(--glass-bg);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+.theme-glass-hero {
+  background-color: var(--glass-bg);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 20px var(--border-glow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}

@@ -125,3 +125,4 @@ pub async fn is_privacy_blurred(state: State<'_, AppState>) -> Result<bool, Stri
 pub async fn get_auth_status(state: State<'_, AppState>) -> Result<AuthStatus, String> {
     Ok(state.auth.get_status())
 }
+

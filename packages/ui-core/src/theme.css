@@ -1,20 +1,36 @@
 @import "tailwindcss";
+@import "./styles/themes.css";
 
 @theme {
-  --color-aurora-bg: #07090D;
-  --color-aurora-surface-primary: #111827;
-  --color-aurora-surface-secondary: #182235;
-  --color-aurora-surface-elevated: #202B40;
-  
-  --color-aurora-accent-primary: #8B9CFF;
-  --color-aurora-accent-secondary: #65E6C4;
-  --color-aurora-accent-achievement: #FFD078;
-  --color-aurora-accent-danger: #FF6B6B;
+  --color-bg-base: var(--bg-base);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-elevated: var(--surface-elevated);
 
-  --color-aurora-text-dominant: #F9FAFB;
-  --color-aurora-text-muted: #9CA3AF;
-  --color-aurora-border: #1F2937;
-  --color-aurora-border-elevated: #374151;
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-achievement: var(--accent-achievement);
+  --color-accent-creative: var(--accent-creative);
+  --color-accent-danger: var(--accent-danger);
+
+  --color-text-dominant: var(--text-dominant);
+  --color-text-muted: var(--text-muted);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-elevated: var(--border-elevated);
+
+  /* Backwards compatibility aliases */
+  --color-aurora-bg: var(--bg-base);
+  --color-aurora-surface-primary: var(--surface-primary);
+  --color-aurora-surface-secondary: var(--surface-secondary);
+  --color-aurora-surface-elevated: var(--surface-elevated);
+  --color-aurora-accent-primary: var(--accent-primary);
+  --color-aurora-accent-secondary: var(--accent-secondary);
+  --color-aurora-accent-achievement: var(--accent-achievement);
+  --color-aurora-accent-danger: var(--accent-danger);
+  --color-aurora-text-dominant: var(--text-dominant);
+  --color-aurora-text-muted: var(--text-muted);
+  --color-aurora-border: var(--border-subtle);
+  --color-aurora-border-elevated: var(--border-elevated);
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -22,12 +38,13 @@
 
 @layer base {
   body {
-    background-color: var(--color-aurora-bg);
-    color: var(--color-aurora-text-dominant);
+    background-color: var(--bg-base);
+    color: var(--text-dominant);
     font-family: var(--font-sans);
+    font-size: var(--app-font-size, 14px);
     overflow: hidden;
     user-select: none;
     -webkit-user-select: none;
+    transition: background-color 150ms ease, color 150ms ease;
   }
 }
-

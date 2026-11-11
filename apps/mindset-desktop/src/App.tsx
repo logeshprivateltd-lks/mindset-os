@@ -98,7 +98,10 @@ export const App: React.FC = () => {
 
   return (
     <BootSplashGate>
-      <div className="min-h-screen bg-[#07090D] text-[#F9FAFB] flex flex-col font-sans select-none overflow-x-hidden">
+      <div
+        className="min-h-screen flex flex-col font-sans select-none overflow-x-hidden transition-colors"
+        style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-dominant)' }}
+      >
         {/* Frameless Window Custom Titlebar */}
         <TitleBar
           title="MindSet OS — Powered by LKS PVT LTD"
