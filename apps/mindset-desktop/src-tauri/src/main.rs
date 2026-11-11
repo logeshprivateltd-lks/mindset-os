@@ -5,6 +5,7 @@ mod ai;
 mod auth;
 mod commands;
 mod db;
+mod fs;
 mod kernel;
 mod storage;
 
@@ -12,6 +13,7 @@ use ai::*;
 use auth::AuthEngine;
 use commands::*;
 use db::DatabaseManager;
+use fs::*;
 use kernel::{
     BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, MindSetKernel, ServiceHealth,
 };
@@ -207,6 +209,26 @@ async fn main() {
             ai_unload_model,
             ai_restart_ollama,
             ai_execute_structured_tool_call,
+            // File Explorer & Storage Operations
+            fs_list_directory,
+            fs_create_folder,
+            fs_rename_item,
+            fs_copy_item,
+            fs_move_item,
+            fs_move_to_recycle_bin,
+            fs_restore_from_recycle_bin,
+            fs_empty_recycle_bin,
+            fs_compress_to_zip,
+            fs_extract_archive,
+            fs_get_disk_partition_stats,
+            fs_read_file_text_or_base64,
+            // Zero-RAM RAG Knowledge Commands
+            rag_index_document,
+            rag_update_last_read_page,
+            rag_get_document,
+            rag_list_documents,
+            rag_search_chunks,
+            rag_delete_document,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,

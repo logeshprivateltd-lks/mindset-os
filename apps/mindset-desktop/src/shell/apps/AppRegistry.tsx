@@ -11,6 +11,7 @@ import { TasksGoalsApp } from './TasksGoalsApp';
 import { JournalNotesApp } from './JournalNotesApp';
 import { BalanceRelaxApp } from './BalanceRelaxApp';
 import { DashboardApp } from './DashboardApp';
+import { FileExplorerPage, RagDocumentTutor } from '../../pages/files';
 
 export interface AppMetadata {
   appId: string;
@@ -83,5 +84,25 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 640,
     defaultHeight: 520,
     description: '4-7-8 cortisol-reducing breathwork guide and restorative ambient sounds.',
+  },
+  files: {
+    appId: 'files',
+    title: 'Study Vault & Files',
+    icon: '🗂️',
+    subjectTag: 'Filesystem',
+    component: FileExplorerPage,
+    defaultWidth: 1040,
+    defaultHeight: 680,
+    description: 'Distraction-free file explorer with study roots, instant previews, and RAG indexing.',
+  },
+  tutor: {
+    appId: 'tutor',
+    title: 'RAG Document Tutor',
+    icon: '🎓',
+    subjectTag: 'StudyAgent',
+    component: RagDocumentTutor,
+    defaultWidth: 1120,
+    defaultHeight: 720,
+    description: 'Split-screen textbook reader with context-locked StudyAgent and [Page X] citations.',
   },
 };

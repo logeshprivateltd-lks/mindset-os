@@ -38,8 +38,9 @@ export const ACTIVITIES: Record<ActivityId, ActivityDefinition> = {
     tagline: 'Syllabus Focus & Textbook Ingestion',
     suggestedTheme: 'aurora-focus',
     description: 'Textbook PDF Reader, Focus Guard timer, StudyAgent AI tutor, and Exam Targets.',
-    pinnedApps: ['reader', 'tasks', 'terminal', 'balance'],
+    pinnedApps: ['files', 'reader', 'tasks', 'terminal', 'balance'],
     desktopShortcuts: [
+      { id: 'sc-0', title: 'Study Vault & Files', icon: '🗂️', appId: 'files' },
       { id: 'sc-1', title: 'NCERT Biology Vol II.pdf', icon: '📄', appId: 'reader' },
       { id: 'sc-2', title: 'Differential Equations', icon: '📐', appId: 'tasks' },
       { id: 'sc-3', title: 'Focus Guard 45m Block', icon: '⏱️', appId: 'tasks' },
@@ -53,8 +54,9 @@ export const ACTIVITIES: Record<ActivityId, ActivityDefinition> = {
     tagline: 'Native Rust & Systems Engineering',
     suggestedTheme: 'aurora-focus',
     description: 'MindSet Terminal, Code Explorer, Architecture Specs, and Low-RAM Profiling.',
-    pinnedApps: ['terminal', 'tasks', 'reader'],
+    pinnedApps: ['files', 'terminal', 'tasks', 'reader'],
     desktopShortcuts: [
+      { id: 'sc-dev-0', title: 'Project Vault', icon: '🗂️', appId: 'files' },
       { id: 'sc-dev-1', title: 'MindSet Terminal', icon: '⚡', appId: 'terminal' },
       { id: 'sc-dev-2', title: 'Architecture Specs', icon: '📑', appId: 'reader' },
       { id: 'sc-dev-3', title: 'Release Milestones', icon: '🎯', appId: 'tasks' },
@@ -67,8 +69,9 @@ export const ACTIVITIES: Record<ActivityId, ActivityDefinition> = {
     tagline: 'Daily Habits & Mindful Review',
     suggestedTheme: 'forest-zen',
     description: 'Daily Journal, Habit Tracker, Mood Check-ins, and Non-punitive Streaks.',
-    pinnedApps: ['journal', 'tasks', 'balance'],
+    pinnedApps: ['files', 'journal', 'tasks', 'balance'],
     desktopShortcuts: [
+      { id: 'sc-plan-0', title: 'Notes & Reflections', icon: '🗂️', appId: 'files' },
       { id: 'sc-plan-1', title: 'Daily Evening Journal', icon: '✍️', appId: 'journal' },
       { id: 'sc-plan-2', title: 'Habit & Sleep Tracker', icon: '🌱', appId: 'journal' },
       { id: 'sc-plan-3', title: 'Mood Check-in', icon: '🧘', appId: 'balance' },

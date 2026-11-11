@@ -84,6 +84,53 @@ impl MindSetPaths {
             }
         }
 
+        self.ensure_vault_study_roots()?;
+
+        Ok(())
+    }
+
+    /// Creates standard study roots under ~/.mindset_data/vault/
+    pub fn ensure_vault_study_roots(&self) -> Result<(), StorageError> {
+        let vault = self.base_dir.join("vault");
+        let study_roots: [&Path; 11] = [
+            &vault.join("Subjects").join("Physics"),
+            &vault.join("Subjects").join("Chemistry"),
+            &vault.join("Subjects").join("Mathematics"),
+            &vault.join("Subjects").join("Computer Science"),
+            &vault.join("Subjects").join("General Studies"),
+            &vault.join("Textbooks & PDFs"),
+            &vault.join("Notes"),
+            &vault.join("Projects"),
+            &vault.join("Downloads"),
+            &vault.join("My Phone Vault"),
+            &vault.join("Recycle Bin"),
+        ];
+
+        for root in study_roots {
+            if !root.exists() {
+                fs::create_dir_all(root).map_err(|e| {
+                    StorageError::DirectoryCreationFailed(root.display().to_string(), e)
+                })?;
+            }
+        }
+
+        // Seed a helpful sample welcome note if Notes is empty
+        let welcome_file = vault.join("Notes").join("MindSet_OS_Welcome_Guide.md");
+        if !welcome_file.exists() {
+            let sample_content = r#"# Welcome to MindSet OS Study Vault
+**Designed for focused, distraction-free mastery.**
+
+## Quick Navigation:
+- **Subjects**: Course materials partitioned by subject (*Physics*, *Chemistry*, *Mathematics*, *CS*).
+- **Textbooks & PDFs**: Drag textbooks here or click **"Send to StudyAgent"** to launch the Split-Screen RAG Tutor.
+- **Notes**: High-yield formulas, summaries, and Markdown cheat-sheets.
+- **Recycle Bin**: Soft-deleted files that can be restored with a single click.
+
+*Tip: Press Alt + Space anywhere to summon the Floating AI Orb!*
+"#;
+            let _ = fs::write(&welcome_file, sample_content);
+        }
+
         Ok(())
     }
 }

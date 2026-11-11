@@ -115,3 +115,4 @@ CORE DIRECTIVES:
 export function getPersonaConfig(persona: AgentPersona): PersonaConfig {
   return PERSONA_CONFIGS[persona] ?? PERSONA_CONFIGS.StudyAgent;
 }
+
