@@ -169,3 +169,33 @@ MindSet OS monitors student activity context via kernel events:
 - Starting an interactive Quiz or Milestone challenge $\rightarrow$ suggests switching to **Cosmic Arcade**.
 
 > **Crucial Rule:** The system NEVER forces an automatic theme switch without user consent. It presents an unobtrusive, non-blocking toast suggestion with an "Accept" or "Dismiss" action.
+
+---
+
+## 6. Desktop OS Shell, Window Manager & Activity Workspaces
+
+### 6.1 Desktop Canvas
+- Renders curated calm wallpapers (deep gradients, nature scenes, or custom user wallpapers).
+- Desktop shortcut icons: `My Textbooks`, `Daily Journal`, `Board Exam 590 Target`, `MindSet Terminal`, `Recycle Bin`.
+- Right-click Desktop Context Menu: Change Wallpaper, New Study Folder, Open Terminal, Switch Activity (`Super + Tab`), Display Settings.
+
+### 6.2 MindSet Taskbar & Start Menu
+- **Taskbar Dock:** Bottom Liquid Glass dock (`var(--glass-bg)`) with:
+  - **MindSet Start Button (`Super`):** Opens Start Menu with pinned apps, activity switcher, user profile badge, and power controls (`Lock Screen Super+L`, `Sleep`, `Restart`, `Shutdown`).
+  - **Pinned & Active App Icons:** Displays active window dots, window preview tooltips, and minimized window restore.
+  - **Interactive System Tray:** Live tabular clock & calendar flyout, Active Focus Session countdown pill, Wi-Fi/Network status icon, Audio volume slider popup, Battery/Thermal profile indicator, Do Not Disturb toggle, and Notification Center drawer toggle.
+
+### 6.3 Multi-Window Manager & Snap Layouts
+- High-performance draggable, resizable windows running at 60 FPS using CSS `translate3d`.
+- **Snap Layouts (`Super + Arrow Keys` or drag-to-edge / hover snap picker):**
+  - **2-Grid Split (50% / 50%):** Textbook PDF Reader on the left + Notes/Journal on the right.
+  - **3-Grid Study Layout:** 50% Left (Main Reader) + 25% Top-Right (AI Tutor) + 25% Bottom-Right (Tasks Checklist).
+  - **4-Grid Quadrant Layout:** 4 equal tiles (25% each).
+
+### 6.4 KDE Plasma-Style Activity Workspaces (`Super + Tab`)
+Isolates windows, desktop shortcuts, pinned taskbar tools, and suggested themes across 4 dedicated environments:
+1. **Deep Study Activity:** Pins Command Center, Study Reader, Focus Timer, and StudyAgent; suggests `aurora-focus` or `paper-studio`.
+2. **Coding & Projects Activity:** Pins MindSet Terminal, File Explorer, and Tasks; suggests `aurora-focus`.
+3. **Planning & Reflection Activity:** Pins Daily Journal, Habit Tracker, Mood Check-ins, and Timeline; suggests `forest-zen`.
+4. **Controlled Relaxation Activity:** Pins MindSet Balance AI and Hobby Discovery; suggests `forest-zen`.
+

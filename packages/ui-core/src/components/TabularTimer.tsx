@@ -135,3 +135,4 @@ export const TabularTimer: React.FC<TabularTimerProps> = ({
     </div>
   );
 };
+

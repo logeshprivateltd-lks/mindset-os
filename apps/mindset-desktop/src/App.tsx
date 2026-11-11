@@ -9,7 +9,7 @@ import { useKernelStore } from './stores/useKernelStore';
 import { TitleBar } from '@mindset/ui-core';
 import { BootSplashGate } from './components/BootSplashGate';
 import { SmartLockOverlay } from './pages/auth/SmartLockOverlay';
-import { Dashboard } from './components/Dashboard';
+import { DesktopShell } from './shell/DesktopShell';
 import { StatusViewerModal } from './components/StatusViewerModal';
 
 export const App: React.FC = () => {
@@ -114,12 +114,15 @@ export const App: React.FC = () => {
         />
 
         {/* Main OS Surface */}
-        <main className="flex-1 relative overflow-y-auto">
+        <main className="flex-1 relative overflow-hidden">
           {isLocked ? (
             <SmartLockOverlay onUnlock={() => setIsLocked(false)} />
           ) : (
             <>
-              <Dashboard onLock={lockSystem} />
+              <DesktopShell
+                onLock={lockSystem}
+                onOpenStatus={() => setIsStatusViewOpen(true)}
+              />
               {/* Instant Privacy Blur Overlay (Alt + B) */}
               {isPrivacyBlurred && (
                 <SmartLockOverlay
