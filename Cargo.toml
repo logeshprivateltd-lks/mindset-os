@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/mindset-desktop/src-tauri",
+    "packages/connect-protocol",
+    "packages/focus-policy-engine",
+    "services/mindset-focus-guard",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["LKS PVT LTD <engineering@lkspvtltd.com>"]
+license = "Proprietary"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+sysinfo = "0.33"
+rusqlite = { version = "0.32", features = ["bundled"] }
+dirs = "6.0"
+async-trait = "0.1"
+

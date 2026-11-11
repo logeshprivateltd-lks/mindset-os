@@ -1,0 +1,16 @@
+{
+  "name": "mindset-ecosystem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MindSet OS Monorepo — Powered by LKS PVT LTD",
+  "packageManager": "pnpm@12.18.0",
+  "scripts": {
+    "dev:desktop": "pnpm --filter @mindset/desktop dev",
+    "build:desktop": "pnpm --filter @mindset/desktop build",
+    "typecheck": "pnpm -r --stream run typecheck",
+    "lint": "pnpm -r --stream run lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,23 @@
+# Rust target directory
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node dependencies
+node_modules/
+dist/
+.pnpm-debug.log*
+
+# Tauri bundle artifacts
+/apps/mindset-desktop/src-tauri/target/
+
+# OS metadata & User runtime data
+.DS_Store
+Thumbs.db
+user-data/
+.mindset_data/
+
+# Environment files
+.env
+.env.local
+

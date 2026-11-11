@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-aurora-bg: #07090D;
+  --color-aurora-surface-primary: #111827;
+  --color-aurora-surface-secondary: #182235;
+  --color-aurora-surface-elevated: #202B40;
+  
+  --color-aurora-accent-primary: #8B9CFF;
+  --color-aurora-accent-secondary: #65E6C4;
+  --color-aurora-accent-achievement: #FFD078;
+  --color-aurora-accent-danger: #FF6B6B;
+
+  --color-aurora-text-dominant: #F9FAFB;
+  --color-aurora-text-muted: #9CA3AF;
+  --color-aurora-border: #1F2937;
+  --color-aurora-border-elevated: #374151;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-aurora-bg);
+    color: var(--color-aurora-text-dominant);
+    font-family: var(--font-sans);
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+

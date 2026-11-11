@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@mindset/ui-core": ["./packages/ui-core/src/index.ts"],
+      "@mindset/ui-core/*": ["./packages/ui-core/src/*"],
+      "@mindset/db-schema": ["./packages/db-schema/src/index.ts"],
+      "@mindset/db-schema/*": ["./packages/db-schema/src/*"],
+      "@mindset/identity-engine": ["./packages/identity-engine/src/index.ts"],
+      "@mindset/identity-engine/*": ["./packages/identity-engine/src/*"],
+      "@mindset/balance-engine": ["./packages/balance-engine/src/index.ts"],
+      "@mindset/balance-engine/*": ["./packages/balance-engine/src/*"],
+      "@mindset/i18n-locales": ["./packages/i18n-locales/src/index.ts"],
+      "@mindset/i18n-locales/*": ["./packages/i18n-locales/src/*"]
+    }
+  }
+}

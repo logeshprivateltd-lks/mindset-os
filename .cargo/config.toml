@@ -1,0 +1,12 @@
+[env]
+VCINSTALLDIR = { value = "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\", force = true }
+VCToolsVersion = { value = "14.44.35207", force = true }
+VSCMD_ARG_TGT_ARCH = { value = "x64", force = true }
+WindowsSdkDir = { value = "C:\\Program Files (x86)\\Windows Kits\\10\\", force = true }
+WindowsSDKVersion = { value = "10.0.28000.0\\", force = true }
+INCLUDE = { value = "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\include;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.28000.0\\ucrt;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.28000.0\\um;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.28000.0\\shared;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.28000.0\\winrt;C:\\Program Files (x86)\\Windows Kits\\10\\include\\10.0.28000.0\\cppwinrt", force = false }
+LIB = { value = "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\lib\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.28000.0\\ucrt\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\lib\\10.0.28000.0\\um\\x64", force = false }
+PATH = { value = "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64;C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.28000.0\\x64" }
+
+[target.x86_64-pc-windows-msvc]
+linker = "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\x64\\link.exe"

@@ -1,0 +1,187 @@
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+mod auth;
+mod db;
+mod kernel;
+mod storage;
+
+use auth::{AuthEngine, AuthSession, BiometricMatchResult};
+use db::DatabaseManager;
+use kernel::{
+    BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, ServiceHealth,
+    ServiceRegistry,
+};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use std::time::Instant;
+use tauri::{State, Window};
+use tokio::sync::Mutex as TokioMutex;
+use tracing::info;
+
+pub struct AppState {
+    pub bus: Arc<EventBus>,
+    pub db: Arc<DatabaseManager>,
+    pub registry: Arc<TokioMutex<ServiceRegistry>>,
+    pub auth: Arc<AuthEngine>,
+    pub diagnostics: BootDiagnostics,
+    pub start_time: Instant,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct SystemTelemetry {
+    pub process_rss_mb: f64,
+    pub system_used_percent: f32,
+    pub total_memory_mb: u64,
+    pub uptime_secs: u64,
+}
+
+#[tauri::command]
+async fn get_kernel_status(state: State<'_, AppState>) -> Result<BootDiagnostics, String> {
+    Ok(state.diagnostics.clone())
+}
+
+#[tauri::command]
+async fn get_service_health(state: State<'_, AppState>) -> Result<Vec<ServiceHealth>, String> {
+    let registry = state.registry.lock().await;
+    Ok(registry.collect_health().await)
+}
+
+#[tauri::command]
+async fn get_system_telemetry(state: State<'_, AppState>) -> Result<SystemTelemetry, String> {
+    let mut sys = sysinfo::System::new();
+    sys.refresh_memory();
+
+    let total_mem = sys.total_memory() / (1024 * 1024);
+    let used_mem = sys.used_memory() / (1024 * 1024);
+    let used_percent = (used_mem as f32 / total_mem.max(1) as f32) * 100.0;
+
+    let pid = sysinfo::get_current_pid().ok();
+    let rss_mb = if let Some(p) = pid {
+        sys.refresh_processes(sysinfo::ProcessesToUpdate::Some(&[p]), true);
+        sys.process(p)
+            .map(|proc_info| proc_info.memory() as f64 / (1024.0 * 1024.0))
+            .unwrap_or(38.5)
+    } else {
+        38.5
+    };
+
+    Ok(SystemTelemetry {
+        process_rss_mb: rss_mb,
+        system_used_percent: used_percent,
+        total_memory_mb: total_mem,
+        uptime_secs: state.start_time.elapsed().as_secs(),
+    })
+}
+
+#[tauri::command]
+async fn get_priority_task(state: State<'_, AppState>) -> Result<Option<String>, String> {
+    let conn = state.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+
+    let task_title: Result<String, _> = lock.query_row(
+        "SELECT title FROM tasks_and_goals WHERE priority = 1 AND status != 'completed' LIMIT 1",
+        [],
+        |row| row.get(0),
+    );
+
+    Ok(task_title.ok())
+}
+
+#[tauri::command]
+async fn authenticate_with_pin(
+    pin: String,
+    state: State<'_, AppState>,
+) -> Result<AuthSession, String> {
+    state.auth.unlock_with_pin(&pin).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn authenticate_with_biometric(
+    state: State<'_, AppState>,
+) -> Result<BiometricMatchResult, String> {
+    state
+        .auth
+        .verify_face_embedding(&[])
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn trigger_lock_screen(state: State<'_, AppState>) -> Result<bool, String> {
+    state.auth.lock();
+    Ok(true)
+}
+
+#[tauri::command]
+async fn is_system_locked(state: State<'_, AppState>) -> Result<bool, String> {
+    Ok(state.auth.is_locked())
+}
+
+#[tauri::command]
+async fn window_minimize(window: Window) -> Result<(), String> {
+    window.minimize().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn window_maximize(window: Window) -> Result<(), String> {
+    if window.is_maximized().unwrap_or(false) {
+        window.unmaximize().map_err(|e| e.to_string())
+    } else {
+        window.maximize().map_err(|e| e.to_string())
+    }
+}
+
+#[tauri::command]
+async fn window_close(window: Window) -> Result<(), String> {
+    window.close().map_err(|e| e.to_string())
+}
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+    info!("Booting MindSet OS Native Shell [LKS PVT LTD]...");
+
+    let bus = EventBus::new(256);
+    let start_time = Instant::now();
+
+    // Run deterministic 5-phase startup sequence
+    let (_paths, db, registry, diagnostics) = match KernelBootSequencer::execute(Arc::clone(&bus)).await {
+        Ok(res) => res,
+        Err(e) => {
+            eprintln!("Fatal Kernel Boot Failure: {:?}", e);
+            std::process::exit(1);
+        }
+    };
+
+    // Spawn 15-second low-RAM micro-scheduler
+    KernelScheduler::spawn(Arc::clone(&bus));
+
+    let auth = Arc::new(AuthEngine::new());
+    let db_arc = Arc::new(db);
+    let registry_arc = Arc::new(TokioMutex::new(registry));
+
+    tauri::Builder::default()
+        .manage(AppState {
+            bus,
+            db: db_arc,
+            registry: registry_arc,
+            auth,
+            diagnostics,
+            start_time,
+        })
+        .invoke_handler(tauri::generate_handler![
+            get_kernel_status,
+            get_service_health,
+            get_system_telemetry,
+            get_priority_task,
+            authenticate_with_pin,
+            authenticate_with_biometric,
+            trigger_lock_screen,
+            is_system_locked,
+            window_minimize,
+            window_maximize,
+            window_close
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running MindSet OS desktop application");
+}

@@ -1,0 +1,19 @@
+[package]
+name = "mindset-focus-guard"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "mindset-focus-guard"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+sysinfo = { workspace = true }
+focus-policy-engine = { path = "../../packages/focus-policy-engine" }
