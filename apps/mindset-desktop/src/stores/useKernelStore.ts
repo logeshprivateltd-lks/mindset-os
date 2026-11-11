@@ -13,6 +13,8 @@ export interface KernelStoreState {
   bootPhase: KernelBootPhase;
   isReady: boolean;
   isLocked: boolean;
+  isPrivacyBlurred: boolean;
+  isUacElevated: boolean;
   isStatusViewOpen: boolean;
   uptimeSecs: number;
 
@@ -38,6 +40,10 @@ export interface KernelStoreState {
   triggerRamPurge: () => Promise<EmergencyPurgeResult | null>;
   fetchEventHistory: (limit?: number) => Promise<void>;
   initEventListeners: () => Promise<() => void>;
+  syncAuthStatus: () => Promise<void>;
+  lockSystem: () => Promise<void>;
+  togglePrivacyBlur: () => Promise<boolean>;
+  setIsPrivacyBlurred: (blurred: boolean) => void;
   setBootPhase: (phase: KernelBootPhase) => void;
   setTelemetry: (rssMb: number, systemUsedPercent: number, totalMemoryMb: number, uptimeSecs: number) => void;
   setServices: (services: ServiceHealthReport[]) => void;
@@ -52,6 +58,8 @@ export const useKernelStore = create<KernelStoreState>((set, get) => ({
   bootPhase: 'BOOT_INIT',
   isReady: false,
   isLocked: true,
+  isPrivacyBlurred: false,
+  isUacElevated: false,
   isStatusViewOpen: false,
   uptimeSecs: 0,
   rssMb: 36.5,
@@ -224,6 +232,8 @@ export const useKernelStore = create<KernelStoreState>((set, get) => ({
           }));
         } else if (payload.type === 'ServiceStateChanged') {
           get().fetchKernelStatus();
+        } else if (payload.type === 'SecurityLockTriggered') {
+          set({ isLocked: true });
         }
       });
 
@@ -232,6 +242,48 @@ export const useKernelStore = create<KernelStoreState>((set, get) => ({
       return () => {};
     }
   },
+
+  syncAuthStatus: async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const status = await invoke<{
+        is_locked: boolean;
+        is_privacy_blurred: boolean;
+        is_uac_elevated: boolean;
+      }>('get_auth_status');
+      set({
+        isLocked: status.is_locked,
+        isPrivacyBlurred: status.is_privacy_blurred,
+        isUacElevated: status.is_uac_elevated,
+      });
+    } catch {
+      // Browser preview mode
+    }
+  },
+
+  lockSystem: async () => {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      await invoke('trigger_lock_screen');
+    } catch {
+      // Mock fallback
+    }
+    set({ isLocked: true });
+  },
+
+  togglePrivacyBlur: async () => {
+    let blurred = !get().isPrivacyBlurred;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      blurred = await invoke<boolean>('trigger_privacy_blur', { blurred });
+    } catch {
+      // Mock fallback
+    }
+    set({ isPrivacyBlurred: blurred });
+    return blurred;
+  },
+
+  setIsPrivacyBlurred: (isPrivacyBlurred) => set({ isPrivacyBlurred }),
 
   setBootPhase: (phase) =>
     set({

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useKernelStore } from '../stores/kernelStore';
 import { AuroraCard, Button, StatusBadge } from '@mindset/ui-core';
+import { useUac } from './security/useUac';
+import { UacModal } from './security/UacModal';
 
 export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
   const {
@@ -15,7 +17,23 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
     activeFocusMinutes,
     toggleFocusSession,
     setIsStatusViewOpen,
+    togglePrivacyBlur,
+    isUacElevated,
   } = useKernelStore();
+
+  const { requestElevation, modalProps } = useUac();
+  const [elevationGrantedMsg, setElevationGrantedMsg] = useState<string | null>(null);
+
+  const handleTestUac = async () => {
+    const granted = await requestElevation(
+      'Modify Focus Guard Kernel Policy & Low-Level Packet Filter',
+      'Focus Guard Policy Engine'
+    );
+    if (granted) {
+      setElevationGrantedMsg('UAC Admin Elevation Active (Valid 3 mins)');
+      setTimeout(() => setElevationGrantedMsg(null), 6000);
+    }
+  };
 
   return (
     <div className="pt-12 pb-6 px-6 max-w-6xl mx-auto space-y-6 select-none">
@@ -63,17 +81,43 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
           <div className="text-[11px] text-[#9CA3AF] uppercase tracking-wider font-semibold">
             Security & Smart Lock
           </div>
-          <div className="mt-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onLock}
-              className="w-full flex items-center justify-center space-x-1.5"
+          <div className="mt-2 space-y-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onLock}
+                className="w-full text-xs py-1"
+                title="Lock Workspace (Super + L / Ctrl + Alt + L)"
+              >
+                🔒 Lock
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={togglePrivacyBlur}
+                className="w-full text-xs py-1"
+                title="Instant Privacy Blur Guard (Alt + B)"
+              >
+                👁️‍🗨️ Blur
+              </Button>
+            </div>
+            <button
+              onClick={handleTestUac}
+              className="w-full py-1 px-2 rounded bg-[#182235] hover:bg-[#202B40] text-[10px] text-[#8B9CFF] font-medium border border-[#202B40] hover:border-[#8B9CFF]/40 transition-all flex items-center justify-center space-x-1"
             >
-              <span>🔒 Lock (Super + L)</span>
-            </Button>
+              <span>🛡️ Test UAC Elevation</span>
+            </button>
           </div>
-          <p className="text-[11px] text-[#9CA3AF] mt-2 text-center">Transient Face / PIN Auth</p>
+          {elevationGrantedMsg ? (
+            <p className="text-[10px] text-[#65E6C4] mt-1.5 text-center font-medium animate-fadeIn">
+              ✓ {elevationGrantedMsg}
+            </p>
+          ) : (
+            <p className="text-[10px] text-[#9CA3AF] mt-1.5 text-center">
+              {isUacElevated ? '🛡️ UAC Admin Elevated' : 'Multi-Modal Biometrics / PIN'}
+            </p>
+          )}
         </AuroraCard>
       </div>
 
@@ -243,6 +287,9 @@ export const Dashboard: React.FC<{ onLock: () => void }> = ({ onLock }) => {
           </div>
         </AuroraCard>
       </div>
+
+      {/* UAC Elevation Confirmation Modal */}
+      <UacModal {...modalProps} />
     </div>
   );
 };

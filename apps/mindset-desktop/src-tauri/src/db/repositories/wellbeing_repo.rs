@@ -381,3 +381,4 @@ pub fn end_focus_session(
 
     Ok(())
 }
+

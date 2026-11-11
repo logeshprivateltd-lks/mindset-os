@@ -21,6 +21,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 sysinfo = { workspace = true }
 rusqlite = { workspace = true }
+bcrypt = "0.17"
 dirs = { workspace = true }
 async-trait = { workspace = true }
 connect-protocol = { path = "../../../packages/connect-protocol" }

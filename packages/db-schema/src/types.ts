@@ -240,3 +240,34 @@ export type KernelEvent =
   | { type: 'SecurityLockTriggered'; payload: { reason: string } }
   | { type: 'SyncOplogAppended'; payload: { op_id: string; row_id: string; table_name: string } };
 
+export interface AuthSession {
+  session_token: string;
+  user_id: string;
+  authenticated_at: string;
+  expires_at: string;
+  auth_method: string;
+}
+
+export interface AuthStatus {
+  is_locked: boolean;
+  is_privacy_blurred: boolean;
+  is_uac_elevated: boolean;
+  active_user: string | null;
+  auth_method: string | null;
+  auto_lock_minutes: number;
+}
+
+export interface BiometricMatchResult {
+  success: boolean;
+  match_score: number;
+  inference_latency_ms: number;
+  method: string;
+}
+
+export interface FingerprintResult {
+  success: boolean;
+  enrolled: boolean;
+  message: string;
+}
+
+

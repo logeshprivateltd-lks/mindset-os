@@ -54,3 +54,4 @@ pub fn run_db_integrity_check_and_repair(
         timestamp_utc: Utc::now().to_rfc3339(),
     })
 }
+

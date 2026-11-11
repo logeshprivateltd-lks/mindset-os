@@ -163,3 +163,4 @@ CREATE TABLE IF NOT EXISTS vec_memory_fallback (
 );
 
 CREATE INDEX IF NOT EXISTS idx_vec_source ON vec_memory_fallback(source_type, source_id);
+

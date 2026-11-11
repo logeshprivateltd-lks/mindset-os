@@ -1,8 +1,14 @@
+/**
+ * MindSet OS Desktop Application Shell
+ * Powered by LKS PVT LTD
+ * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
+ */
+
 import React, { useEffect } from 'react';
 import { useKernelStore } from './stores/useKernelStore';
 import { TitleBar } from '@mindset/ui-core';
 import { BootSplashGate } from './components/BootSplashGate';
-import { LockScreen } from './components/LockScreen';
+import { SmartLockOverlay } from './pages/auth/SmartLockOverlay';
 import { Dashboard } from './components/Dashboard';
 import { StatusViewerModal } from './components/StatusViewerModal';
 
@@ -10,26 +16,49 @@ export const App: React.FC = () => {
   const {
     bootPhase,
     isLocked,
+    isPrivacyBlurred,
     rssMb,
     isStatusViewOpen,
     setIsLocked,
+    lockSystem,
+    togglePrivacyBlur,
+    syncAuthStatus,
     setIsStatusViewOpen,
     fetchKernelStatus,
+    initEventListeners,
   } = useKernelStore();
 
-  // Periodic Kernel Status Refresh
+  // Periodic Kernel Status Refresh & initial auth check
   useEffect(() => {
     fetchKernelStatus();
+    syncAuthStatus();
     const interval = setInterval(fetchKernelStatus, 3000);
     return () => clearInterval(interval);
-  }, [fetchKernelStatus]);
+  }, [fetchKernelStatus, syncAuthStatus]);
 
-  // Global hotkeys: Ctrl+L / Meta+L to lock, Ctrl+S / Meta+S to open /status
+  // Subscribe to Kernel broadcast events
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    initEventListeners().then((cleanup) => {
+      unlisten = cleanup;
+    });
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, [initEventListeners]);
+
+  // Global hotkeys:
+  // Super + L / Ctrl + L / Ctrl + Alt + L to lock
+  // Alt + B to toggle Privacy Blur Guard
+  // Ctrl + S / Meta + S to open /status modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+      if ((e.ctrlKey || e.metaKey || (e.altKey && e.ctrlKey)) && e.key.toLowerCase() === 'l') {
         e.preventDefault();
-        setIsLocked(true);
+        lockSystem();
+      } else if (e.altKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        togglePrivacyBlur();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         setIsStatusViewOpen(!isStatusViewOpen);
@@ -38,7 +67,7 @@ export const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isStatusViewOpen, setIsLocked, setIsStatusViewOpen]);
+  }, [isStatusViewOpen, lockSystem, togglePrivacyBlur, setIsStatusViewOpen]);
 
   const handleMinimize = async () => {
     try {
@@ -84,9 +113,18 @@ export const App: React.FC = () => {
         {/* Main OS Surface */}
         <main className="flex-1 relative overflow-y-auto">
           {isLocked ? (
-            <LockScreen onUnlock={() => setIsLocked(false)} />
+            <SmartLockOverlay onUnlock={() => setIsLocked(false)} />
           ) : (
-            <Dashboard onLock={() => setIsLocked(true)} />
+            <>
+              <Dashboard onLock={lockSystem} />
+              {/* Instant Privacy Blur Overlay (Alt + B) */}
+              {isPrivacyBlurred && (
+                <SmartLockOverlay
+                  isPrivacyBlurredOnly
+                  onUnlock={() => togglePrivacyBlur()}
+                />
+              )}
+            </>
           )}
         </main>
 

@@ -284,3 +284,4 @@ pub fn record_habit_completion(
 
     Ok(habit)
 }
+

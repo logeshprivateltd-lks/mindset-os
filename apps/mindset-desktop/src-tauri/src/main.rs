@@ -7,7 +7,7 @@ mod db;
 mod kernel;
 mod storage;
 
-use auth::{AuthEngine, AuthSession, BiometricMatchResult};
+use auth::AuthEngine;
 use commands::*;
 use db::DatabaseManager;
 use kernel::{
@@ -80,35 +80,6 @@ async fn get_priority_task(state: State<'_, AppState>) -> Result<Option<String>,
     );
 
     Ok(task_title.ok())
-}
-
-#[tauri::command]
-async fn authenticate_with_pin(
-    pin: String,
-    state: State<'_, AppState>,
-) -> Result<AuthSession, String> {
-    state.auth.unlock_with_pin(&pin).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn authenticate_with_biometric(
-    state: State<'_, AppState>,
-) -> Result<BiometricMatchResult, String> {
-    state
-        .auth
-        .verify_face_embedding(&[])
-        .map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-async fn trigger_lock_screen(state: State<'_, AppState>) -> Result<bool, String> {
-    state.auth.lock();
-    Ok(true)
-}
-
-#[tauri::command]
-async fn is_system_locked(state: State<'_, AppState>) -> Result<bool, String> {
-    Ok(state.auth.is_locked())
 }
 
 #[tauri::command]
@@ -211,14 +182,23 @@ async fn main() {
             db_search_vectors,
             db_purge_vector_cache,
             db_run_integrity_check_and_repair,
-            // Telemetry & Auth Commands
+            // Authentication & Security Commands
+            authenticate_with_pin,
+            authenticate_with_password,
+            authenticate_with_face,
+            authenticate_with_fingerprint,
+            enroll_face,
+            trigger_lock_screen,
+            trigger_privacy_blur,
+            request_uac_elevation,
+            is_uac_elevated,
+            is_system_locked,
+            is_privacy_blurred,
+            get_auth_status,
+            // System Telemetry Commands
             get_service_health,
             get_system_telemetry,
             get_priority_task,
-            authenticate_with_pin,
-            authenticate_with_biometric,
-            trigger_lock_screen,
-            is_system_locked,
             // Window Controls
             window_minimize,
             window_maximize,
