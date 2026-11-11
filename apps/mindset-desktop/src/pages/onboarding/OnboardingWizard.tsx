@@ -6,11 +6,7 @@
 
 import React, { useState, useMemo } from 'react';
 import type { UserProfile } from '@mindset/db-schema';
-import {
-  LOCALE_METADATA,
-  SupportedLocale,
-  t,
-} from '@mindset/i18n-locales';
+import type { SupportedLocale } from '@mindset/i18n-locales';
 import {
   PersonalContextBuilder,
   GoalItem,
@@ -25,6 +21,7 @@ import {
   ThemeSelector,
 } from '@mindset/ui-core';
 import { dbClient } from '../../lib/dbClient';
+import { LanguageSettingsPanel } from '../../components/settings/LanguageSettingsPanel';
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -123,7 +120,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
       user_id: 'default_student',
       display_name: displayName.trim() || 'MindSet Scholar',
       role,
-      interface_lang: interfaceLang === 'tanglish' ? 'en' : interfaceLang,
+      interface_lang: interfaceLang,
       ai_lang: aiLang,
       conversation_style: conversationStyle,
       goals_json: JSON.stringify(goals),
@@ -320,7 +317,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
           {/* SCREEN 2: Dual-Layer Multilingual Calibration                             */}
           {/* ========================================================================= */}
           {step === 2 && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div>
                 <h2 className="text-2xl font-bold text-[var(--text-dominant)]">
                   Dual-Layer Multilingual Setup
@@ -330,181 +327,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Layer A: OS Interface Language */}
-                <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-3">
-                  <div className="text-xs uppercase tracking-wider font-bold text-[var(--accent-secondary)]">
-                    Layer A: OS Interface Language
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(Object.keys(LOCALE_METADATA) as SupportedLocale[])
-                      .filter((loc) => loc !== 'tanglish')
-                      .map((loc) => {
-                        const meta = LOCALE_METADATA[loc];
-                        const isSelected = interfaceLang === loc;
-                        return (
-                          <button
-                            key={loc}
-                            onClick={() => setInterfaceLang(loc)}
-                            className="p-2.5 rounded-lg text-left text-xs transition border flex flex-col justify-between"
-                            style={{
-                              backgroundColor: isSelected ? 'var(--bg-elevated)' : 'var(--bg-primary)',
-                              borderColor: isSelected ? 'var(--accent-primary)' : 'var(--border-subtle)',
-                              color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                            }}
-                          >
-                            <span className="font-bold">{meta.nativeName}</span>
-                            <span className="text-[10px] opacity-70">{meta.name}</span>
-                          </button>
-                        );
-                      })}
-                  </div>
-                </div>
-
-                {/* Layer B: MindSet AI Response Language & Style */}
-                <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] space-y-4">
-                  <div className="text-xs uppercase tracking-wider font-bold text-[var(--accent-primary)]">
-                    Layer B: AI Mentor Speech Style
-                  </div>
-
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => {
-                        setAiLang('ta');
-                        setConversationStyle('tanglish');
-                      }}
-                      className="w-full p-3 rounded-lg text-left text-xs border transition flex items-center justify-between"
-                      style={{
-                        backgroundColor:
-                          aiLang === 'ta' && conversationStyle === 'tanglish'
-                            ? 'var(--bg-elevated)'
-                            : 'var(--bg-primary)',
-                        borderColor:
-                          aiLang === 'ta' && conversationStyle === 'tanglish'
-                            ? 'var(--accent-primary)'
-                            : 'var(--border-subtle)',
-                      }}
-                    >
-                      <div>
-                        <div className="font-bold text-[var(--text-dominant)]">Conversational Tanglish</div>
-                        <div className="text-[10px] text-[var(--text-muted)]">
-                          Tamil + English mix in Latin script (e.g. "Romba easy thaan")
-                        </div>
-                      </div>
-                      <span className="text-lg">✨</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setAiLang('ta');
-                        setConversationStyle('formal');
-                      }}
-                      className="w-full p-3 rounded-lg text-left text-xs border transition flex items-center justify-between"
-                      style={{
-                        backgroundColor:
-                          aiLang === 'ta' && conversationStyle === 'formal'
-                            ? 'var(--bg-elevated)'
-                            : 'var(--bg-primary)',
-                        borderColor:
-                          aiLang === 'ta' && conversationStyle === 'formal'
-                            ? 'var(--accent-primary)'
-                            : 'var(--border-subtle)',
-                      }}
-                    >
-                      <div>
-                        <div className="font-bold text-[var(--text-dominant)]">Pure Tamil (தமிழ்)</div>
-                        <div className="text-[10px] text-[var(--text-muted)]">
-                          Elegant Tamil script with scientific notation
-                        </div>
-                      </div>
-                      <span className="text-lg">📜</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setAiLang('en');
-                        setConversationStyle('formal');
-                      }}
-                      className="w-full p-3 rounded-lg text-left text-xs border transition flex items-center justify-between"
-                      style={{
-                        backgroundColor:
-                          aiLang === 'en'
-                            ? 'var(--bg-elevated)'
-                            : 'var(--bg-primary)',
-                        borderColor:
-                          aiLang === 'en'
-                            ? 'var(--accent-primary)'
-                            : 'var(--border-subtle)',
-                      }}
-                    >
-                      <div>
-                        <div className="font-bold text-[var(--text-dominant)]">Pure English</div>
-                        <div className="text-[10px] text-[var(--text-muted)]">
-                          Clear, precise, direct academic English
-                        </div>
-                      </div>
-                      <span className="text-lg">🎯</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setAiLang('hi');
-                        setConversationStyle('formal');
-                      }}
-                      className="w-full p-3 rounded-lg text-left text-xs border transition flex items-center justify-between"
-                      style={{
-                        backgroundColor:
-                          aiLang === 'hi'
-                            ? 'var(--bg-elevated)'
-                            : 'var(--bg-primary)',
-                        borderColor:
-                          aiLang === 'hi'
-                            ? 'var(--accent-primary)'
-                            : 'var(--border-subtle)',
-                      }}
-                    >
-                      <div>
-                        <div className="font-bold text-[var(--text-dominant)]">Hindi (हिन्दी)</div>
-                        <div className="text-[10px] text-[var(--text-muted)]">
-                          Conversational Hindi / Devanagari script
-                        </div>
-                      </div>
-                      <span className="text-lg">🇮🇳</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Synchronous Live Preview Card */}
-              <div className="p-4 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)]">
-                <div className="text-[11px] font-mono text-[var(--accent-primary)] uppercase tracking-wider mb-2">
-                  Live Bilingual Synchronous Preview
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                  <div className="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
-                    <span className="text-[10px] text-[var(--text-muted)] block mb-1">
-                      OS Button Preview ({interfaceLang})
-                    </span>
-                    <button className="px-3 py-1.5 rounded bg-[var(--accent-primary)] text-[var(--bg-base)] text-xs font-bold">
-                      {t(interfaceLang, 'onboarding.launch')}
-                    </button>
-                  </div>
-                  <div className="p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-subtle)]">
-                    <span className="text-[10px] text-[var(--text-muted)] block mb-1">
-                      AI Mentor Chat Preview ({conversationStyle === 'tanglish' ? 'Tanglish' : aiLang})
-                    </span>
-                    <p className="text-xs text-[var(--text-dominant)] italic">
-                      {conversationStyle === 'tanglish'
-                        ? '“Vanakkam! Naan unga MindSet AI mentor. Innikku daily target mudikkalaama?”'
-                        : aiLang === 'ta'
-                        ? '“வணக்கம்! நான் உங்கள் மைண்ட்செட் வழிகாட்டி. இன்றைய பாடத்திட்டத்தைத் தொடங்கலாமா?”'
-                        : aiLang === 'hi'
-                        ? '“नमस्ते! मैं आपका MindSet AI मेंटर हूँ। आज का अध्ययन लक्ष्य शुरू करें?”'
-                        : '“Hello! I am your MindSet AI mentor. Ready to master your syllabus today?”'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <LanguageSettingsPanel
+                isEmbeddedInOnboarding={true}
+                initialInterfaceLang={interfaceLang}
+                initialAiLang={aiLang}
+                initialConversationStyle={conversationStyle}
+                onChange={({ interfaceLang: loc, aiLang: l, conversationStyle: s }) => {
+                  setInterfaceLang(loc);
+                  setAiLang(l as typeof aiLang);
+                  setConversationStyle(s as typeof conversationStyle);
+                }}
+              />
             </div>
           )}
 

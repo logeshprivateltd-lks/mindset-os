@@ -5,11 +5,15 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
+    "test": "pnpm dlx tsx test/i18n.test.ts",
     "typecheck": "tsc --noEmit",
     "lint": "echo @mindset/i18n-locales lint clean"
   },
   "devDependencies": {
     "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "i18next": "^27.1.1",
+    "react-i18next": "^18.0.1"
   }
 }
-

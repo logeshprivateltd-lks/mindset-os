@@ -16,6 +16,7 @@ export interface StartMenuOverlayProps {
   onOpenStatus: () => void;
   onOpenMemoryInspector?: () => void;
   onOpenOnboarding?: () => void;
+  onOpenLanguageSettings?: () => void;
 }
 
 export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
@@ -25,6 +26,7 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
   onOpenStatus,
   onOpenMemoryInspector,
   onOpenOnboarding,
+  onOpenLanguageSettings,
 }) => {
   const { openWindow } = useWindowManagerStore();
   const { currentActivityId, switchActivity } = useActivityStore();
@@ -145,6 +147,20 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-1.5">
+            {onOpenLanguageSettings && (
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenLanguageSettings();
+                  onClose();
+                }}
+                title="Language & AI Engine Settings"
+                className="p-2 rounded-lg bg-[var(--surface-primary)] hover:bg-[var(--surface-elevated)] text-[var(--accent-primary)] border border-[var(--border-subtle)] transition-colors"
+              >
+                🌐
+              </button>
+            )}
+
             {onOpenMemoryInspector && (
               <button
                 type="button"

@@ -17,8 +17,10 @@
     "@mindset/identity-engine": "workspace:*",
     "@mindset/ui-core": "workspace:*",
     "@tauri-apps/api": "^2.2.0",
+    "i18next": "^27.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^18.0.1",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -31,4 +33,3 @@
     "vite": "^6.2.0"
   }
 }
-

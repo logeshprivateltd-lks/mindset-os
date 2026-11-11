@@ -19,6 +19,7 @@ import { useActivityStore } from './activities/useActivityStore';
 import { APP_REGISTRY } from './apps/AppRegistry';
 import { MemoryInspectorModal } from '../components/MemoryInspectorModal';
 import { LivingProfileSuggestionCard } from '../components/LivingProfileSuggestionCard';
+import { LanguageSettingsModal } from '../components/settings/LanguageSettingsModal';
 import { dbClient } from '../lib/dbClient';
 
 export interface DesktopShellProps {
@@ -37,6 +38,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
 
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [isMemoryInspectorOpen, setIsMemoryInspectorOpen] = useState(false);
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeSuggestion, setActiveSuggestion] = useState<ProfileEvolutionSuggestion | null>(null);
 
@@ -153,12 +155,20 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
         onOpenStatus={onOpenStatus}
         onOpenMemoryInspector={() => setIsMemoryInspectorOpen(true)}
         onOpenOnboarding={onOpenOnboarding}
+        onOpenLanguageSettings={() => setIsLanguageModalOpen(true)}
       />
 
       {/* 7. Sovereign AI Memory Inspector Modal (Ctrl + M) */}
       <MemoryInspectorModal
         isOpen={isMemoryInspectorOpen}
         onClose={() => setIsMemoryInspectorOpen(false)}
+      />
+
+      {/* 8. Dual-Layer Language & AI Speech Settings Modal */}
+      <LanguageSettingsModal
+        isOpen={isLanguageModalOpen}
+        onClose={() => setIsLanguageModalOpen(false)}
+        onSaved={(p) => setUserProfile(p)}
       />
 
       {/* 8. Persistent Bottom Liquid Glass Taskbar Dock */}

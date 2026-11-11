@@ -7,3 +7,4 @@ export * from './types';
 export * from './PersonalContextBuilder';
 export * from './LivingProfileEngine';
 export * from './MemoryInspectorService';
+export * from './languagePromptRules';
