@@ -15,12 +15,14 @@ export interface TaskbarDockProps {
   onToggleStartMenu: () => void;
   isStartMenuOpen: boolean;
   onOpenStatus: () => void;
+  onOpenCommandPalette?: () => void;
 }
 
 export const TaskbarDock: React.FC<TaskbarDockProps> = ({
   onToggleStartMenu,
   isStartMenuOpen,
   onOpenStatus,
+  onOpenCommandPalette,
 }) => {
   const { windows, activeWindowId, openWindow, minimizeWindow, bringToFront } = useWindowManagerStore();
   const { currentActivityId, toggleSwitcher } = useActivityStore();
@@ -87,6 +89,22 @@ export const TaskbarDock: React.FC<TaskbarDockProps> = ({
           <span className="font-semibold text-[11px] hidden sm:inline">{activeActivity.name}</span>
           <span className="text-[10px] text-[var(--text-muted)] font-mono">⇥</span>
         </button>
+
+        {/* Global Command Palette & Unified Search Button (Ctrl + K) */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            title="Search OS & Commands (Ctrl + K)"
+            className="h-8 px-2.5 rounded-lg border border-[var(--border-subtle)] hover:border-[#8B9CFF] bg-[var(--surface-primary)] hover:bg-[var(--surface-elevated)] flex items-center space-x-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--text-dominant)] transition-colors"
+          >
+            <span>🔍</span>
+            <span className="hidden md:inline text-[11px] font-medium">Search</span>
+            <kbd className="hidden md:inline px-1 py-0.2 rounded text-[9px] font-mono bg-[var(--surface-secondary)] text-[#8B9CFF] border border-[#8B9CFF]/30">
+              Ctrl+K
+            </kbd>
+          </button>
+        )}
       </div>
 
       {/* --------------------------------------------------------- */}

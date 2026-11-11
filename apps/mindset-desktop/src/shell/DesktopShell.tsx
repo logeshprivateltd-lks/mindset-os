@@ -21,6 +21,8 @@ import { MemoryInspectorModal } from '../components/MemoryInspectorModal';
 import { LivingProfileSuggestionCard } from '../components/LivingProfileSuggestionCard';
 import { LanguageSettingsModal } from '../components/settings/LanguageSettingsModal';
 import { FloatingAiOrb } from '../components/floating-ai';
+import { GlobalCommandPalette } from '../components/command-palette';
+import { navigationRouter } from '../navigation/navigationRouter';
 import { dbClient } from '../lib/dbClient';
 
 export interface DesktopShellProps {
@@ -34,12 +36,13 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
   onOpenStatus,
   onOpenOnboarding,
 }) => {
-  const { windows, openWindow } = useWindowManagerStore();
+  const { windows, openWindow, bringToFront } = useWindowManagerStore();
   const { currentActivityId, toggleSwitcher } = useActivityStore();
 
   const [isStartMenuOpen, setIsStartMenuOpen] = useState(false);
   const [isMemoryInspectorOpen, setIsMemoryInspectorOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeSuggestion, setActiveSuggestion] = useState<ProfileEvolutionSuggestion | null>(null);
 
@@ -80,7 +83,8 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
   // Global hotkeys for Desktop Shell:
   // Super + Tab -> Activity Switcher
   // Ctrl + M / Super + M -> AI Memory Inspector
-  // Escape -> close Start Menu
+  // Ctrl + K / Super + K -> Global Command Palette
+  // Escape -> close Start Menu / Command Palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.altKey) && e.key === 'Tab') {
@@ -89,15 +93,93 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'm') {
         e.preventDefault();
         setIsMemoryInspectorOpen((prev) => !prev);
-      } else if (e.key === 'Escape' && isStartMenuOpen) {
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsStartMenuOpen(false);
+        setIsCommandPaletteOpen((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        if (isStartMenuOpen) {
+          e.preventDefault();
+          setIsStartMenuOpen(false);
+        }
+        if (isCommandPaletteOpen) {
+          e.preventDefault();
+          setIsCommandPaletteOpen(false);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isStartMenuOpen, toggleSwitcher]);
+  }, [isStartMenuOpen, isCommandPaletteOpen, toggleSwitcher]);
+
+  // Subscribe to canonical route navigation (/mind, /tasks, /files, /status, etc.)
+  useEffect(() => {
+    const unsubscribe = navigationRouter.subscribe(({ route }) => {
+      switch (route) {
+        case '/':
+        case '/dashboard':
+        case '/timeline': {
+          const win = windows.find((w) => w.appId === 'dashboard');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('dashboard', { title: 'Command Center', icon: '⚡' }, currentActivityId);
+          }
+          break;
+        }
+        case '/tasks': {
+          const win = windows.find((w) => w.appId === 'tasks');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('tasks', { title: 'Tasks & Goals', icon: '🎯' }, currentActivityId);
+          }
+          break;
+        }
+        case '/habits':
+        case '/journal': {
+          const win = windows.find((w) => w.appId === 'journal');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('journal', { title: 'Daily Journal & Habits', icon: '✍️' }, currentActivityId);
+          }
+          break;
+        }
+        case '/files': {
+          const win = windows.find((w) => w.appId === 'files');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('files', { title: 'Study Vault & Files', icon: '🗂️' }, currentActivityId);
+          }
+          break;
+        }
+        case '/mood': {
+          const win = windows.find((w) => w.appId === 'balance');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('balance', { title: 'MindSet Balance', icon: '🌿' }, currentActivityId);
+          }
+          break;
+        }
+        case '/mind':
+        case '/insights':
+          setIsMemoryInspectorOpen(true);
+          break;
+        case '/settings':
+          setIsLanguageModalOpen(true);
+          break;
+        case '/status':
+        case '/devices':
+          onOpenStatus();
+          break;
+      }
+    });
+
+    return () => unsubscribe();
+  }, [windows, currentActivityId, openWindow, bringToFront, onOpenStatus]);
 
   // Filter windows belonging to current activity workspace (or pinned across all)
   const visibleWindows = windows.filter(
@@ -175,11 +257,18 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
       {/* 9. Always-On-Top Floating AI Orb & Screen Doubt Solver (Alt + Space, Alt + S) */}
       <FloatingAiOrb />
 
-      {/* 10. Persistent Bottom Liquid Glass Taskbar Dock */}
+      {/* 10. Global Command Palette & Unified Search (Ctrl + K) */}
+      <GlobalCommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
+
+      {/* 11. Persistent Bottom Liquid Glass Taskbar Dock */}
       <TaskbarDock
         isStartMenuOpen={isStartMenuOpen}
         onToggleStartMenu={() => setIsStartMenuOpen(!isStartMenuOpen)}
         onOpenStatus={onOpenStatus}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
     </div>
   );

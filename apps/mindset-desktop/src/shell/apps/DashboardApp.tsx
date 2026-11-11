@@ -1,14 +1,14 @@
 /**
  * MindSet OS Dashboard App Wrapper for Window Manager
+ * Renders the 5-Zone Personalised Command Center Dashboard
  * Copyright (c) 2026 LKS PVT LTD. All rights reserved.
  */
 
 import React from 'react';
-import { Dashboard } from '../../components/Dashboard';
-import { useKernelStore } from '../../stores/kernelStore';
+import { CommandCenterPage } from '../../pages/command-center';
+import { useKernelStore } from '../../stores/useKernelStore';
 
 export const DashboardApp: React.FC = () => {
   const { lockSystem } = useKernelStore();
-  return <Dashboard onLock={lockSystem} />;
+  return <CommandCenterPage onLock={lockSystem} />;
 };
-
