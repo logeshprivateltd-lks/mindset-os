@@ -20,6 +20,7 @@ import { InsightsPage } from '../../pages/insights';
 import { MoodCheckinModal } from '../../pages/mood';
 import { SettingsPage } from '../../pages/settings';
 import { AppHubPage } from '../../pages/app-hub';
+import { DeviceManagerPage } from '../../pages/devices';
 import { OfflineLecturePlayer } from '../../components/utilities/OfflineLecturePlayer';
 
 export interface AppMetadata {
@@ -223,5 +224,15 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 920,
     defaultHeight: 620,
     description: 'Distraction-free local video player with 0.75x–2.5x speed control and timestamp bookmarking to study notes.',
+  },
+  devices: {
+    appId: 'devices',
+    title: 'Hardware & Device Manager',
+    icon: '🔌',
+    subjectTag: 'Hardware',
+    component: DeviceManagerPage,
+    defaultWidth: 1040,
+    defaultHeight: 680,
+    description: 'Hardware topology, USB peripherals, Wi-Fi driver diagnostics, power governors, and media fallback routing.',
   },
 };

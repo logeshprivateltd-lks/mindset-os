@@ -270,4 +270,146 @@ export interface FingerprintResult {
   message: string;
 }
 
+// -------------------------------------------------------------------------
+// Hardware & Device Manager DTOs (/devices)
+// -------------------------------------------------------------------------
+
+export interface UsbDevice {
+  id: string;
+  name: string;
+  device_type: 'keyboard' | 'mouse' | 'storage' | 'printer' | 'scanner' | 'audio' | 'camera' | 'network' | 'other' | string;
+  vendor_id?: string | null;
+  product_id?: string | null;
+  connected_port?: string | null;
+  is_removable: boolean;
+  status: string;
+}
+
+export interface DisplayInfo {
+  id: string;
+  name: string;
+  resolution: string;
+  refresh_rate_hz: number;
+  is_primary: boolean;
+  scale_factor: number;
+  connection_type: string;
+}
+
+export interface StorageDrive {
+  id: string;
+  name: string;
+  mount_point: string;
+  fs_type: string;
+  total_bytes: number;
+  available_bytes: number;
+  used_bytes: number;
+  used_percent: number;
+  is_removable: boolean;
+  is_system: boolean;
+}
+
+export interface DiskCleanupCategory {
+  name: string;
+  bytes: number;
+  description: string;
+}
+
+export interface DiskCleanupReport {
+  drive_mount: string;
+  total_cleanable_bytes: number;
+  categories: DiskCleanupCategory[];
+  timestamp_utc: string;
+  cleaned: boolean;
+}
+
+export interface PeripheralReport {
+  usb_devices: UsbDevice[];
+  displays: DisplayInfo[];
+  storage_drives: StorageDrive[];
+  keyboards_count: number;
+  mice_count: number;
+  printers_count: number;
+  scanners_count: number;
+  timestamp_utc: string;
+}
+
+export interface WifiAdapterInfo {
+  adapter_name: string;
+  description: string;
+  mac_address: string;
+  chipset: string;
+  is_external_usb: boolean;
+  is_connected: boolean;
+  ssid?: string | null;
+  link_quality_percent: number;
+  signal_strength_dbm: number;
+  driver_version: string;
+  driver_status: string;
+  ip_address?: string | null;
+  gateway?: string | null;
+  dns_servers: string[];
+  hotspot_active: boolean;
+}
+
+export interface NetworkDiagnosticsReport {
+  adapters: WifiAdapterInfo[];
+  primary_adapter?: string | null;
+  internet_reachable: boolean;
+  dns_resolving: boolean;
+  latency_ms?: number | null;
+  is_external_wifi_detected: boolean;
+  suggested_actions: string[];
+  timestamp_utc: string;
+}
+
+export interface DriverResetResult {
+  success: boolean;
+  message: string;
+  requires_elevation: boolean;
+  steps_taken: string[];
+}
+
+export type GovernorProfileType = 'EcoStudy' | 'Balanced' | 'AiBoost';
+
+export interface PowerThermalReport {
+  active_profile: GovernorProfileType | string;
+  display_name: string;
+  profile_description: string;
+  battery_percent?: number | null;
+  is_charging: boolean;
+  time_remaining_minutes?: number | null;
+  battery_health_percent: number;
+  cpu_temp_celsius: number;
+  ram_temp_celsius?: number | null;
+  fan_speed_rpm?: number | null;
+  power_consumption_watts?: number | null;
+  thermal_throttling: boolean;
+  timestamp_utc: string;
+}
+
+export interface MediaDevice {
+  id: string;
+  name: string;
+  kind: 'audio_input' | 'audio_output' | 'video_input' | string;
+  is_default: boolean;
+  is_fallback_virtual: boolean;
+  status: string;
+}
+
+export interface MediaRoutingReport {
+  audio_inputs: MediaDevice[];
+  audio_outputs: MediaDevice[];
+  video_inputs: MediaDevice[];
+  active_audio_input_id: string;
+  active_audio_output_id: string;
+  active_video_input_id: string;
+  mic_fallback_active: boolean;
+  mic_fallback_label: string;
+  camera_fallback_active: boolean;
+  camera_fallback_label: string;
+  bluetooth_fallback_active: boolean;
+  bluetooth_fallback_label: string;
+  timestamp_utc: string;
+}
+
 

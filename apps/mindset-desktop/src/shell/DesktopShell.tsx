@@ -250,8 +250,16 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
+        case '/devices': {
+          const win = windows.find((w) => w.appId === 'devices');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('devices', { title: 'Hardware & Device Manager', icon: '🔌' }, currentActivityId);
+          }
+          break;
+        }
         case '/status':
-        case '/devices':
           onOpenStatus();
           break;
       }

@@ -5,6 +5,7 @@ mod ai;
 mod auth;
 mod commands;
 mod db;
+mod devices;
 mod fs;
 mod kernel;
 mod storage;
@@ -13,6 +14,7 @@ use ai::*;
 use auth::AuthEngine;
 use commands::*;
 use db::DatabaseManager;
+use devices::*;
 use fs::*;
 use kernel::{
     BootDiagnostics, EventBus, KernelBootSequencer, KernelScheduler, MindSetKernel, ServiceHealth,
@@ -235,6 +237,17 @@ async fn main() {
             rag_list_documents,
             rag_search_chunks,
             rag_delete_document,
+            // Hardware & Device Manager Commands
+            devices_get_peripherals,
+            devices_eject_drive,
+            devices_trigger_disk_cleanup,
+            devices_get_network_diagnostics,
+            devices_reset_wifi_driver,
+            devices_toggle_hotspot,
+            devices_get_power_thermal_status,
+            devices_set_power_governor_profile,
+            devices_get_media_routing,
+            devices_select_media_device,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,
