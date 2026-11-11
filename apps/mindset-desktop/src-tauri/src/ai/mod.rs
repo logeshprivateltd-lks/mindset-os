@@ -2,7 +2,15 @@
 //! Copyright (c) 2026 LKS PVT LTD. All rights reserved.
 
 pub mod laya_engine;
+pub mod screen_reader;
 
+#[allow(unused_imports)]
+pub use screen_reader::{
+    OcrExtractionResult, ScreenCaptureRegion, ScreenCaptureResult, ScreenDoubtRequest,
+    ScreenDoubtResponse, VoiceBridgeStatus,
+};
+
+use crate::kernel::MindSetKernel;
 use laya_engine::{
     LayaEngine, LayaStreamRequest, LocalModelInfo,
 };
@@ -107,4 +115,47 @@ pub async fn ai_execute_structured_tool_call(
     )
     .await
 }
+
+// ---------------------------------------------------------------------------
+// Screen Reader, Vision & Voice Bridge Commands
+// ---------------------------------------------------------------------------
+
+#[command]
+pub async fn ai_capture_screen_region(
+    x: i32,
+    y: i32,
+    width: u32,
+    height: u32,
+) -> Result<ScreenCaptureResult, String> {
+    screen_reader::capture_screen_region(x, y, width, height)
+}
+
+#[command]
+pub async fn ai_capture_active_window() -> Result<ScreenCaptureResult, String> {
+    screen_reader::capture_active_window()
+}
+
+#[command]
+pub async fn ai_extract_screen_text_and_formulas(
+    image_base64: String,
+    hint_text: Option<String>,
+) -> Result<OcrExtractionResult, String> {
+    screen_reader::extract_screen_text_and_formulas(&image_base64, hint_text.as_deref()).await
+}
+
+#[command]
+pub async fn ai_solve_screen_doubt(
+    request: ScreenDoubtRequest,
+) -> Result<ScreenDoubtResponse, String> {
+    screen_reader::solve_screen_doubt(request).await
+}
+
+#[command]
+pub async fn ai_get_voice_capabilities(
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<VoiceBridgeStatus, String> {
+    let status = kernel.get_status().await;
+    Ok(screen_reader::get_voice_capabilities(status.hardware.has_mic))
+}
+
 

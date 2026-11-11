@@ -20,6 +20,7 @@ import { APP_REGISTRY } from './apps/AppRegistry';
 import { MemoryInspectorModal } from '../components/MemoryInspectorModal';
 import { LivingProfileSuggestionCard } from '../components/LivingProfileSuggestionCard';
 import { LanguageSettingsModal } from '../components/settings/LanguageSettingsModal';
+import { FloatingAiOrb } from '../components/floating-ai';
 import { dbClient } from '../lib/dbClient';
 
 export interface DesktopShellProps {
@@ -171,7 +172,10 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
         onSaved={(p) => setUserProfile(p)}
       />
 
-      {/* 8. Persistent Bottom Liquid Glass Taskbar Dock */}
+      {/* 9. Always-On-Top Floating AI Orb & Screen Doubt Solver (Alt + Space, Alt + S) */}
+      <FloatingAiOrb />
+
+      {/* 10. Persistent Bottom Liquid Glass Taskbar Dock */}
       <TaskbarDock
         isStartMenuOpen={isStartMenuOpen}
         onToggleStartMenu={() => setIsStartMenuOpen(!isStartMenuOpen)}

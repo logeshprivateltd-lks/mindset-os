@@ -209,6 +209,11 @@ async fn main() {
             ai_unload_model,
             ai_restart_ollama,
             ai_execute_structured_tool_call,
+            ai_capture_screen_region,
+            ai_capture_active_window,
+            ai_extract_screen_text_and_formulas,
+            ai_solve_screen_doubt,
+            ai_get_voice_capabilities,
             // File Explorer & Storage Operations
             fs_list_directory,
             fs_create_folder,
