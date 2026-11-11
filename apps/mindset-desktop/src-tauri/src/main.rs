@@ -187,6 +187,7 @@ async fn main() {
             db_search_vectors,
             db_purge_vector_cache,
             db_run_integrity_check_and_repair,
+            db_list_timeline_events,
             // Authentication & Security Commands
             authenticate_with_pin,
             authenticate_with_password,

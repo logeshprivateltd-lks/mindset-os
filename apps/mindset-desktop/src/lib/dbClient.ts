@@ -11,6 +11,7 @@ import type {
   JournalEntry,
   MoodCheckin,
   FocusSession,
+  TimelineEvent,
   VectorSearchResult,
   DbIntegrityReport,
 } from '@mindset/db-schema';
@@ -277,6 +278,22 @@ export const dbClient = {
   diagnostics: {
     runIntegrityCheckAndRepair: async (): Promise<DbIntegrityReport> => {
       return await invokeTauri<DbIntegrityReport>('db_run_integrity_check_and_repair');
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // 7. Chronological Activity Timeline
+  // -------------------------------------------------------------------------
+  timeline: {
+    list: async (limit = 50, eventType?: string): Promise<TimelineEvent[]> => {
+      try {
+        return await invokeTauri<TimelineEvent[]>('db_list_timeline_events', {
+          limit,
+          eventType,
+        });
+      } catch {
+        return [];
+      }
     },
   },
 };

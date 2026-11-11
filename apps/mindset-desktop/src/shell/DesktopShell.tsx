@@ -117,8 +117,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
     const unsubscribe = navigationRouter.subscribe(({ route }) => {
       switch (route) {
         case '/':
-        case '/dashboard':
-        case '/timeline': {
+        case '/dashboard': {
           const win = windows.find((w) => w.appId === 'dashboard');
           if (win) {
             bringToFront(win.id);
@@ -136,13 +135,30 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
           }
           break;
         }
-        case '/habits':
+        case '/habits': {
+          const win = windows.find((w) => w.appId === 'habits');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('habits', { title: 'Habits & Conditioning', icon: '🔥' }, currentActivityId);
+          }
+          break;
+        }
+        case '/timeline': {
+          const win = windows.find((w) => w.appId === 'timeline');
+          if (win) {
+            bringToFront(win.id);
+          } else {
+            openWindow('timeline', { title: 'Activity Timeline', icon: '⏱️' }, currentActivityId);
+          }
+          break;
+        }
         case '/journal': {
           const win = windows.find((w) => w.appId === 'journal');
           if (win) {
             bringToFront(win.id);
           } else {
-            openWindow('journal', { title: 'Daily Journal & Habits', icon: '✍️' }, currentActivityId);
+            openWindow('journal', { title: 'Daily Journal & Reflection', icon: '✍️' }, currentActivityId);
           }
           break;
         }

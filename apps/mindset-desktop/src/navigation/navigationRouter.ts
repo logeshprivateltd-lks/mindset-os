@@ -157,3 +157,4 @@ export const CANONICAL_ROUTES_META: Record<
     category: 'system',
   },
 };
+

@@ -468,3 +468,89 @@ pub async fn db_run_integrity_check_and_repair(
     .map_err(|e| e.to_string())
 }
 
+// ---------------------------------------------------------------------------
+// 7. Chronological Activity Timeline Commands
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+pub struct TimelineEventRecord {
+    pub id: String,
+    pub event_type: String,
+    pub title: String,
+    pub metadata_json: String,
+    pub created_at: String,
+}
+
+#[tauri::command]
+pub async fn db_list_timeline_events(
+    limit: Option<usize>,
+    event_type: Option<String>,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<Vec<TimelineEventRecord>, String> {
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+
+    let limit_val = limit.unwrap_or(50);
+    let mut events = Vec::new();
+
+    if let Some(ref et) = event_type {
+        let mut stmt = lock
+            .prepare(
+                "SELECT id, event_type, title, metadata_json, created_at 
+                 FROM timeline_events 
+                 WHERE event_type = ?1 
+                 ORDER BY created_at DESC 
+                 LIMIT ?2",
+            )
+            .map_err(|e| e.to_string())?;
+
+        let rows = stmt
+            .query_map(rusqlite::params![et, limit_val], |row| {
+                Ok(TimelineEventRecord {
+                    id: row.get(0)?,
+                    event_type: row.get(1)?,
+                    title: row.get(2)?,
+                    metadata_json: row.get(3)?,
+                    created_at: row.get(4)?,
+                })
+            })
+            .map_err(|e| e.to_string())?;
+
+        for r in rows {
+            if let Ok(event) = r {
+                events.push(event);
+            }
+        }
+    } else {
+        let mut stmt = lock
+            .prepare(
+                "SELECT id, event_type, title, metadata_json, created_at 
+                 FROM timeline_events 
+                 ORDER BY created_at DESC 
+                 LIMIT ?1",
+            )
+            .map_err(|e| e.to_string())?;
+
+        let rows = stmt
+            .query_map(rusqlite::params![limit_val], |row| {
+                Ok(TimelineEventRecord {
+                    id: row.get(0)?,
+                    event_type: row.get(1)?,
+                    title: row.get(2)?,
+                    metadata_json: row.get(3)?,
+                    created_at: row.get(4)?,
+                })
+            })
+            .map_err(|e| e.to_string())?;
+
+        for r in rows {
+            if let Ok(event) = r {
+                events.push(event);
+            }
+        }
+    }
+
+    Ok(events)
+}
+
+

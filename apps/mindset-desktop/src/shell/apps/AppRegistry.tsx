@@ -12,6 +12,9 @@ import { JournalNotesApp } from './JournalNotesApp';
 import { BalanceRelaxApp } from './BalanceRelaxApp';
 import { DashboardApp } from './DashboardApp';
 import { FileExplorerPage, RagDocumentTutor } from '../../pages/files';
+import { HabitsPage } from '../../pages/habits';
+import { TimelinePage } from '../../pages/timeline';
+import { GoalsAndSyllabusView, SmartPlannerPage } from '../../pages/tasks';
 
 export interface AppMetadata {
   appId: string;
@@ -104,5 +107,45 @@ export const APP_REGISTRY: Record<string, AppMetadata> = {
     defaultWidth: 1120,
     defaultHeight: 720,
     description: 'Split-screen textbook reader with context-locked StudyAgent and [Page X] citations.',
+  },
+  habits: {
+    appId: 'habits',
+    title: 'Habits & Subconscious Conditioning',
+    icon: '🔥',
+    subjectTag: 'Mindset',
+    component: HabitsPage,
+    defaultWidth: 840,
+    defaultHeight: 580,
+    description: 'Non-punitive habit tracker with consistency heatmaps and morning/evening visualization.',
+  },
+  timeline: {
+    appId: 'timeline',
+    title: 'Chronological Activity Timeline',
+    icon: '⏱️',
+    subjectTag: 'Activity',
+    component: TimelinePage,
+    defaultWidth: 860,
+    defaultHeight: 600,
+    description: 'Immutable chronological activity stream logging tasks, habits, and focus blocks.',
+  },
+  goals: {
+    appId: 'goals',
+    title: 'Academic Goals & Syllabus (590/600)',
+    icon: '🌳',
+    subjectTag: 'Syllabus',
+    component: GoalsAndSyllabusView,
+    defaultWidth: 960,
+    defaultHeight: 640,
+    description: 'Class 12 target calculator and chapter mastery skill-tree with auto-scheduler.',
+  },
+  planner: {
+    appId: 'planner',
+    title: 'Smart Timetable & Planner',
+    icon: '📅',
+    subjectTag: 'Schedule',
+    component: SmartPlannerPage,
+    defaultWidth: 920,
+    defaultHeight: 620,
+    description: 'Configurable recurring schedule template with drag-and-drop task time-blocking.',
   },
 };
