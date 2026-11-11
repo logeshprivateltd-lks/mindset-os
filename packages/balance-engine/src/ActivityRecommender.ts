@@ -460,3 +460,4 @@ export class ActivityRecommender {
     return HOBBY_CHALLENGES;
   }
 }
+
