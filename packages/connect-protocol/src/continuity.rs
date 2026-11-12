@@ -69,3 +69,4 @@ pub struct FocusEmergencyBypassRequest {
     pub requested_at: DateTime<Utc>,
     pub auto_approved_contacts: Vec<String>,
 }
+

@@ -88,3 +88,4 @@ export const PauseIcon: React.FC<IconProps> = ({ className = 'w-4 h-4' }) => (
     <rect x="14" y="4" width="4" height="16" />
   </svg>
 );
+

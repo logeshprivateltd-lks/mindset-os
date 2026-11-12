@@ -83,3 +83,4 @@ pub struct SelectiveFolderSyncStatus {
     pub pending_downloads: usize,
     pub active_conflicts: usize,
 }
+

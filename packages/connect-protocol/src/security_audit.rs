@@ -76,3 +76,4 @@ pub struct ConnectAuditEntry {
     pub description: String,
     pub timestamp_utc: DateTime<Utc>,
 }
+

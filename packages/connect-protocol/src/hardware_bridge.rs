@@ -155,3 +155,4 @@ pub struct ScannedDocumentPayload {
     pub trigger_rag_ingestion: bool,
     pub timestamp_utc: DateTime<Utc>,
 }
+

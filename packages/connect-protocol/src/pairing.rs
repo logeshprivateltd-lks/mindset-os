@@ -106,3 +106,4 @@ pub struct DeviceRevocationRecord {
     pub reason: String,
     pub revoke_remote_tokens: bool,
 }
+

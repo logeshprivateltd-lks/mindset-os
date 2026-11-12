@@ -60,3 +60,4 @@ pub struct RemoteDeleteConfirmationGate {
     pub confirmation_token: String,
     pub requires_biometric_auth: bool,
 }
+
