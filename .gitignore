@@ -17,7 +17,18 @@ Thumbs.db
 user-data/
 .mindset_data/
 
-# Environment files
+# Environment & secrets
 .env
 .env.local
+*.priv
+signing_key.priv
+
+# Updates & Patch files
+*.msos-patch
+
+# SQLite Databases & Backups
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.backup.sqlite
 

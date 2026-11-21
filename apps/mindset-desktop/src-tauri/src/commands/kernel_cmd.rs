@@ -42,3 +42,41 @@ pub async fn get_kernel_event_history(
     Ok(kernel.get_event_history(limit.unwrap_or(50)))
 }
 
+#[tauri::command]
+pub async fn kernel_execute_power_action(
+    action: String,
+    reason: Option<String>,
+    kernel: State<'_, Arc<MindSetKernel>>,
+    app_handle: tauri::AppHandle,
+) -> Result<crate::kernel::power::PowerActionResult, String> {
+    let act = crate::kernel::power::PowerAction::from_str(&action)
+        .ok_or_else(|| format!("Unknown power action: {}", action))?;
+    crate::kernel::power::PowerManager::execute_power_action(
+        act,
+        reason,
+        kernel.inner().clone(),
+        Some(app_handle),
+    )
+    .await
+}
+
+#[tauri::command]
+pub async fn kernel_get_power_state(
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<crate::kernel::power::PowerStateResponse, String> {
+    Ok(crate::kernel::power::PowerManager::get_power_state(kernel.inner()))
+}
+
+#[tauri::command]
+pub async fn kernel_save_wallpaper_asset(
+    source_path: String,
+    filename: Option<String>,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<crate::kernel::power::WallpaperAssetResponse, String> {
+    crate::kernel::power::PowerManager::save_wallpaper_asset(
+        &kernel.paths,
+        &source_path,
+        filename,
+    )
+}
+

@@ -4,6 +4,7 @@
 
 pub mod event_bus;
 pub mod lifecycle;
+pub mod power;
 pub mod registry;
 pub mod scheduler;
 
@@ -11,6 +12,10 @@ pub mod scheduler;
 pub use event_bus::{EventBus, HardwareCapabilities, KernelEvent, MAX_EVENT_HISTORY};
 #[allow(unused_imports)]
 pub use lifecycle::{BootDiagnostics, BootPhase, KernelBootSequencer, StageDuration};
+#[allow(unused_imports)]
+pub use power::{
+    PowerAction, PowerActionResult, PowerManager, PowerStateResponse, WallpaperAssetResponse,
+};
 #[allow(unused_imports)]
 pub use registry::{
     AuthService, HardwareProbeService, KernelError, KernelService, MemoryWatchdogService,

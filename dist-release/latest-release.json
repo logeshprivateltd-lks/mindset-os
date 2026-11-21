@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "notes": "MindSet OS v1.0.0 Golden Master (GM) Release. Sovereign, local-first operating system for STEM mastery and cognitive focus.",
+  "pub_date": "2026-11-12T16:38:55.666264700+00:00",
+  "platforms": {
+    "linux-x86_64-deb": {
+      "signature": "ed25519:0f8ac41b96c3db6184f527dde3c04791f5530a4f9a8a2302ac22ba0d8f6f6072f78736ba48edf41702fbe3162dff515846f4740d0280aa99c30db2b40bdb3a0d",
+      "url": "https://github.com/lkspvtltd/mindsetos/releases/download/v1.0.0/mindset-os_1.0.0_amd64.deb",
+      "size_bytes": 16120832,
+      "sha256": "2907a4776c549e203edc4b2ed53b7761768859764acd2b3d12a7b7d9e96314d5"
+    },
+    "windows-x86_64": {
+      "signature": "ed25519:8714e344f702320b852bfa1063042b178752dc772047941501513dace2b73ae6fdcb730f28fd3721c5f2774e2dfd451acb66caa15ac70b1a35b08064c81cb806",
+      "url": "https://github.com/lkspvtltd/mindsetos/releases/download/v1.0.0/MindSet_OS_1.0.0_x64-setup.exe",
+      "size_bytes": 14680064,
+      "sha256": "511aecf4dd36c438e4cdd8d4dab3c238773b7534ade1adbceca86414ab81765a"
+    },
+    "linux-x86_64": {
+      "signature": "ed25519:ac4676a61178cf3be515254a4fdb016b1383f430a4d7a61fc5c236e27aaf592bf20c770a8c16983b3d3b3d7d18d8ff065ed41386e692d646798701a30eef7309",
+      "url": "https://github.com/lkspvtltd/mindsetos/releases/download/v1.0.0/mindset-os_1.0.0_amd64.AppImage",
+      "size_bytes": 18450432,
+      "sha256": "65edf50e741c2ed0bf5737e6f50dc0c70c01fe9136a1c96a0b0a3f99d70940f4"
+    },
+    "mobile-pwa": {
+      "signature": "ed25519:700a86cb34def3ec5376a14d70fa263a4549669f85b3f8cc9a0f71c4b524bc504b52aba44653bcc4579d1a2a8ca5623db42a456ac3eeaa8fa91fe340c012a50a",
+      "url": "https://github.com/lkspvtltd/mindsetos/releases/download/v1.0.0/mindset-mobile-pwa-v1.0.0.zip",
+      "size_bytes": 1820000,
+      "sha256": "5a6c7658031646ed8dc1d796e7eff5c89cff4afd04d2fd2200393fd5fa5397a6"
+    }
+  },
+  "package": {
+    "id": "mindsetos-1.0.0-gm",
+    "channel": "stable",
+    "version": "1.0.0",
+    "title": "MindSet OS 1.0.0 Golden Master",
+    "release_notes": [
+      "Production-ready sovereign desktop operating environment",
+      "Full OS Power Lifecycle with deterministic safe teardown and WAL checkpoint",
+      "Interactive 88x96px snap-to-grid desktop icon canvas and right-click context menu",
+      "4-tab Personalization Studio (10 curated wallpaper presets, custom uploads, accent palette)",
+      "Zero-RAM Ollama model eviction and VRAM reclamation",
+      "Class 12 Exam Target & Hero Clock ambient desktop widgets"
+    ],
+    "size_bytes": 14680064,
+    "checksum_sha256": "511aecf4dd36c438e4cdd8d4dab3c238773b7534ade1adbceca86414ab81765a",
+    "signature_ed25519": "ed25519:8714e344f702320b852bfa1063042b178752dc772047941501513dace2b73ae6fdcb730f28fd3721c5f2774e2dfd451acb66caa15ac70b1a35b08064c81cb806",
+    "published_at": "2026-11-12T16:38:55.666344500+00:00",
+    "requires_reboot": false,
+    "diff_type": "full_image",
+    "is_staged": false,
+    "is_applied": true
+  }
+}

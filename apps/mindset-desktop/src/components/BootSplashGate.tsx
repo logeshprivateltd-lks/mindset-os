@@ -88,8 +88,15 @@ export const BootSplashGate: React.FC<BootSplashGateProps> = ({ children }) => {
 
     setup();
 
+    // Fallback: If in web preview or kernel events are delayed, ensure smooth auto-completion
+    const fallbackTimer = setTimeout(() => {
+      setIsTransitioning(true);
+      setTimeout(() => setFadeComplete(true), 220);
+    }, 1200);
+
     return () => {
       if (unlistenFn) unlistenFn();
+      clearTimeout(fallbackTimer);
     };
   }, [initEventListeners, fetchKernelStatus]);
 
@@ -242,12 +249,23 @@ export const BootSplashGate: React.FC<BootSplashGateProps> = ({ children }) => {
             <span className="px-1.5 py-0.5 rounded bg-[#1F2937] text-amber-300 font-mono text-[10px]">Alt + R</span>
             <span>for Standalone Recovery</span>
           </span>
-          <button
-            onClick={() => setIsRecoveryActive(true)}
-            className="text-amber-400 hover:text-amber-300 transition-colors font-medium hover:underline text-[11px]"
-          >
-            Launch Recovery Console →
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => {
+                setIsTransitioning(true);
+                setTimeout(() => setFadeComplete(true), 150);
+              }}
+              className="text-[#8B9CFF] hover:text-[#A5B4FC] transition-colors font-semibold hover:underline text-[11px]"
+            >
+              Skip to Workspace →
+            </button>
+            <button
+              onClick={() => setIsRecoveryActive(true)}
+              className="text-amber-400 hover:text-amber-300 transition-colors font-medium hover:underline text-[11px]"
+            >
+              Recovery Console →
+            </button>
+          </div>
         </div>
       </div>
     </div>

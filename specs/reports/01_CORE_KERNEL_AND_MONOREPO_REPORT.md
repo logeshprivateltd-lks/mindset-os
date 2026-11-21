@@ -20,3 +20,4 @@
    - `@mindset/desktop`: Tauri 2 desktop shell with React 19 and Tailwind CSS.
 4. **Rust Microkernel Bootstrap:**
    - Initialized `apps/mindset-desktop/src-tauri` with Tauri 2 and multi-threaded runtime.
+

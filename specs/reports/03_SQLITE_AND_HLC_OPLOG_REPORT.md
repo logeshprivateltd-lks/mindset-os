@@ -18,3 +18,4 @@
    - Dedicated Rust repositories for Tasks, Habits, Profiles, Wellbeing, and Vectors with connection pooling and automated schema migrations.
 4. **Database Manager (`apps/mindset-desktop/src-tauri/src/db/mod.rs`):**
    - Automated integrity checks (`PRAGMA integrity_check`) and safe WAL (Write-Ahead Logging) mode initialization.
+

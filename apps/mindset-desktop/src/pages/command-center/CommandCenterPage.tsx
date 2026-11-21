@@ -130,6 +130,29 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
     return `Restful night, ${name}`;
   }, [profile]);
 
+  // Primary Goal Title for Memory Zone
+  const topGoalTitle = useMemo(() => {
+    if (!profile?.goals_json) return 'Core Exam Mastery';
+    try {
+      const parsed = typeof profile.goals_json === 'string' ? JSON.parse(profile.goals_json) : profile.goals_json;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const first = parsed[0];
+        if (typeof first === 'string') return first;
+        if (first && typeof first === 'object') {
+          if (typeof first.title === 'string') return first.title;
+          if (typeof first.name === 'string') return first.name;
+          if (typeof first.goal === 'string') return first.goal;
+        }
+      } else if (parsed && typeof parsed === 'object') {
+        if (typeof (parsed as any).title === 'string') return (parsed as any).title;
+        if (typeof (parsed as any).name === 'string') return (parsed as any).name;
+      }
+    } catch {
+      // Fallback
+    }
+    return 'Core Exam Mastery';
+  }, [profile?.goals_json]);
+
   // CoachAgent dynamic advice
   const coachMessage = useMemo(() => {
     const hour = new Date().getHours();
@@ -661,7 +684,7 @@ export const CommandCenterPage: React.FC<CommandCenterPageProps> = ({
             </h3>
           </div>
           <p className="text-xs text-[var(--text-muted)] max-w-2xl leading-relaxed">
-            Targeting: <strong>{profile?.goals_json ? JSON.parse(profile.goals_json)[0] : 'Core Exam Mastery'}</strong>.
+            Targeting: <strong>{topGoalTitle}</strong>.
             Language: <strong>{profile?.ai_lang === 'ta' ? 'Tamil (தமிழ்)' : 'English'}</strong> (
             {profile?.conversation_style === 'tanglish' ? 'Tanglish' : 'Standard'}).
             System state: Memory guard active, prompt injection filters primed.

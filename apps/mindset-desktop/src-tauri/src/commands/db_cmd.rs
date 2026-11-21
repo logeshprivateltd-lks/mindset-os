@@ -553,4 +553,76 @@ pub async fn db_list_timeline_events(
     Ok(events)
 }
 
+// ---------------------------------------------------------------------------
+// 7. Desktop Shortcuts & Personalization Commands
+// ---------------------------------------------------------------------------
+
+#[tauri::command]
+pub async fn db_list_desktop_shortcuts(
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<Vec<crate::db::repositories::personalization_repo::DesktopShortcut>, String> {
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+    crate::db::repositories::personalization_repo::list_shortcuts(&lock)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn db_save_desktop_shortcut(
+    shortcut: crate::db::repositories::personalization_repo::DesktopShortcut,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<(), String> {
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+    crate::db::repositories::personalization_repo::save_shortcut(&lock, &shortcut)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn db_update_shortcut_coords(
+    id: String,
+    grid_x: i32,
+    grid_y: i32,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<(), String> {
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+    crate::db::repositories::personalization_repo::update_shortcut_coords(&lock, &id, grid_x, grid_y)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn db_delete_desktop_shortcut(
+    id: String,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<(), String> {
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+    crate::db::repositories::personalization_repo::delete_shortcut(&lock, &id)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn db_get_user_personalization(
+    user_id: Option<String>,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<crate::db::repositories::personalization_repo::UserPersonalization, String> {
+    let uid = user_id.unwrap_or_else(|| "default_student".to_string());
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+    crate::db::repositories::personalization_repo::get_personalization(&lock, &uid)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn db_save_user_personalization(
+    settings: crate::db::repositories::personalization_repo::UserPersonalization,
+    kernel: State<'_, Arc<MindSetKernel>>,
+) -> Result<(), String> {
+    let conn = kernel.db.get_core_connection();
+    let lock = conn.lock().map_err(|e| e.to_string())?;
+    crate::db::repositories::personalization_repo::save_personalization(&lock, &settings)
+        .map_err(|e| e.to_string())
+}
+
 

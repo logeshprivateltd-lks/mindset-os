@@ -70,6 +70,14 @@ pub enum KernelEvent {
         row_id: String,
         table_name: String,
     },
+    PowerTransition {
+        action: String,
+        phase: String,
+        details: Option<String>,
+    },
+    SoftReboot {
+        reason: String,
+    },
 }
 
 pub struct EventBus {

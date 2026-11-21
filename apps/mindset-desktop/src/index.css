@@ -35,6 +35,9 @@
 
 :root {
   color-scheme: var(--color-scheme, dark);
+  --bg-primary: var(--surface-primary);
+  --bg-secondary: var(--surface-secondary);
+  --bg-elevated: var(--surface-elevated);
 }
 
 body {

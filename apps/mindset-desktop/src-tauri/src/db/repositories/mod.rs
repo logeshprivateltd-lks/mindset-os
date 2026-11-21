@@ -4,6 +4,7 @@
 
 pub mod diagnostics_repo;
 pub mod habits_repo;
+pub mod personalization_repo;
 pub mod profile_repo;
 pub mod tasks_repo;
 pub mod vector_repo;
@@ -13,6 +14,8 @@ pub mod wellbeing_repo;
 pub use diagnostics_repo::*;
 #[allow(unused_imports)]
 pub use habits_repo::*;
+#[allow(unused_imports)]
+pub use personalization_repo::*;
 #[allow(unused_imports)]
 pub use profile_repo::*;
 #[allow(unused_imports)]

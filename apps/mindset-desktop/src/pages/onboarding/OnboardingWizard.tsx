@@ -254,8 +254,20 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }
                 MindSet OS — First Time Setup
               </span>
             </div>
-            <div className="text-xs font-mono text-[var(--text-muted)]">
-              Step <span className="text-[var(--accent-primary)] font-bold">{step}</span> of 6
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('mindset_onboarding_completed', 'true');
+                  onComplete();
+                }}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--accent-primary)] transition-colors underline font-medium"
+              >
+                Skip to Desktop →
+              </button>
+              <div className="text-xs font-mono text-[var(--text-muted)]">
+                Step <span className="text-[var(--accent-primary)] font-bold">{step}</span> of 6
+              </div>
             </div>
           </div>
 

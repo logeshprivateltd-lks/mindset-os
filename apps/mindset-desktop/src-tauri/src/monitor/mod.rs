@@ -216,7 +216,29 @@ pub async fn terminal_execute_command(
         }
     }
 
-    // 2. Generic Shell Execution (PowerShell on Windows, sh on Linux) with 4-second safety timeout
+    // 2. Security Guard: Prevent destructive shell execution from unprivileged contexts
+    let lower_cmd = command_line.to_lowercase();
+    let is_destructive = lower_cmd.contains("rm -rf")
+        || lower_cmd.contains("format ")
+        || lower_cmd.contains("del /f")
+        || lower_cmd.contains("del /s")
+        || lower_cmd.contains("rd /s")
+        || lower_cmd.contains("mkfs")
+        || lower_cmd.contains("dd if=")
+        || lower_cmd.contains(":(){ :|:& };:")
+        || lower_cmd.contains("drop table")
+        || lower_cmd.contains("drop database");
+
+    if is_destructive {
+        return Ok(TerminalCommandResult {
+            command: command_line,
+            output: "[Security Block] Destructive command prohibited by MindSet OS Kernel Policy.".to_string(),
+            exit_code: 1,
+            execution_time_ms: start.elapsed().as_millis() as u64,
+        });
+    }
+
+    // 3. Generic Shell Execution (PowerShell on Windows, sh on Linux) with 4-second safety timeout
     #[cfg(target_os = "windows")]
     let child_res = timeout(
         Duration::from_millis(4000),

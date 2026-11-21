@@ -18,3 +18,4 @@
    - Probes CPU cores, memory limits, and external display attachments without freezing the main thread.
 4. **Boot Sequence & BootSplashGate (`apps/mindset-desktop/src/components/BootSplashGate.tsx`):**
    - Step-by-step diagnostic boot sequencer ensuring database integrity and service readiness before unlocking the OS shell.
+

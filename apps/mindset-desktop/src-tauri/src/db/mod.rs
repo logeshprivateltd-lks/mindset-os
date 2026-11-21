@@ -162,8 +162,29 @@ impl DatabaseManager {
                     now
                 ],
             )?;
+
+            // Seed default personalization settings for default_student
+            conn.execute(
+                r#"
+                INSERT OR IGNORE INTO user_personalization (
+                    user_id, wallpaper_type, wallpaper_path, wallpaper_dimness, wallpaper_blur_px,
+                    accent_color, font_scale, glass_opacity, motion_intensity, dock_position,
+                    dock_autohide, dock_style, widgets_json, updated_at
+                ) VALUES (?1, 'preset', 'nebula_deep', 0.25, 0, '#8B9CFF', 1.0, 0.85, 'normal', 'bottom', 0, 'floating', '{"clock":true,"target":true,"affirmation":true}', ?2)
+                "#,
+                rusqlite::params!["default_student", now],
+            )?;
         }
 
+        Ok(())
+    }
+
+    pub fn checkpoint_and_optimize(&self) -> Result<(), DbError> {
+        let core = self.core_conn.lock().map_err(|e| DbError::LockError(e.to_string()))?;
+        core.execute_batch("PRAGMA wal_checkpoint(TRUNCATE); PRAGMA optimize;")?;
+
+        let oplog = self.oplog_conn.lock().map_err(|e| DbError::LockError(e.to_string()))?;
+        oplog.execute_batch("PRAGMA wal_checkpoint(TRUNCATE); PRAGMA optimize;")?;
         Ok(())
     }
 

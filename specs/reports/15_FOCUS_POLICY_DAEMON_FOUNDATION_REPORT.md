@@ -15,3 +15,4 @@
    - Standalone Linux/Windows system service intercepting application launches with non-punitive intervention hooks.
 3. **VIP Communication Allowlist:**
    - Always permits emergency parent/school phone calls and SMS regardless of strict lockdown.
+

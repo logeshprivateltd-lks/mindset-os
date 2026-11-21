@@ -24,6 +24,7 @@ import { FloatingAiOrb } from '../components/floating-ai';
 import { GlobalCommandPalette } from '../components/command-palette';
 import { FocusInterruptionOverlay } from '../components/focus-guard';
 import { ScientificCalculatorModal, AccessibilityController } from '../components/utilities';
+import { ShutdownSplashOverlay } from '../components/shell/ShutdownSplashOverlay';
 import { useKernelStore } from '../stores/useKernelStore';
 import { navigationRouter } from '../navigation/navigationRouter';
 import { dbClient } from '../lib/dbClient';
@@ -303,7 +304,7 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
 
   // Filter windows belonging to current activity workspace (or pinned across all)
   const visibleWindows = windows.filter(
-    (w) => w.activityId === currentActivityId || w.pinnedToAllActivities
+    (w) => !w.activityId || w.activityId === currentActivityId || w.pinnedToAllActivities
   );
 
   return (
@@ -416,6 +417,9 @@ export const DesktopShell: React.FC<DesktopShellProps> = ({
         onOpenStatus={onOpenStatus}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
+
+      {/* 15. Power Teardown & Safe Halt Diagnostic Splash Overlay */}
+      <ShutdownSplashOverlay />
     </div>
   );
 };

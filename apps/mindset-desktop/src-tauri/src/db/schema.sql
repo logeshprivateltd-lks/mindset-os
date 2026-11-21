@@ -164,3 +164,39 @@ CREATE TABLE IF NOT EXISTS vec_memory_fallback (
 
 CREATE INDEX IF NOT EXISTS idx_vec_source ON vec_memory_fallback(source_type, source_id);
 
+-- 13. Interactive Desktop Shortcuts
+CREATE TABLE IF NOT EXISTS desktop_shortcuts (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    target_type TEXT NOT NULL, -- app, file, url, folder, action
+    target_payload TEXT NOT NULL,
+    grid_x INTEGER NOT NULL DEFAULT 0,
+    grid_y INTEGER NOT NULL DEFAULT 0,
+    is_pinned INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_shortcuts_grid ON desktop_shortcuts(grid_x, grid_y);
+
+-- 14. User Personalization & Wallpaper Studio
+CREATE TABLE IF NOT EXISTS user_personalization (
+    user_id TEXT PRIMARY KEY,
+    wallpaper_type TEXT NOT NULL DEFAULT 'preset', -- preset, custom, solid, video
+    wallpaper_path TEXT NOT NULL DEFAULT 'nebula_deep',
+    wallpaper_dimness REAL NOT NULL DEFAULT 0.25,
+    wallpaper_blur_px INTEGER NOT NULL DEFAULT 0,
+    accent_color TEXT NOT NULL DEFAULT '#8B9CFF',
+    font_scale REAL NOT NULL DEFAULT 1.0,
+    glass_opacity REAL NOT NULL DEFAULT 0.85,
+    motion_intensity TEXT NOT NULL DEFAULT 'normal', -- reduced, normal, energetic
+    dock_position TEXT NOT NULL DEFAULT 'bottom', -- bottom, left, top
+    dock_autohide INTEGER NOT NULL DEFAULT 0,
+    dock_style TEXT NOT NULL DEFAULT 'floating', -- floating, edge
+    widgets_json TEXT NOT NULL DEFAULT '{"clock":true,"target":true,"affirmation":true}',
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES user_profile(user_id) ON DELETE CASCADE
+);
+
+

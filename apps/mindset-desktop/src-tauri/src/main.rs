@@ -305,6 +305,16 @@ async fn main() {
             connect_toggle_mic_stream,
             connect_ingest_scanned_document,
             connect_get_security_audit_logs,
+            // Phase 25: Power Lifecycle & Personalization Commands
+            kernel_execute_power_action,
+            kernel_get_power_state,
+            kernel_save_wallpaper_asset,
+            db_list_desktop_shortcuts,
+            db_save_desktop_shortcut,
+            db_update_shortcut_coords,
+            db_delete_desktop_shortcut,
+            db_get_user_personalization,
+            db_save_user_personalization,
             // System Telemetry Commands
             get_service_health,
             get_system_telemetry,

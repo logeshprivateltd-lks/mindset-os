@@ -15,3 +15,4 @@
    - Web Audio synthesizer generating offline binaural beats (Alpha 10Hz, Theta 6Hz), brown noise, and rain soundscapes with zero external MP3 dependencies.
 3. **Tray State Synchronisation:**
    - Real-time tray icon updates reflecting Focus Guard status and timer remaining.
+

@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { useWindowManagerStore } from './wm/useWindowManagerStore';
 import { useActivityStore, ACTIVITIES, type ActivityId } from './activities/useActivityStore';
 import { APP_REGISTRY } from './apps/AppRegistry';
+import { usePersonalizationStore } from '../stores/usePersonalizationStore';
 
 export interface StartMenuOverlayProps {
   isOpen: boolean;
@@ -30,8 +31,10 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
 }) => {
   const { openWindow } = useWindowManagerStore();
   const { currentActivityId, switchActivity } = useActivityStore();
+  const { executePowerAction } = usePersonalizationStore();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPowerFlyoutOpen, setIsPowerFlyoutOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -208,10 +211,83 @@ export const StartMenuOverlay: React.FC<StartMenuOverlayProps> = ({
                 onClose();
               }}
               title="Lock Screen (Super + L)"
-              className="p-2 rounded-lg bg-[var(--surface-primary)] hover:bg-red-500/20 text-[var(--text-muted)] hover:text-red-400 border border-[var(--border-subtle)] transition-colors"
+              className="p-2 rounded-lg bg-[var(--surface-primary)] hover:bg-amber-500/20 text-[var(--text-muted)] hover:text-amber-300 border border-[var(--border-subtle)] transition-colors"
             >
               🔒
             </button>
+
+            {/* Power Flyout Container */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsPowerFlyoutOpen((prev) => !prev)}
+                title="Power & Session Options"
+                className="p-2 rounded-lg bg-[var(--surface-primary)] hover:bg-red-500/20 text-[var(--text-muted)] hover:text-red-400 border border-[var(--border-subtle)] transition-colors"
+              >
+                ⏻
+              </button>
+
+              {isPowerFlyoutOpen && (
+                <div
+                  role="menu"
+                  className="absolute bottom-full right-0 mb-2 w-48 p-1.5 rounded-xl border border-[var(--accent-primary)]/40 bg-[var(--surface-elevated)] backdrop-blur-2xl shadow-2xl z-50 text-xs space-y-1 animate-fadeIn"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPowerFlyoutOpen(false);
+                      onLock();
+                      onClose();
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center space-x-2 text-[var(--text-dominant)] hover:bg-[var(--surface-primary)] transition-colors"
+                  >
+                    <span>🔒</span>
+                    <span>Lock Session</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPowerFlyoutOpen(false);
+                      executePowerAction('sleep');
+                      onClose();
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center space-x-2 text-amber-300 hover:bg-amber-400/15 transition-colors"
+                  >
+                    <span>🌙</span>
+                    <span>Sleep Mode</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPowerFlyoutOpen(false);
+                      executePowerAction('restart');
+                      onClose();
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center space-x-2 text-blue-300 hover:bg-blue-400/15 transition-colors"
+                  >
+                    <span>🔄</span>
+                    <span>Restart OS</span>
+                  </button>
+
+                  <div className="h-px bg-[var(--border-subtle)] my-0.5" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPowerFlyoutOpen(false);
+                      executePowerAction('shutdown');
+                      onClose();
+                    }}
+                    className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center space-x-2 text-red-400 hover:bg-red-500/20 font-semibold transition-colors"
+                  >
+                    <span>⏻</span>
+                    <span>Shut Down</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

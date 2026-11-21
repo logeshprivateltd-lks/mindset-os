@@ -260,12 +260,18 @@ impl PeripheralsManager {
         // On Windows or Linux, trigger safe flush/sync
         #[cfg(target_os = "windows")]
         {
-            // Execute dismount or flush via PowerShell
+            // Strictly extract the single drive letter to prevent command injection
             let clean_mount = mount_point.trim_end_matches('\\');
-            let _ = tokio::process::Command::new("powershell")
-                .args(["-NoProfile", "-Command", &format!("Get-Volume -DriveLetter '{}' | Dismount-Volume -Confirm:$false", clean_mount)])
-                .output()
-                .await;
+            if let Some(letter) = clean_mount.chars().find(|c| c.is_ascii_alphabetic()) {
+                let _ = tokio::process::Command::new("powershell")
+                    .args([
+                        "-NoProfile",
+                        "-Command",
+                        &format!("Get-Volume -DriveLetter '{}' | Dismount-Volume -Confirm:$false", letter),
+                    ])
+                    .output()
+                    .await;
+            }
         }
 
         #[cfg(target_os = "linux")]

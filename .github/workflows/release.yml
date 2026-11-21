@@ -1,0 +1,188 @@
+name: MindSet OS Release & Golden Master Packaging
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    name: Full Verification Gate (Test & Typecheck)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 12.18.0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Typecheck All Packages
+        run: pnpm typecheck
+
+      - name: Run Full Test Suite (TypeScript + Rust)
+        run: pnpm test:all
+
+  build-windows:
+    name: Build Windows GM Installer (NSIS & WiX)
+    needs: [verify]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 12.18.0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Web Frontends (Desktop + Mobile PWA)
+        run: pnpm build
+
+      - name: Build Focus Guard Sidecar
+        run: |
+          cargo build --release -p mindset-focus-guard
+          New-Item -ItemType Directory -Force -Path apps/mindset-desktop/src-tauri/binaries
+          Copy-Item target/release/mindset-focus-guard.exe apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard-x86_64-pc-windows-msvc.exe
+          Copy-Item target/release/mindset-focus-guard.exe apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard.exe
+
+      - name: Build Tauri Desktop Installer
+        run: pnpm --filter @mindset/desktop tauri build
+
+      - name: Archive Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            apps/mindset-desktop/src-tauri/target/release/bundle/nsis/*.exe
+            apps/mindset-desktop/src-tauri/target/release/bundle/msi/*.msi
+
+  build-linux:
+    name: Build Linux Sovereign Desktop (AppImage & DEB)
+    needs: [verify]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 12.18.0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux GUI Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev squashfs-tools
+
+      - name: Build Web Frontends (Desktop + Mobile PWA)
+        run: pnpm build
+
+      - name: Build Focus Guard Sidecar
+        run: |
+          cargo build --release -p mindset-focus-guard
+          mkdir -p apps/mindset-desktop/src-tauri/binaries
+          cp target/release/mindset-focus-guard apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard-x86_64-unknown-linux-gnu
+          cp target/release/mindset-focus-guard apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard
+
+      - name: Build Tauri Linux Packages
+        run: pnpm --filter @mindset/desktop tauri build
+
+      - name: Archive Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: |
+            apps/mindset-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+            apps/mindset-desktop/src-tauri/target/release/bundle/deb/*.deb
+
+  sign-and-publish:
+    name: Sign Golden Master Release & OTA Manifest
+    needs: [build-windows, build-linux]
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-installers
+          path: dist-release
+
+      - name: Download Linux Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: dist-release
+
+      - name: Build Mobile Companion PWA Archive
+        run: |
+          Compress-Archive -Path apps/mindset-mobile/dist/* -DestinationPath dist-release/mindset-mobile-pwa-v1.0.0.zip -Force
+
+      - name: Build Release Signer Tool
+        run: cargo build --release --bin mindset-release-signer
+
+      - name: Generate Signed OTA Manifest & Checksums
+        run: |
+          target/release/mindset-release-signer.exe generate-release dist-release
+
+      - name: Upload Release Assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist-release/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+

@@ -172,7 +172,7 @@ export const useWindowManagerStore = create<WindowManagerStoreState>((set, get) 
       zIndex: newZ,
       isMinimized: false,
       isMaximized: false,
-      activityId: targetActivityId,
+      activityId: targetActivityId || 'deep-study',
       pinnedToAllActivities: initialProps.pinnedToAllActivities ?? false,
       ...initialProps,
     };

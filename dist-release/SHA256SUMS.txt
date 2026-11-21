@@ -1,0 +1,4 @@
+511aecf4dd36c438e4cdd8d4dab3c238773b7534ade1adbceca86414ab81765a  MindSet_OS_1.0.0_x64-setup.exe
+65edf50e741c2ed0bf5737e6f50dc0c70c01fe9136a1c96a0b0a3f99d70940f4  mindset-os_1.0.0_amd64.AppImage
+2907a4776c549e203edc4b2ed53b7761768859764acd2b3d12a7b7d9e96314d5  mindset-os_1.0.0_amd64.deb
+5a6c7658031646ed8dc1d796e7eff5c89cff4afd04d2fd2200393fd5fa5397a6  mindset-mobile-pwa-v1.0.0.zip

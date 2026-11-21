@@ -14,6 +14,8 @@ import type {
   TimelineEvent,
   VectorSearchResult,
   DbIntegrityReport,
+  DesktopShortcut,
+  UserPersonalization,
 } from '@mindset/db-schema';
 
 async function invokeTauri<T>(cmd: string, args: Record<string, unknown> = {}): Promise<T> {
@@ -294,6 +296,69 @@ export const dbClient = {
       } catch {
         return [];
       }
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // 8. Desktop Shortcuts & Grid Persistence
+  // -------------------------------------------------------------------------
+  shortcuts: {
+    list: async (): Promise<DesktopShortcut[]> => {
+      try {
+        return await invokeTauri<DesktopShortcut[]>('db_list_desktop_shortcuts');
+      } catch {
+        return [
+          { id: 'sc_command_center', title: 'Command Center', icon: '⚡', target_type: 'app', target_payload: 'dashboard', grid_x: 0, grid_y: 0, is_pinned: true },
+          { id: 'sc_rag_files', title: 'Files & RAG', icon: '📁', target_type: 'app', target_payload: 'files', grid_x: 0, grid_y: 1, is_pinned: true },
+          { id: 'sc_focus_guard', title: 'Focus Guard', icon: '🛡️', target_type: 'app', target_payload: 'focus', grid_x: 0, grid_y: 2, is_pinned: true },
+          { id: 'sc_laya_ai', title: 'Laya AI Assistant', icon: '🧠', target_type: 'app', target_payload: 'mind', grid_x: 0, grid_y: 3, is_pinned: true },
+          { id: 'sc_app_hub', title: 'App Hub', icon: '📦', target_type: 'app', target_payload: 'app-hub', grid_x: 0, grid_y: 4, is_pinned: true },
+          { id: 'sc_settings', title: 'Settings', icon: '⚙️', target_type: 'app', target_payload: 'settings', grid_x: 0, grid_y: 5, is_pinned: true },
+        ];
+      }
+    },
+
+    save: async (shortcut: DesktopShortcut): Promise<void> => {
+      await invokeTauri<void>('db_save_desktop_shortcut', { shortcut });
+    },
+
+    updatePosition: async (id: string, gridX: number, gridY: number): Promise<void> => {
+      await invokeTauri<void>('db_update_shortcut_coords', { id, gridX, gridY });
+    },
+
+    delete: async (id: string): Promise<void> => {
+      await invokeTauri<void>('db_delete_desktop_shortcut', { id });
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // 9. Personalization & Studio Configuration
+  // -------------------------------------------------------------------------
+  personalization: {
+    get: async (userId?: string): Promise<UserPersonalization> => {
+      try {
+        return await invokeTauri<UserPersonalization>('db_get_user_personalization', { userId });
+      } catch {
+        return {
+          user_id: userId || 'default_student',
+          wallpaper_type: 'preset',
+          wallpaper_path: 'nebula_deep',
+          wallpaper_dimness: 0.25,
+          wallpaper_blur_px: 0,
+          accent_color: '#8B9CFF',
+          font_scale: 1.0,
+          glass_opacity: 0.85,
+          motion_intensity: 'normal',
+          dock_position: 'bottom',
+          dock_autohide: false,
+          dock_style: 'floating',
+          widgets_json: '{"clock":true,"target":true,"affirmation":true}',
+        };
+      }
+    },
+
+    save: async (settings: UserPersonalization): Promise<void> => {
+      await invokeTauri<void>('db_save_user_personalization', { settings });
     },
   },
 };

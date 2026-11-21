@@ -12,6 +12,7 @@ import { SmartLockOverlay } from './pages/auth/SmartLockOverlay';
 import { DesktopShell } from './shell/DesktopShell';
 import { StatusViewerModal } from './components/StatusViewerModal';
 import { OnboardingWizard } from './pages/onboarding/OnboardingWizard';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 export const App: React.FC = () => {
   const {
@@ -124,26 +125,28 @@ export const App: React.FC = () => {
 
         {/* Main OS Surface */}
         <main className="flex-1 relative overflow-hidden">
-          {isLocked ? (
-            <SmartLockOverlay onUnlock={() => setIsLocked(false)} />
-          ) : isOnboardingOpen ? (
-            <OnboardingWizard onComplete={() => setIsOnboardingOpen(false)} />
-          ) : (
-            <>
-              <DesktopShell
-                onLock={lockSystem}
-                onOpenStatus={() => setIsStatusViewOpen(true)}
-                onOpenOnboarding={() => setIsOnboardingOpen(true)}
-              />
-              {/* Instant Privacy Blur Overlay (Alt + B) */}
-              {isPrivacyBlurred && (
-                <SmartLockOverlay
-                  isPrivacyBlurredOnly
-                  onUnlock={() => togglePrivacyBlur()}
+          <ErrorBoundary fallbackTitle="MindSet OS Workspace Exception">
+            {isLocked ? (
+              <SmartLockOverlay onUnlock={() => setIsLocked(false)} />
+            ) : isOnboardingOpen ? (
+              <OnboardingWizard onComplete={() => setIsOnboardingOpen(false)} />
+            ) : (
+              <>
+                <DesktopShell
+                  onLock={lockSystem}
+                  onOpenStatus={() => setIsStatusViewOpen(true)}
+                  onOpenOnboarding={() => setIsOnboardingOpen(true)}
                 />
-              )}
-            </>
-          )}
+                {/* Instant Privacy Blur Overlay (Alt + B) */}
+                {isPrivacyBlurred && (
+                  <SmartLockOverlay
+                    isPrivacyBlurredOnly
+                    onUnlock={() => togglePrivacyBlur()}
+                  />
+                )}
+              </>
+            )}
+          </ErrorBoundary>
         </main>
 
         {/* /status Interactive Inspection & Control Modal */}

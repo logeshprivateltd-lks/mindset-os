@@ -9,7 +9,7 @@ use rusqlite::Connection;
 use std::path::Path;
 use tracing::{info, warn};
 
-pub const CURRENT_SCHEMA_VERSION: i32 = 1;
+pub const CURRENT_SCHEMA_VERSION: i32 = 2;
 
 pub struct MigrationManager;
 
@@ -65,6 +65,7 @@ impl MigrationManager {
             info!("Applying migration step to version {}", target_version);
             match target_version {
                 1 => Self::apply_v1_schema(&tx)?,
+                2 => Self::apply_v2_schema(&tx)?,
                 _ => {
                     return Err(DbError::MigrationFailed(format!(
                         "Unsupported migration target version {}",
@@ -110,6 +111,59 @@ impl MigrationManager {
         let schema_sql = include_str!("schema.sql");
         conn.execute_batch(schema_sql)
             .map_err(|e| DbError::MigrationFailed(format!("Failed to execute schema.sql: {}", e)))?;
+        Ok(())
+    }
+
+    fn apply_v2_schema(conn: &Connection) -> Result<(), DbError> {
+        conn.execute_batch(
+            r#"
+            -- 13. Interactive Desktop Shortcuts
+            CREATE TABLE IF NOT EXISTS desktop_shortcuts (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                icon TEXT NOT NULL,
+                target_type TEXT NOT NULL,
+                target_payload TEXT NOT NULL,
+                grid_x INTEGER NOT NULL DEFAULT 0,
+                grid_y INTEGER NOT NULL DEFAULT 0,
+                is_pinned INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_shortcuts_grid ON desktop_shortcuts(grid_x, grid_y);
+
+            -- 14. User Personalization & Wallpaper Studio
+            CREATE TABLE IF NOT EXISTS user_personalization (
+                user_id TEXT PRIMARY KEY,
+                wallpaper_type TEXT NOT NULL DEFAULT 'preset',
+                wallpaper_path TEXT NOT NULL DEFAULT 'nebula_deep',
+                wallpaper_dimness REAL NOT NULL DEFAULT 0.25,
+                wallpaper_blur_px INTEGER NOT NULL DEFAULT 0,
+                accent_color TEXT NOT NULL DEFAULT '#8B9CFF',
+                font_scale REAL NOT NULL DEFAULT 1.0,
+                glass_opacity REAL NOT NULL DEFAULT 0.85,
+                motion_intensity TEXT NOT NULL DEFAULT 'normal',
+                dock_position TEXT NOT NULL DEFAULT 'bottom',
+                dock_autohide INTEGER NOT NULL DEFAULT 0,
+                dock_style TEXT NOT NULL DEFAULT 'floating',
+                widgets_json TEXT NOT NULL DEFAULT '{"clock":true,"target":true,"affirmation":true}',
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES user_profile(user_id) ON DELETE CASCADE
+            );
+
+            -- Seed Default Desktop Shortcuts
+            INSERT OR IGNORE INTO desktop_shortcuts (id, title, icon, target_type, target_payload, grid_x, grid_y, is_pinned, created_at, updated_at)
+            VALUES 
+                ('sc_command_center', 'Command Center', '⚡', 'app', 'dashboard', 0, 0, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('sc_rag_files', 'Files & RAG', '📁', 'app', 'files', 0, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('sc_focus_guard', 'Focus Guard', '🛡️', 'app', 'focus', 0, 2, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('sc_laya_ai', 'Laya AI Assistant', '🧠', 'app', 'mind', 0, 3, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('sc_app_hub', 'App Hub', '📦', 'app', 'app-hub', 0, 4, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('sc_settings', 'Settings', '⚙️', 'app', 'settings', 0, 5, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+            "#,
+        )
+        .map_err(|e| DbError::MigrationFailed(format!("Failed to execute apply_v2_schema: {}", e)))?;
         Ok(())
     }
 }

@@ -562,13 +562,14 @@ pub fn compress_to_zip(source_paths: &[String], output_zip_path: &str) -> Result
             {
                 let joined_paths = source_paths
                     .iter()
-                    .map(|p| format!("'{}'", p))
+                    .map(|p| format!("'{}'", p.replace('\'', "''")))
                     .collect::<Vec<_>>()
                     .join(",");
+                let safe_output = output_path.display().to_string().replace('\'', "''");
                 let ps_script = format!(
-                    "Compress-Archive -Path {} -DestinationPath '{}' -Force",
+                    "Compress-Archive -LiteralPath @({}) -DestinationPath '{}' -Force",
                     joined_paths,
-                    output_path.display()
+                    safe_output
                 );
                 let ps_res = Command::new("powershell")
                     .args(["-NoProfile", "-Command", &ps_script])
@@ -627,10 +628,12 @@ pub fn extract_archive(archive_path: &str, destination_folder: &str) -> Result<b
 
     #[cfg(target_os = "windows")]
     {
+        let safe_archive = archive.display().to_string().replace('\'', "''");
+        let safe_dest = dest.display().to_string().replace('\'', "''");
         let ps_script = format!(
-            "Expand-Archive -Path '{}' -DestinationPath '{}' -Force",
-            archive.display(),
-            dest.display()
+            "Expand-Archive -LiteralPath '{}' -DestinationPath '{}' -Force",
+            safe_archive,
+            safe_dest
         );
         let ps_res = Command::new("powershell")
             .args(["-NoProfile", "-Command", &ps_script])

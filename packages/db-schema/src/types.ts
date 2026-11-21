@@ -846,6 +846,79 @@ export interface ConnectAuditEntry {
   timestamp_utc: string;
 }
 
+// ---------------------------------------------------------------------------
+// Phase 25: Desktop Shortcuts, Personalization & Power Lifecycle
+// ---------------------------------------------------------------------------
+
+export type ShortcutTargetType = 'app' | 'file' | 'url' | 'folder' | 'action';
+
+export interface DesktopShortcut {
+  id: string;
+  title: string;
+  icon: string;
+  target_type: ShortcutTargetType;
+  target_payload: string;
+  grid_x: number;
+  grid_y: number;
+  is_pinned: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export type WallpaperType = 'preset' | 'custom' | 'solid' | 'video';
+export type DockPosition = 'bottom' | 'left' | 'top';
+export type DockStyle = 'floating' | 'edge';
+export type MotionIntensity = 'reduced' | 'normal' | 'energetic';
+
+export interface DesktopWidgetsConfig {
+  clock: boolean;
+  target: boolean;
+  affirmation: boolean;
+  notes?: boolean;
+}
+
+export interface UserPersonalization {
+  user_id: string;
+  wallpaper_type: WallpaperType;
+  wallpaper_path: string;
+  wallpaper_dimness: number; // 0.0 to 0.85
+  wallpaper_blur_px: number; // 0 to 32
+  accent_color: string;
+  font_scale: number; // 0.9 to 1.25
+  glass_opacity: number; // 0.5 to 1.0
+  motion_intensity: MotionIntensity;
+  dock_position: DockPosition;
+  dock_autohide: boolean;
+  dock_style: DockStyle;
+  widgets_json: string; // JSON encoded DesktopWidgetsConfig
+  updated_at?: string;
+}
+
+export type PowerAction = 'shutdown' | 'restart' | 'sleep' | 'lock' | 'exit_to_host';
+
+export interface PowerActionResult {
+  success: boolean;
+  action: string;
+  message: string;
+  timestamp_utc: string;
+}
+
+export interface PowerStateResponse {
+  is_locked: boolean;
+  is_sleeping: boolean;
+  last_action: string | null;
+  uptime_secs: number;
+  safe_teardown_ready: boolean;
+}
+
+export interface WallpaperAssetResponse {
+  file_path: string;
+  file_name: string;
+  file_size_bytes: number;
+  mime_type: string;
+}
+
+
 
 
 

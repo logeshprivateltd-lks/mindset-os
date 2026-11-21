@@ -12,9 +12,14 @@ import { dbClient } from '../../lib/dbClient';
 import { LanguageSettingsPanel } from '../../components/settings/LanguageSettingsPanel';
 import { navigationRouter } from '../../navigation/navigationRouter';
 import type { UserProfile } from '@mindset/db-schema';
+import { WallpaperSettingsPanel } from './WallpaperSettingsPanel';
+import { AppearanceSettingsPanel } from './AppearanceSettingsPanel';
+import { DesktopWidgetsPanel } from './DesktopWidgetsPanel';
+import { DockSettingsPanel } from './DockSettingsPanel';
 
 export type SettingsDomain =
   | 'appearance'
+  | 'personalization'
   | 'dock_window'
   | 'display_sound'
   | 'language'
@@ -27,6 +32,7 @@ export type SettingsDomain =
 
 export const SettingsPage: React.FC = () => {
   const [activeDomain, setActiveDomain] = useState<SettingsDomain>('appearance');
+  const [personalizationSubTab, setPersonalizationSubTab] = useState<'wallpaper' | 'appearance' | 'widgets' | 'dock'>('wallpaper');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -139,6 +145,7 @@ export const SettingsPage: React.FC = () => {
           <nav className="space-y-1 text-xs">
             {[
               { id: 'appearance', label: 'Appearance & Themes', icon: '🎨' },
+              { id: 'personalization', label: 'Personalization Studio', icon: '✨' },
               { id: 'dock_window', label: 'Taskbar & Snapping', icon: '🪟' },
               { id: 'display_sound', label: 'Display & Audio', icon: '🔊' },
               { id: 'language', label: 'Language & Tanglish', icon: '🌐' },
@@ -328,6 +335,43 @@ export const SettingsPage: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ============================================================= */}
+        {/* DOMAIN: PERSONALIZATION STUDIO (PROMPT 25)                    */}
+        {/* ============================================================= */}
+        {activeDomain === 'personalization' && (
+          <div className="space-y-6 max-w-3xl animate-fadeIn">
+            {/* Sub-Tabs Pill Navigation */}
+            <div className="flex items-center space-x-2 border-b border-[var(--border-subtle)] pb-3">
+              {[
+                { id: 'wallpaper' as const, label: 'Wallpaper Engine', icon: '🖼️' },
+                { id: 'appearance' as const, label: 'Accent & Glass', icon: '🎨' },
+                { id: 'widgets' as const, label: 'Desktop Widgets', icon: '⏱️' },
+                { id: 'dock' as const, label: 'Dock & Shortcuts', icon: '🪟' },
+              ].map((subTab) => (
+                <button
+                  key={subTab.id}
+                  type="button"
+                  onClick={() => setPersonalizationSubTab(subTab.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-2 transition-all ${
+                    personalizationSubTab === subTab.id
+                      ? 'bg-[var(--accent-primary)] text-[var(--surface-primary)] shadow-sm'
+                      : 'bg-[var(--surface-secondary)] text-[var(--text-muted)] hover:text-[var(--text-dominant)]'
+                  }`}
+                >
+                  <span>{subTab.icon}</span>
+                  <span>{subTab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Sub-Tab Views */}
+            {personalizationSubTab === 'wallpaper' && <WallpaperSettingsPanel />}
+            {personalizationSubTab === 'appearance' && <AppearanceSettingsPanel />}
+            {personalizationSubTab === 'widgets' && <DesktopWidgetsPanel />}
+            {personalizationSubTab === 'dock' && <DockSettingsPanel />}
           </div>
         )}
 

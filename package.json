@@ -5,12 +5,18 @@
   "description": "MindSet OS Monorepo — Powered by LKS PVT LTD",
   "packageManager": "pnpm@12.18.0",
   "scripts": {
+    "dev": "pnpm --filter @mindset/desktop tauri dev",
+    "dev:web": "pnpm --filter @mindset/desktop dev",
     "dev:desktop": "pnpm --filter @mindset/desktop dev",
+    "build": "pnpm -r run build",
     "build:desktop": "pnpm --filter @mindset/desktop build",
     "tauri:dev": "pnpm --filter @mindset/desktop tauri dev",
     "tauri:build": "pnpm --filter @mindset/desktop tauri build",
     "typecheck": "pnpm -r --stream run typecheck",
-    "lint": "pnpm -r --stream run lint"
+    "lint": "pnpm -r --stream run lint",
+    "test": "pnpm -r --if-present run test",
+    "test:rust": "cargo test --workspace",
+    "test:all": "pnpm -r run test && cargo test --workspace"
   },
   "devDependencies": {
     "typescript": "^5.8.2"
