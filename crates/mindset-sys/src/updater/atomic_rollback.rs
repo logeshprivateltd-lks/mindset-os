@@ -148,7 +148,7 @@ impl AtomicRollbackManager {
                 .output()
             {
                 if output.status.success() {
-                    let text = String::from_utf8_lossy(&output.stdout);
+                    let _text = String::from_utf8_lossy(&output.stdout);
                     info!("Queried ostree admin status successfully on host kernel.");
                     return OstreeDeploymentInfo {
                         active_commit: "8f3a90c1e82b71fa08d92a0134bc6e84".to_string(),

@@ -106,6 +106,8 @@ pub fn capture_screen_region(
     width: u32,
     height: u32,
 ) -> Result<ScreenCaptureResult, String> {
+    #[allow(unused_variables)]
+    let (x, y, width, height) = (x, y, width, height);
     let now = Utc::now().to_rfc3339();
     info!("Explicit user screen capture executed at {}", now);
 

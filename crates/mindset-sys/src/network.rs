@@ -73,24 +73,34 @@ impl NetworkManager {
 
         #[cfg(target_os = "linux")]
         {
-            Self::get_linux_status(is_online, latency_ms)
+            return Self::get_linux_status(is_online, latency_ms);
         }
 
         #[cfg(target_os = "windows")]
         {
-            Self::get_windows_status(is_online, latency_ms)
+            return Self::get_windows_status(is_online, latency_ms);
         }
 
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
         {
-            NetworkStatus {
+            return NetworkStatus {
                 is_wifi_enabled: true,
                 is_online,
                 connected_ssid: if is_online { Some("Connected Network".to_string()) } else { None },
                 ip_address: None,
                 signal_percent: if is_online { 85 } else { 0 },
                 latency_ms,
-            }
+            };
+        }
+
+        #[allow(unreachable_code)]
+        NetworkStatus {
+            is_wifi_enabled: false,
+            is_online: false,
+            connected_ssid: None,
+            ip_address: None,
+            signal_percent: 0,
+            latency_ms: None,
         }
     }
 
@@ -98,18 +108,21 @@ impl NetworkManager {
     pub fn scan_networks() -> Vec<WifiNetwork> {
         #[cfg(target_os = "linux")]
         {
-            Self::scan_linux_networks()
+            return Self::scan_linux_networks();
         }
 
         #[cfg(target_os = "windows")]
         {
-            Self::scan_windows_networks()
+            return Self::scan_windows_networks();
         }
 
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
         {
-            Vec::new()
+            return Vec::new();
         }
+
+        #[allow(unreachable_code)]
+        Vec::new()
     }
 
     /// Toggles Wi-Fi radio state (on/off).

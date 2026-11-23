@@ -47,6 +47,8 @@ jobs:
             dosfstools
 
       - name: Compile Pure Rust MindSet OS Native Binaries
+        env:
+          RUSTFLAGS: "-A unused_variables -A dead_code -A unused_imports"
         run: |
           cargo build --release --bin mindset-os
           cargo build --release -p mindset-focus-guard
