@@ -11,6 +11,7 @@ jobs:
   build-pure-rust-iso:
     name: Build Pure Rust wgpu Live ISO (Debian 13 Trixie + Openbox)
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -23,7 +24,11 @@ jobs:
 
       - name: Install System Build & ISO Dependencies
         run: |
-          sudo apt-get update
+          echo 'Acquire::http::Timeout "15";' | sudo tee /etc/apt/apt.conf.d/99custom-timeout
+          echo 'Acquire::https::Timeout "15";' | sudo tee -a /etc/apt/apt.conf.d/99custom-timeout
+          echo 'Acquire::Retries "3";' | sudo tee -a /etc/apt/apt.conf.d/99custom-timeout
+          sudo sed -i 's|http://[a-zA-Z0-9.-]*\.archive\.ubuntu\.com|http://archive.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+          sudo apt-get update -o Acquire::Retries=3
           sudo apt-get install -y --no-install-recommends \
             build-essential \
             pkg-config \

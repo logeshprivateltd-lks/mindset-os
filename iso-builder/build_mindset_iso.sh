@@ -55,7 +55,7 @@ done
 
 if [ -n "$MISSING_PKGS" ]; then
     echo "[Deps] Installing missing host packages:$MISSING_PKGS..."
-    apt-get update -y
+    apt-get update -o Acquire::Retries=2 -o Acquire::http::Timeout=15 -y
     apt-get install -y --no-install-recommends $MISSING_PKGS
 fi
 
