@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="brainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#C084FC" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#34D399" />
+    </linearGradient>
+  </defs>
+  <!-- Background Shield Rounded Rect -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bgGrad)" stroke="#38BDF8" stroke-width="2" stroke-opacity="0.35" />
+  
+  <!-- Outer Focus Reticle / Calipers -->
+  <path d="M 28 44 L 28 28 L 44 28" fill="none" stroke="url(#accentGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 100 44 L 100 28 L 84 28" fill="none" stroke="url(#accentGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 28 84 L 28 100 L 44 100" fill="none" stroke="url(#accentGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 100 84 L 100 100 L 84 100" fill="none" stroke="url(#accentGrad)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Stylized Neural Synapse Brain Core -->
+  <circle cx="64" cy="64" r="14" fill="none" stroke="url(#brainGrad)" stroke-width="3" opacity="0.9" />
+  <circle cx="64" cy="64" r="6" fill="#38BDF8" />
+  
+  <!-- Synaptic Nodes and Projections -->
+  <path d="M 64 50 C 64 38, 48 40, 48 52 C 48 60, 52 64, 52 64" fill="none" stroke="url(#brainGrad)" stroke-width="3" stroke-linecap="round" />
+  <path d="M 64 50 C 64 38, 80 40, 80 52 C 80 60, 76 64, 76 64" fill="none" stroke="url(#brainGrad)" stroke-width="3" stroke-linecap="round" />
+  <path d="M 52 64 C 44 64, 42 76, 50 82 C 58 88, 64 78, 64 78" fill="none" stroke="url(#brainGrad)" stroke-width="3" stroke-linecap="round" />
+  <path d="M 76 64 C 84 64, 86 76, 78 82 C 70 88, 64 78, 64 78" fill="none" stroke="url(#brainGrad)" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Pulse dots -->
+  <circle cx="48" cy="48" r="2.5" fill="#34D399" />
+  <circle cx="80" cy="48" r="2.5" fill="#34D399" />
+  <circle cx="46" cy="74" r="2.5" fill="#C084FC" />
+  <circle cx="82" cy="74" r="2.5" fill="#C084FC" />
+</svg>

@@ -1,0 +1,12 @@
+{
+  "name": "nero-engageing-inspector",
+  "displayName": "NERO-ENGAGEING-INSPECTOR",
+  "description": "Audits student-facing operating systems and apps for deep cognitive engagement, visual hierarchy, dopamine micro-rewards, distraction shielding, and ergonomic long-session study comfort.",
+  "version": "1.0.0",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Audit this UI view for student cognitive load and Hick's Law compliance",
+    "Run NERO-ENGAGEING-INSPECTOR on the study session UI to check dopamine feedback loops",
+    "Check contrast ergonomics and eye strain risks for long study sessions"
+  ]
+}

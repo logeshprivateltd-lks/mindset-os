@@ -1,0 +1,12 @@
+[package]
+name = "mindset-material"
+version = "0.1.0"
+edition = "2021"
+authors = ["LKS PVT LTD"]
+description = "Dual-Kawase liquid glass and offscreen render targets for MindSet OS"
+
+[dependencies]
+wgpu = { workspace = true }
+bytemuck = { workspace = true }
+log = { workspace = true }
+

@@ -33,9 +33,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
 
-        if scan_count % 20 == 0 {
-            info!("Focus Guard heartbeat ok ({} processes inspected)", sys.processes().len());
+        if scan_count.is_multiple_of(20) {
+            info!(
+                "Focus Guard heartbeat ok ({} processes inspected)",
+                sys.processes().len()
+            );
         }
     }
 }
-

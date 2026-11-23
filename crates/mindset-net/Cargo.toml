@@ -1,0 +1,16 @@
+[package]
+name = "mindset-net"
+version = "0.1.0"
+edition = "2021"
+authors = ["LKS PVT LTD <engineering@lkspvtltd.com>"]
+description = "Network integrity, zero-incognito enforcement, entertainment blocker, and YouTube timer for MindSet OS"
+
+[dependencies]
+mindset-sys = { path = "../mindset-sys" }
+rusqlite = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+dirs = { workspace = true }

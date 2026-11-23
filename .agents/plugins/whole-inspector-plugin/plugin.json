@@ -1,0 +1,12 @@
+{
+  "name": "whole-inspector-plugin",
+  "displayName": "WHOLE_INSPECTOR_PLUGIN",
+  "description": "Comprehensive read-only diagnostic and architectural verification plugin for MindSet OS: audits filesystem hygiene, dependencies, normal OS capabilities, Debian 13 ISO boot readiness, UI themes, permission-gated Maindy AI tools, and student vision.",
+  "version": "1.0.0",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Run whole_inspector_plugin across the workspace and generate WHOLE_INSPECTOR_REPORT.md",
+    "Audit MindSet OS for Debian 13 ISO creation and physical PC boot readiness",
+    "Verify Maindy AI permission gate security and student vision capabilities"
+  ]
+}

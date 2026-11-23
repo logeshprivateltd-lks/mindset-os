@@ -1,0 +1,15 @@
+[package]
+name = "mindset-core"
+version = "1.0.0"
+edition = "2021"
+authors = ["LKS PVT LTD <engineering@lkspvtltd.com>"]
+description = "Pure Rust domain logic, Pomodoro engine, study datasets, and identity state for MindSet OS"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+tokio = { workspace = true }
+mindset-sys = { path = "../mindset-sys" }
+mindset-intelligence = { path = "../mindset-intelligence" }
+mindset-motion = { path = "../mindset-motion" }

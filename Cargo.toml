@@ -1,10 +1,22 @@
 [workspace]
 resolver = "2"
 members = [
-    "apps/mindset-desktop/src-tauri",
-    "packages/connect-protocol",
-    "packages/focus-policy-engine",
+    "crates/mindset-core",
+    "crates/mindset-sys",
+    "crates/mindset-connect-protocol",
+    "crates/mindset-focus-policy",
+    "crates/mindset-motion",
+    "crates/mindset-intelligence",
+    "crates/mindset-net",
+    "crates/whole_inspector_plugin",
     "services/mindset-focus-guard",
+    "bins/mindset-os",
+]
+default-members = [
+    "bins/mindset-os",
+]
+exclude = [
+    "archive",
 ]
 
 [workspace.package]
@@ -15,10 +27,10 @@ license = "Proprietary"
 
 [profile.release]
 opt-level = "s"
-lto = true
+lto = "thin"
 codegen-units = 1
-strip = true
 panic = "abort"
+strip = true
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -33,4 +45,4 @@ sysinfo = "0.33"
 rusqlite = { version = "0.32", features = ["bundled"] }
 dirs = "6.0"
 async-trait = "0.1"
-
+env_logger = "0.11"

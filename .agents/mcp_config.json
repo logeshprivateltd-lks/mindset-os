@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "NERO-ENGAGEING-INSPECTOR": {
+      "command": "node",
+      "args": [
+        "C:\\MINDSETOS\\.agents\\mcp-servers\\nero-engageing-inspector\\index.mjs"
+      ]
+    },
+    "MORPHISSMS_INSPECTOR": {
+      "command": "node",
+      "args": [
+        "C:\\MINDSETOS\\.agents\\mcp-servers\\morphissms-inspector\\index.mjs"
+      ]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+#!/bin/bash
+# ==============================================================================
+# MindSet OS — Distraction-Free Study Browser Launcher
+# Runs Chromium in standalone application mode with isolated student profile
+# ==============================================================================
+
+URL="${1:-https://www.youtube.com}"
+PROFILE_DIR="$HOME/.local/share/mindset-os/browser-profile"
+mkdir -p "$PROFILE_DIR"
+
+exec chromium \
+    --user-data-dir="$PROFILE_DIR" \
+    --app="$URL" \
+    --disable-features=Translate \
+    --no-first-run \
+    --no-default-browser-check \
+    --enable-gpu-rasterization \
+    --enable-zero-copy \
+    --ignore-gpu-blocklist \
+    --disable-background-networking \
+    "$@"

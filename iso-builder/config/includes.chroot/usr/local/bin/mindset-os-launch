@@ -1,0 +1,104 @@
+#!/bin/bash
+# ==============================================================================
+# MindSet OS — Smart GPU & Hardware Acceleration Probe Launcher
+# Handles Bare-Metal PC (Intel/AMD/Nvidia Vulkan) + VM (VirtualBox/VMware/QEMU GL)
+# ==============================================================================
+set -e
+
+LOG_FILE="/tmp/mindset-os.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "=========================================================="
+echo " Starting MindSet OS — Student Computing Shell (Debian 13)"
+echo " Launch Timestamp: $(date)"
+echo "=========================================================="
+
+# 1. Environment & D-Bus / Audio Setup
+export LC_ALL="C.UTF-8"
+export LANG="C.UTF-8"
+export RUST_BACKTRACE=1
+export PULSE_SERVER="unix:/run/user/$(id -u)/pulse/native"
+
+# 2. Virtualization & GPU Hardware Detection
+VIRT_ENV="none"
+if which systemd-detect-virt >/dev/null 2>&1; then
+    VIRT_ENV=$(systemd-detect-virt || echo "none")
+fi
+echo "[GPU Probe] Detected Virtualization: $VIRT_ENV"
+
+# Check available GPU devices in /dev/dri
+HAS_RENDER_NODE=false
+if ls /dev/dri/renderD* >/dev/null 2>&1; then
+    HAS_RENDER_NODE=true
+fi
+echo "[GPU Probe] DRI Render Node Present: $HAS_RENDER_NODE"
+
+# Check Vulkan driver availability
+HAS_VULKAN=false
+if which vulkaninfo >/dev/null 2>&1; then
+    if vulkaninfo --summary >/dev/null 2>&1; then
+        HAS_VULKAN=true
+    fi
+fi
+echo "[GPU Probe] Native Vulkan Operational: $HAS_VULKAN"
+
+# 3. Configure Optimal wgpu / Mesa Graphics Backend
+if [ "$VIRT_ENV" != "none" ] && [ "$HAS_VULKAN" = false ]; then
+    echo "[GPU Probe] Running inside Virtual Machine without native Vulkan."
+    echo "[GPU Probe] Engaging Mesa OpenGL / LLVMpipe Software Fallback..."
+    export WGPU_BACKEND="gl"
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export MESA_LOADER_DRIVER_OVERRIDE="llvmpipe"
+    export WGPU_POWER_PREF="low"
+elif [ "$HAS_VULKAN" = true ]; then
+    echo "[GPU Probe] Native Vulkan Hardware Detected. Enabling Vulkan acceleration..."
+    export WGPU_BACKEND="vulkan"
+else
+    echo "[GPU Probe] Standard OpenGL / EGL Fallback selected."
+    export WGPU_BACKEND="gl"
+fi
+
+# 4. Locate MindSet OS Binary
+BINARY_PATH=""
+if [ -x "/opt/mindset-os/bin/mindset-os" ]; then
+    BINARY_PATH="/opt/mindset-os/bin/mindset-os"
+elif [ -x "/usr/local/bin/mindset-os" ]; then
+    BINARY_PATH="/usr/local/bin/mindset-os"
+else
+    echo "ERROR: mindset-os binary not found in /opt/mindset-os/bin/ or /usr/local/bin/!"
+    exit 1
+fi
+
+echo "[Launch] Executing: $BINARY_PATH"
+
+# 5. Robust Execution Loop with Restart Guard
+RESTART_COUNT=0
+MAX_RESTARTS=5
+
+while [ $RESTART_COUNT -lt $MAX_RESTARTS ]; do
+    echo "[Launch] Starting mindset-os instance #$((RESTART_COUNT + 1))..."
+    "$BINARY_PATH" || EXIT_CODE=$?
+
+    if [ "$EXIT_CODE" -eq 0 ]; then
+        echo "[Launch] mindset-os exited cleanly."
+        break
+    fi
+
+    echo "[Launch WARNING] mindset-os exited with status $EXIT_CODE."
+    RESTART_COUNT=$((RESTART_COUNT + 1))
+
+    # If first launch failed on Vulkan, automatically downgrade to OpenGL software rasterizer
+    if [ $RESTART_COUNT -eq 1 ]; then
+        echo "[GPU Recovery] Attempting failover to OpenGL / LLVMpipe fallback..."
+        export WGPU_BACKEND="gl"
+        export LIBGL_ALWAYS_SOFTWARE=1
+        export MESA_LOADER_DRIVER_OVERRIDE="llvmpipe"
+    fi
+
+    sleep 1.5
+done
+
+if [ $RESTART_COUNT -ge $MAX_RESTARTS ]; then
+    echo "ERROR: MindSet OS crashed repeatedly. Switching to fallback terminal."
+    x-terminal-emulator || true
+fi

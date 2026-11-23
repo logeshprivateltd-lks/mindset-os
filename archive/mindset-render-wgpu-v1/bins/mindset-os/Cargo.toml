@@ -1,0 +1,34 @@
+[package]
+name = "mindset-os"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "MindSet OS — Pure-Rust Native Desktop Visual Computing Shell"
+
+[[bin]]
+name = "mindset-os"
+path = "src/main.rs"
+
+[dependencies]
+mindset-render = { path = "../../crates/mindset-render" }
+mindset-material = { path = "../../crates/mindset-material" }
+mindset-motion = { path = "../../crates/mindset-motion" }
+mindset-sys = { path = "../../crates/mindset-sys" }
+mindset-ui = { path = "../../crates/mindset-ui" }
+mindset-surface = { path = "../../crates/mindset-surface" }
+mindset-intelligence = { path = "../../crates/mindset-intelligence" }
+mindset-net = { path = "../../crates/mindset-net" }
+wgpu = { workspace = true }
+winit = { workspace = true }
+tokio = { workspace = true }
+pollster = { workspace = true }
+bytemuck = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+chrono = { workspace = true }
+sysinfo = { workspace = true }
+rusqlite = { workspace = true }
+serde_json = { workspace = true }
+cosmic-text = { workspace = true }
+

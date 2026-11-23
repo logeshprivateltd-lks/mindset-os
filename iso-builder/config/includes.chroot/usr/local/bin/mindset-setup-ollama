@@ -1,0 +1,21 @@
+#!/bin/bash
+# ==============================================================================
+# MindSet OS — Local AI (Ollama) Setup & Model Scout Helper
+# Optional setup helper for offline Maindy AI tutoring on bare-metal PC
+# ==============================================================================
+set -e
+
+echo "=== MindSet OS Local AI Tutor Setup ==="
+
+if ! which ollama >/dev/null 2>&1; then
+    echo "==> Installing Ollama local inference runtime..."
+    curl -fsSL https://ollama.com/install.sh | sh
+fi
+
+echo "==> Starting Ollama service..."
+systemctl enable --now ollama || true
+
+echo "==> Pulling lightweight tutor model (qwen2.5:1.5b)..."
+ollama pull qwen2.5:1.5b || echo "Network unavailable. Model can be pulled later."
+
+echo "==> Local AI Tutor ready for MindSet OS!"

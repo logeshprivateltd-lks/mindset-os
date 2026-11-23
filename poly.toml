@@ -1,0 +1,36 @@
+# MindSet OS polylint configuration
+[discovery]
+exclude = [
+    "target/**",
+    ".agent/skills/**/references/**",
+    "vendor/**",
+    "node_modules/**",
+    "dist/**",
+    "dist-release/**",
+]
+
+[workspace]
+root = true
+
+# Rust tooling: bins/mindset-os and crates/mindset-surface
+[fmt.rust.rustfmt]
+enabled = true
+
+[hooks.builtin.cargo]
+enabled = true
+clippy = true
+clippy_args = [
+    "-p", "mindset-os",
+    "-p", "mindset-surface",
+    "--all-targets",
+    "--",
+    "-D", "warnings",
+]
+
+# TOML formatting for repository configuration files only
+[fmt.toml.taplo]
+enabled = true
+
+# Markdown formatting for repository documentation only
+[fmt.markdown.rumdl]
+enabled = true

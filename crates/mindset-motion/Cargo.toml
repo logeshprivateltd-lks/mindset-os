@@ -1,0 +1,9 @@
+[package]
+name = "mindset-motion"
+version = "0.1.0"
+edition = "2021"
+authors = ["LKS PVT LTD"]
+description = "Neuro-visual critically damped spring physics engine for MindSet OS"
+
+[dependencies]
+

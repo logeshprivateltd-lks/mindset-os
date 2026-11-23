@@ -1,0 +1,34 @@
+#!/bin/bash
+# ==============================================================================
+# MindSet OS — Openbox Autostart Orchestrator
+# ==============================================================================
+
+# 1. Prevent screen blanking, screensaver, and DPMS sleep
+xset s off >/dev/null 2>&1 || true
+xset s noblank >/dev/null 2>&1 || true
+xset -dpms >/dev/null 2>&1 || true
+
+# 2. Paint Root Window in MindSet Deep Obsidian (#0B0E14)
+xsetroot -solid "#0B0E14" >/dev/null 2>&1 || true
+
+# 3. Audio & Sound Subsystem (PipeWire + WirePlumber)
+if which pipewire >/dev/null 2>&1; then
+    pipewire &
+    sleep 0.4
+    wireplumber &
+    pipewire-pulse &
+fi
+
+# 4. NetworkManager tray / network scanning engine
+if which nm-applet >/dev/null 2>&1; then
+    nm-applet &
+fi
+
+# 5. X11 Compositor for Smooth Window Transitions & Translucency
+if which picom >/dev/null 2>&1; then
+    picom -b --backend glx --no-fading-openclose --vsync >/dev/null 2>&1 || \
+    picom -b --backend xrender >/dev/null 2>&1 || true
+fi
+
+# 6. Launch MindSet OS Shell via Smart GPU Hardware Probe Wrapper
+/usr/local/bin/mindset-os-launch &

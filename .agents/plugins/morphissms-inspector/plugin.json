@@ -1,0 +1,12 @@
+{
+  "name": "morphissms-inspector",
+  "displayName": "MORPHISSMS_INSPECTOR",
+  "description": "Audits Glassmorphism, Liquidmorphism, Claymorphism, and Neomorphism implementations across Rust Iced 0.14.0, wgpu WGSL shaders, CSS, and Flutter for physical lighting, shadows, blur, depth, and specular fidelity.",
+  "version": "1.0.0",
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Run /morphissms-inspector on our Rust Iced theme and shader files",
+    "Evaluate Claymorphism dual-layer depth and shadow tinting in claymorphism.rs",
+    "Audit lighting consistency and glassmorphism alpha fidelity across views"
+  ]
+}

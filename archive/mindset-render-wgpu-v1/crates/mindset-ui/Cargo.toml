@@ -1,0 +1,15 @@
+[package]
+name = "mindset-ui"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+mindset-render = { path = "../mindset-render" }
+mindset-motion = { path = "../mindset-motion" }
+bytemuck = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+unicode-segmentation = { workspace = true }

@@ -1,0 +1,132 @@
+# ==============================================================================
+# MindSet OS — Debian 13 (Trixie) amd64 Package List
+# Optimized for Live USB (Ventoy/Rufus) on Bare-Metal PC & VirtualBox/VMware
+# ==============================================================================
+
+# --- 1. Linux Kernel & Live Boot Subsystems ---
+linux-image-amd64
+live-boot
+live-config
+live-config-systemd
+systemd
+systemd-sysv
+dbus
+dbus-x11
+
+# --- 2. Hardware Firmware & Real-PC Wi-Fi / Bluetooth Drivers ---
+firmware-linux
+firmware-linux-free
+firmware-linux-nonfree
+firmware-iwlwifi
+firmware-realtek
+firmware-atheros
+firmware-misc-nonfree
+firmware-sof-signed
+firmware-intel-sound
+firmware-amd-graphics
+bluez
+bluez-firmware
+
+# --- 3. Hardware Inspection & Storage Utilities ---
+pciutils
+usbutils
+lshw
+dmidecode
+efibootmgr
+parted
+gparted
+dosfstools
+ntfs-3g
+e2fsprogs
+btrfs-progs
+smartmontools
+
+# --- 4. Networking & Internet Subsystems ---
+network-manager
+network-manager-gnome
+wpasupplicant
+wireless-tools
+wireless-regdb
+iproute2
+iputils-ping
+curl
+wget
+ca-certificates
+dnsmasq-base
+
+# --- 5. Audio, Sound Servers & Speech Dispatcher (TTS) ---
+pipewire
+pipewire-pulse
+pipewire-audio
+wireplumber
+pipewire-alsa
+alsa-utils
+pulseaudio-utils
+espeak-ng
+speech-dispatcher
+speech-dispatcher-espeak-ng
+libespeak-ng1
+
+# --- 6. Graphics, Display Server & Drivers (Real-PC + VM Resilient) ---
+xorg
+xserver-xorg
+xserver-xorg-core
+xserver-xorg-video-all
+xserver-xorg-video-intel
+xserver-xorg-video-amdgpu
+xserver-xorg-video-ati
+xserver-xorg-video-nouveau
+xserver-xorg-video-vmware
+xserver-xorg-video-qxl
+xserver-xorg-input-all
+xserver-xorg-input-libinput
+x11-xserver-utils
+xinit
+xdotool
+x11-utils
+feh
+picom
+
+# --- 7. OpenGL, Vulkan & Hardware Acceleration Stacks ---
+mesa-vulkan-drivers
+mesa-va-drivers
+libgl1-mesa-dri
+libgl1-mesa-glx
+libglx-mesa0
+libvulkan1
+vulkan-tools
+mesa-utils
+
+# --- 8. Window Management & Desktop Integration ---
+openbox
+obconf
+
+# --- 9. Typography, Indic Script & Emoji Fonts ---
+fonts-noto-core
+fonts-noto-ui-core
+fonts-noto-color-emoji
+fonts-noto-extra
+fonts-dejavu-core
+fontconfig
+
+# --- 10. Web Browser, Runtimes & SQLite Engine ---
+chromium
+chromium-l10n
+webext-ublock-origin-chromium
+xdg-utils
+sqlite3
+libsqlite3-0
+libssl3
+
+# --- 11. System Administration & Sudo ---
+sudo
+bash-completion
+nano
+htop
+procps
+less
+polkitd
+
+# --- 12. Optional Calamares Installer ---
+calamares
+calamares-settings-debian

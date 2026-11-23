@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#1C2541" />
+    </linearGradient>
+    <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#48CAE4" />
+      <stop offset="50%" stop-color="#0077B6" />
+      <stop offset="100%" stop-color="#7209B7" />
+    </linearGradient>
+    <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06D6A0" />
+      <stop offset="100%" stop-color="#118AB2" />
+    </linearGradient>
+  </defs>
+  <!-- Background Shield Rounded Rect -->
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bgGrad)" stroke="#48CAE4" stroke-width="2" stroke-opacity="0.4" />
+  
+  <!-- Outer Calipers / Precision Reticle -->
+  <path d="M 24 40 L 24 24 L 40 24" fill="none" stroke="#48CAE4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 104 40 L 104 24 L 88 24" fill="none" stroke="#48CAE4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 24 88 L 24 104 L 40 104" fill="none" stroke="#48CAE4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 104 88 L 104 104 L 88 104" fill="none" stroke="#48CAE4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Magnifying Diagnostic Lens -->
+  <circle cx="58" cy="58" r="26" fill="none" stroke="url(#lensGrad)" stroke-width="4.5" />
+  <line x1="77" y1="77" x2="98" y2="98" stroke="url(#lensGrad)" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Inner Verification Checkmark -->
+  <path d="M 46 58 L 54 66 L 70 50" fill="none" stroke="url(#checkGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

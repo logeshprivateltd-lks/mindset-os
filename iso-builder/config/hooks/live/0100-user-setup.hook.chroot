@@ -1,0 +1,45 @@
+#!/bin/bash
+# ==============================================================================
+# MindSet OS Live-Build Hook: 0100-user-setup.hook.chroot
+# Sets up the default student account ('achiever') with full hardware permissions
+# ==============================================================================
+set -e
+
+echo "==> [MindSet Hook] Configuring user 'achiever'..."
+
+# Create achiever user if not already existing
+if ! id -u achiever >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -c "MindSet Achiever" achiever
+fi
+
+# Set default password ('mindset')
+echo "achiever:mindset" | chpasswd
+
+# Assign hardware, audio, video, render, and administrative groups
+for grp in sudo audio video render input netdev plugdev dialout storage disk users; do
+    if getent group "$grp" >/dev/null 2>&1; then
+        usermod -aG "$grp" achiever || true
+    fi
+done
+
+# Passwordless sudo for smooth live session experience
+mkdir -p /etc/sudoers.d
+echo "achiever ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/01-achiever-nopasswd
+chmod 0440 /etc/sudoers.d/01-achiever-nopasswd
+
+# Populate /home/achiever from /etc/skel
+if [ -d /etc/skel ]; then
+    cp -rT /etc/skel /home/achiever/
+fi
+
+# Ensure correct permissions
+chmod +x /home/achiever/.xinitrc 2>/dev/null || true
+chmod +x /home/achiever/.config/openbox/autostart 2>/dev/null || true
+chmod +x /etc/skel/.xinitrc 2>/dev/null || true
+chmod +x /etc/skel/.config/openbox/autostart 2>/dev/null || true
+chown -R achiever:achiever /home/achiever
+
+# Create standard user directories
+su - achiever -c "mkdir -p ~/Desktop ~/Documents ~/Downloads ~/Music ~/Pictures ~/Videos ~/.local/share/mindset-os"
+
+echo "==> [MindSet Hook] User 'achiever' configured successfully."

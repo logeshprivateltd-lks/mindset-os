@@ -1,0 +1,22 @@
+[package]
+name = "whole_inspector_plugin"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Comprehensive Diagnostic & Architectural Verification Plugin for MindSet OS"
+
+[lib]
+name = "whole_inspector_plugin"
+path = "src/lib.rs"
+
+[[bin]]
+name = "whole_inspector_plugin"
+path = "src/main.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+walkdir = "2.5"
+regex = "1.11"
