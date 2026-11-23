@@ -1,0 +1,76 @@
+name: Build MindSet OS Pure Rust Bootable ISO
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  build-pure-rust-iso:
+    name: Build Pure Rust wgpu Live ISO (Debian 13 Trixie + Openbox)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust Stable Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Install System Build & ISO Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            libasound2-dev \
+            libudev-dev \
+            libwayland-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            live-build \
+            debootstrap \
+            squashfs-tools \
+            xorriso \
+            isolinux \
+            syslinux-common \
+            syslinux-efi \
+            grub-pc-bin \
+            grub-efi-amd64-bin \
+            mtools \
+            dosfstools
+
+      - name: Compile Pure Rust MindSet OS Native Binaries
+        run: |
+          cargo build --release --bin mindset-os
+          cargo build --release -p mindset-focus-guard
+
+      - name: Stage Binaries into ISO Builder Overlay
+        run: |
+          mkdir -p iso-builder/config/includes.chroot/opt/mindset-os
+          cp target/release/mindset-os iso-builder/config/includes.chroot/opt/mindset-os/mindset-os
+          chmod +x iso-builder/config/includes.chroot/opt/mindset-os/mindset-os
+          if [ -f target/release/mindset-focus-guard ]; then
+            cp target/release/mindset-focus-guard iso-builder/config/includes.chroot/opt/mindset-os/mindset-focus-guard
+            chmod +x iso-builder/config/includes.chroot/opt/mindset-os/mindset-focus-guard
+          fi
+
+      - name: Build Hybrid Bootable Live ISO
+        working-directory: iso-builder
+        run: |
+          chmod +x build_mindset_iso.sh
+          sudo bash build_mindset_iso.sh
+
+      - name: Archive Bootable ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindset-pure-rust-live-iso
+          path: |
+            iso-builder/mindset-v1.iso*
+          retention-days: 14
