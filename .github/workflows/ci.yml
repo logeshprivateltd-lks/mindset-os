@@ -48,6 +48,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
+      - name: Build Focus Guard Sidecar
+        run: |
+          cargo build --release -p mindset-focus-guard
+          mkdir -p apps/mindset-desktop/src-tauri/binaries
+          cp target/release/mindset-focus-guard apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard-x86_64-unknown-linux-gnu
+          cp target/release/mindset-focus-guard apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard
+
       - name: Run Cargo Check (Tauri Kernel)
         run: cargo check --manifest-path apps/mindset-desktop/src-tauri/Cargo.toml
 
