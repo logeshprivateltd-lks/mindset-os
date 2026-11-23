@@ -36,6 +36,7 @@
 | **24** | Zero-Trust Security Audit & Hardening | [`MINDSETOS_PRODUCTION_READINESS_AUDIT.md`](../MINDSETOS_PRODUCTION_READINESS_AUDIT.md) | [`24_PRODUCTION_AUDIT_SECURITY_HARDENING_REPORT.md`](./reports/24_PRODUCTION_AUDIT_SECURITY_HARDENING_REPORT.md) | `ErrorBoundary.tsx`, `ed25519-dalek`, PowerShell & Terminal Hardening | `Pass` |
 | **25** | OS Power Lifecycle, Desktop Grid & Studio | [`MINDSETOS_PRODUCTION_READINESS_AUDIT.md`](../MINDSETOS_PRODUCTION_READINESS_AUDIT.md) | [`25_POWER_DESKTOP_GRID_AND_PERSONALIZATION_REPORT.md`](./reports/25_POWER_DESKTOP_GRID_AND_PERSONALIZATION_REPORT.md) | `src-tauri/src/kernel/power.rs`, `DesktopIconGrid.tsx`, `pages/settings/` | `Pass` |
 | **26** | Signed Installers & v1.0.0 Golden Master | [`MINDSETOS_PRODUCTION_READINESS_AUDIT.md`](../MINDSETOS_PRODUCTION_READINESS_AUDIT.md) | [`26_FINAL_RELEASE_INSTALLER_AND_DISTRIBUTION_REPORT.md`](./reports/26_FINAL_RELEASE_INSTALLER_AND_DISTRIBUTION_REPORT.md) | `tauri.conf.json`, `src/bin/signer.rs`, `latest-release.json`, `release.yml` | `Pass` |
+| **27** | Sovereign Bootable Live ISO & Runbook | [`27_BOOTABLE_ISO_CREATION_PROCEDURE.md`](./27_BOOTABLE_ISO_CREATION_PROCEDURE.md) | [`27_BOOTABLE_ISO_CREATION_PROCEDURE.md`](./27_BOOTABLE_ISO_CREATION_PROCEDURE.md) | `scripts/iso/build_iso.sh`, `scripts/iso/Containerfile.bootc`, `.github/workflows/build-iso.yml` | `Pass` |
 
 ---
 

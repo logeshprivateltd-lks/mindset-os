@@ -1,0 +1,50 @@
+# ==============================================================================
+# MindSet OS — Fedora Kinoite / bootc Immutable Image Specification
+# Target: Immutable OSTree Image for bootc-image-builder ISO output
+# ==============================================================================
+
+FROM quay.io/fedora/fedora-bootc:41
+
+LABEL org.opencontainers.image.title="MindSet OS Sovereign Desktop"
+LABEL org.opencontainers.image.description="Atomic, Immutable OS Image for MindSet OS powered by Fedora bootc"
+LABEL org.opencontainers.image.vendor="LKS PVT LTD"
+LABEL org.opencontainers.image.version="1.0.0"
+
+# 1. Install base Wayland compositor, audio, and GUI dependencies
+RUN dnf -y install \
+    cage \
+    webkit2gtk4.1 \
+    libayatana-appindicator \
+    librsvg2 \
+    openssl-libs \
+    sqlite-libs \
+    pipewire \
+    wireplumber \
+    NetworkManager \
+    mesa-dri-drivers \
+    mesa-vulkan-drivers \
+    google-inter-fonts \
+    sudo \
+    shadow-utils \
+    && dnf clean all
+
+# 2. Add mindset user with sudo rights
+RUN useradd -m -s /bin/bash -G wheel,audio,video,render,input mindset && \
+    echo "mindset:mindset" | chpasswd && \
+    echo "mindset ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/mindset
+
+# 3. Copy prebuilt MindSet OS Linux binaries
+COPY mindset-os /usr/bin/mindset-os
+COPY mindset-focus-guard /usr/bin/mindset-focus-guard
+RUN chmod +x /usr/bin/mindset-os /usr/bin/mindset-focus-guard
+
+# 4. Configure autologin into Cage Wayland Kiosk
+RUN mkdir -p /etc/systemd/system/getty@tty1.service.d
+RUN echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin mindset --noclear %I \$TERM\nType=idle" > /etc/systemd/system/getty@tty1.service.d/autologin.conf
+
+# 5. User autostart
+RUN echo -e 'if [ -z "$DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then\n  exec cage -s -- /usr/bin/mindset-os\nfi' >> /home/mindset/.bash_profile && \
+    chown mindset:mindset /home/mindset/.bash_profile
+
+# 6. Enable system services
+RUN systemctl enable NetworkManager.service

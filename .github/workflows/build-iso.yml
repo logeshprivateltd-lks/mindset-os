@@ -1,0 +1,84 @@
+name: Build MindSet OS Bootable ISO
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+  push:
+    tags:
+      - 'v*iso*'
+
+jobs:
+  build-live-iso:
+    name: Build Bootable Hybrid ISO (Debian 12 + Cage Wayland)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 12.18.0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Monorepo Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            squashfs-tools \
+            live-build \
+            xorriso \
+            isolinux \
+            syslinux-efi \
+            grub-pc-bin \
+            grub-efi-amd64-bin \
+            mtools \
+            dosfstools
+
+      - name: Build Web Frontends
+        run: pnpm build
+
+      - name: Build Focus Guard Sidecar
+        run: |
+          cargo build --release -p mindset-focus-guard
+          mkdir -p apps/mindset-desktop/src-tauri/binaries
+          cp target/release/mindset-focus-guard apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard-x86_64-unknown-linux-gnu
+          cp target/release/mindset-focus-guard apps/mindset-desktop/src-tauri/binaries/mindset-focus-guard
+
+      - name: Build Tauri Debian Package (.deb)
+        run: pnpm --filter @mindset/desktop tauri build --bundles deb
+
+      - name: Generate Bootable Hybrid ISO
+        run: |
+          chmod +x scripts/iso/build_iso.sh
+          sudo bash scripts/iso/build_iso.sh
+
+      - name: Archive ISO Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mindset-os-bootable-iso
+          path: dist-release/MindSet_OS_1.0.0_amd64.iso*
+          retention-days: 14
