@@ -113,7 +113,7 @@ pub fn view<'a>(
             core.preferences.brightness,
             Message::BrightnessChanged,
         )
-        .step(0.05)
+        .step(0.05_f32)
         .style(modern_slider(palette)),
     ]
     .spacing(8)
@@ -122,7 +122,7 @@ pub fn view<'a>(
     let volume_slider = row![
         text("🔊").size(TYPE_SUBHEAD),
         slider(0.0..=1.0, core.preferences.volume, Message::VolumeChanged)
-            .step(0.05)
+            .step(0.05_f32)
             .style(modern_slider(palette)),
     ]
     .spacing(8)

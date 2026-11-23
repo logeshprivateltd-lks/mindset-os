@@ -185,7 +185,7 @@ fn view_appearance_tab<'a>(
                 .color(palette.text_secondary),
             container(
                 slider(0.80..=1.45, scale_val, Message::ScaleChanged)
-                    .step(0.05)
+                    .step(0.05_f32)
                     .style(modern_slider(palette))
             )
             .width(360),
@@ -392,7 +392,7 @@ fn view_audio_radios_tab<'a>(
                 .color(palette.text_secondary),
             container(
                 slider(0.0..=1.0, volume_val, Message::VolumeChanged)
-                    .step(0.05)
+                    .step(0.05_f32)
                     .style(modern_slider(palette))
             )
             .width(360),
@@ -885,7 +885,7 @@ fn view_hardware_power_tab<'a>(
                 .color(palette.text_secondary),
             container(
                 slider(0.20..=1.0, brightness_val, Message::BrightnessChanged)
-                    .step(0.05)
+                    .step(0.05_f32)
                     .style(modern_slider(palette))
             )
             .width(360),

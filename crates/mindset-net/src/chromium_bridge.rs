@@ -419,7 +419,7 @@ impl ChromiumEngineBridge {
         #[cfg(target_os = "linux")]
         {
             // 1. Try launching registered desktop app launcher
-            if let Ok(mut child) = Command::new("gtk-launch").arg("youtube").spawn() {
+            if let Ok(child) = Command::new("gtk-launch").arg("youtube").spawn() {
                 return Ok(format!("Launched YouTube App via gtk-launch (PID: {})", child.id()));
             }
 
