@@ -235,13 +235,13 @@ impl NetworkAdapterManager {
                 "Realtek RTL8811AU / RTL8821AU USB PHY handshake re-established.".to_string(),
             );
 
-            DriverResetResult {
+            return DriverResetResult {
                 success,
                 message: "Wi-Fi adapter driver stack successfully cycled and reconnected."
                     .to_string(),
                 requires_elevation: false,
                 steps_taken: steps,
-            }
+            };
         }
 
         #[cfg(target_os = "linux")]
@@ -266,7 +266,7 @@ impl NetworkAdapterManager {
 
             let is_elevated = modprobe_res.map(|o| o.status.success()).unwrap_or(false);
 
-            DriverResetResult {
+            return DriverResetResult {
                 success: true,
                 message: if is_elevated {
                     "rtl88xxau kernel driver module reloaded cleanly.".to_string()
@@ -276,18 +276,26 @@ impl NetworkAdapterManager {
                 },
                 requires_elevation: !is_elevated,
                 steps_taken: steps,
-            }
+            };
         }
 
         #[cfg(not(any(target_os = "windows", target_os = "linux")))]
         {
             steps.push("Simulated adapter driver re-initialization on target OS.".to_string());
-            DriverResetResult {
+            return DriverResetResult {
                 success: true,
                 message: "Wi-Fi driver simulated reset completed successfully.".to_string(),
                 requires_elevation: false,
                 steps_taken: steps,
-            }
+            };
+        }
+
+        #[allow(unreachable_code)]
+        DriverResetResult {
+            success: true,
+            message: "Driver reset routine concluded.".to_string(),
+            requires_elevation: false,
+            steps_taken: steps,
         }
     }
 

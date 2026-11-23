@@ -45,19 +45,22 @@ impl FingerprintEngine {
         // 2. System hardware probe
         #[cfg(target_os = "linux")]
         {
-            std::path::Path::new("/var/run/dbus/system_bus_socket").exists()
+            return std::path::Path::new("/var/run/dbus/system_bus_socket").exists()
                 && (std::path::Path::new("/usr/bin/fprintd-verify").exists()
-                    || std::path::Path::new("/usr/sbin/fprintd").exists())
+                    || std::path::Path::new("/usr/sbin/fprintd").exists());
         }
         #[cfg(target_os = "windows")]
         {
             // Windows Hello / WinBio presence check
-            false // Fallback to PIN/Password on standard development rigs
+            return false; // Fallback to PIN/Password on standard development rigs
         }
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
         {
-            false
+            return false;
         }
+
+        #[allow(unreachable_code)]
+        false
     }
 
     /// Verifies fingerprint touch with automatic fallback if absent
