@@ -8,6 +8,14 @@ on:
         required: false
         default: 'v1.0.0'
   push:
+    branches:
+      - create_iso_procedure
+      - main
+      - master
+    paths:
+      - 'scripts/iso/**'
+      - '.github/workflows/build-iso.yml'
+      - 'apps/mindset-desktop/**'
     tags:
       - 'v*iso*'
 
