@@ -129,6 +129,8 @@ lb config \
     --mode debian \
     --distribution trixie \
     --architectures amd64 \
+    --linux-flavours amd64 \
+    --linux-packages linux-image \
     --archive-areas "main contrib non-free non-free-firmware" \
     --binary-images iso-hybrid \
     --iso-application "MindSet OS" \
