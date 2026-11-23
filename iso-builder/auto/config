@@ -11,14 +11,11 @@ lb config noauto \
     --architectures amd64 \
     --archive-areas "main contrib non-free non-free-firmware" \
     --binary-images iso-hybrid \
-    --bootloaders "grub-efi,syslinux" \
-    --grub-efi-arch amd64 \
     --iso-application "MindSet OS" \
     --iso-publisher "LKS PVT LTD" \
     --iso-volume "MINDSET_V1" \
     --memtest none \
     --win32-loader false \
     --security true \
-    --updates true \
     --apt-recommends true \
     "${@}"
