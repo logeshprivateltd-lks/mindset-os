@@ -136,7 +136,7 @@ lb config \
     --iso-volume "MINDSET_V1" \
     --memtest none \
     --win32-loader false \
-    --security true \
+    --security false \
     --apt-recommends true
 
 echo "=========================================================================="
