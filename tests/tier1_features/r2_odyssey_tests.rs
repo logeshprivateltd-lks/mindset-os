@@ -10,9 +10,12 @@
 
 use mindset_core::odyssey::{NodeType, OdysseyJourneyState, OdysseyNode};
 use mindset_os::shell::odyssey_map::project;
-use std::path::Path;
 
-use crate::helpers::create_test_odyssey_node;
+use crate::helpers::{create_test_odyssey_node, workspace_asset};
+
+fn gamified_map_path() -> std::path::PathBuf {
+    workspace_asset("docs/GAMIFIED_LEARNING_MAP.md")
+}
 
 // ===========================================================================
 // FEATURE 7: Gamified Progression Map Research Document
@@ -20,18 +23,13 @@ use crate::helpers::create_test_odyssey_node;
 
 #[test]
 fn test_f07_research_doc_existence_and_size() {
-    let doc_path = Path::new("docs/GAMIFIED_LEARNING_MAP.md");
-    let fallback_path = Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md");
+    let path = gamified_map_path();
     assert!(
-        doc_path.exists() || fallback_path.exists(),
-        "GAMIFIED_LEARNING_MAP.md must exist in docs/"
+        path.exists(),
+        "GAMIFIED_LEARNING_MAP.md must exist at {}",
+        path.display()
     );
-    let path = if doc_path.exists() {
-        doc_path
-    } else {
-        fallback_path
-    };
-    let metadata = std::fs::metadata(path).expect("Failed to read metadata");
+    let metadata = std::fs::metadata(&path).expect("Failed to read metadata");
     assert!(
         metadata.len() > 10_000,
         "Research document must be comprehensive (>10 KB), found {} bytes",
@@ -41,8 +39,7 @@ fn test_f07_research_doc_existence_and_size() {
 
 #[test]
 fn test_f07_duolingo_mechanics_extraction() {
-    let content = std::fs::read_to_string("docs/GAMIFIED_LEARNING_MAP.md")
-        .or_else(|_| std::fs::read_to_string("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md"))
+    let content = std::fs::read_to_string(gamified_map_path())
         .expect("Failed to read GAMIFIED_LEARNING_MAP.md");
 
     assert!(content.contains("Duolingo"), "Must analyze Duolingo");
@@ -55,8 +52,7 @@ fn test_f07_duolingo_mechanics_extraction() {
 
 #[test]
 fn test_f07_candy_crush_mechanics_extraction() {
-    let content = std::fs::read_to_string("docs/GAMIFIED_LEARNING_MAP.md")
-        .or_else(|_| std::fs::read_to_string("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md"))
+    let content = std::fs::read_to_string(gamified_map_path())
         .expect("Failed to read GAMIFIED_LEARNING_MAP.md");
 
     assert!(content.contains("Candy Crush"), "Must analyze Candy Crush");
@@ -72,8 +68,7 @@ fn test_f07_candy_crush_mechanics_extraction() {
 
 #[test]
 fn test_f07_590_600_anti_trivialization_mandate() {
-    let content = std::fs::read_to_string("docs/GAMIFIED_LEARNING_MAP.md")
-        .or_else(|_| std::fs::read_to_string("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md"))
+    let content = std::fs::read_to_string(gamified_map_path())
         .expect("Failed to read GAMIFIED_LEARNING_MAP.md");
 
     assert!(
@@ -88,8 +83,7 @@ fn test_f07_590_600_anti_trivialization_mandate() {
 
 #[test]
 fn test_f07_dual_cache_canvas_architecture() {
-    let content = std::fs::read_to_string("docs/GAMIFIED_LEARNING_MAP.md")
-        .or_else(|_| std::fs::read_to_string("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md"))
+    let content = std::fs::read_to_string(gamified_map_path())
         .expect("Failed to read GAMIFIED_LEARNING_MAP.md");
 
     assert!(

@@ -10,9 +10,12 @@
 
 use mindset_core::odyssey::{NodeStatus, OdysseyJourneyState};
 use mindset_os::shell::odyssey_map::project;
-use std::path::Path;
 
-use crate::helpers::create_test_odyssey_node;
+use crate::helpers::{create_test_odyssey_node, workspace_asset};
+
+fn gamified_map_path() -> std::path::PathBuf {
+    workspace_asset("docs/GAMIFIED_LEARNING_MAP.md")
+}
 
 // ===========================================================================
 // FEATURE 7: Gamified Progression Map Research Document — Boundary Tests
@@ -20,23 +23,18 @@ use crate::helpers::create_test_odyssey_node;
 
 #[test]
 fn test_f07_boundary_research_doc_fallback_paths() {
-    let p1 = Path::new("docs/GAMIFIED_LEARNING_MAP.md");
-    let p2 = Path::new("GAMIFIED_LEARNING_MAP.md");
-    let p3 = Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md");
+    let p = gamified_map_path();
     assert!(
-        p1.exists() || p2.exists() || p3.exists(),
-        "Research document must exist at docs/GAMIFIED_LEARNING_MAP.md"
+        p.exists(),
+        "Research document must exist at {}",
+        p.display()
     );
 }
 
 #[test]
 fn test_f07_boundary_research_doc_size_thresholds() {
-    let path = if Path::new("docs/GAMIFIED_LEARNING_MAP.md").exists() {
-        Path::new("docs/GAMIFIED_LEARNING_MAP.md")
-    } else {
-        Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md")
-    };
-    let meta = std::fs::metadata(path).expect("Read metadata");
+    let path = gamified_map_path();
+    let meta = std::fs::metadata(&path).expect("Read metadata");
     assert!(
         meta.len() >= 1_000,
         "Doc must contain substantive research (>=1,000 bytes)"
@@ -46,12 +44,8 @@ fn test_f07_boundary_research_doc_size_thresholds() {
 
 #[test]
 fn test_f07_boundary_anti_trivialization_mandate_keywords() {
-    let path = if Path::new("docs/GAMIFIED_LEARNING_MAP.md").exists() {
-        Path::new("docs/GAMIFIED_LEARNING_MAP.md")
-    } else {
-        Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md")
-    };
-    let text = std::fs::read_to_string(path).expect("Read doc");
+    let path = gamified_map_path();
+    let text = std::fs::read_to_string(&path).expect("Read doc");
     assert!(
         text.contains("590/600"),
         "Must address high-yield 590/600 rigor"
@@ -64,12 +58,8 @@ fn test_f07_boundary_anti_trivialization_mandate_keywords() {
 
 #[test]
 fn test_f07_boundary_duolingo_mechanics_sections() {
-    let path = if Path::new("docs/GAMIFIED_LEARNING_MAP.md").exists() {
-        Path::new("docs/GAMIFIED_LEARNING_MAP.md")
-    } else {
-        Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md")
-    };
-    let text = std::fs::read_to_string(path).expect("Read doc");
+    let path = gamified_map_path();
+    let text = std::fs::read_to_string(&path).expect("Read doc");
     assert!(
         text.contains("Duolingo"),
         "Must contain Duolingo case study"
@@ -82,12 +72,8 @@ fn test_f07_boundary_duolingo_mechanics_sections() {
 
 #[test]
 fn test_f07_boundary_candy_crush_mechanics_sections() {
-    let path = if Path::new("docs/GAMIFIED_LEARNING_MAP.md").exists() {
-        Path::new("docs/GAMIFIED_LEARNING_MAP.md")
-    } else {
-        Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md")
-    };
-    let text = std::fs::read_to_string(path).expect("Read doc");
+    let path = gamified_map_path();
+    let text = std::fs::read_to_string(&path).expect("Read doc");
     assert!(
         text.contains("Candy Crush"),
         "Must contain Candy Crush case study"

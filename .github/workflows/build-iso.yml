@@ -116,10 +116,15 @@ jobs:
           if [ -e /dev/kvm ]; then
             KVM_FLAG="-enable-kvm"
           fi
+          QEMU_RC=0
           timeout 45s qemu-system-x86_64 $KVM_FLAG -m 2048 -smp 2 \
             -vga virtio -display none \
             -serial file:iso-builder/qemu-boot.log \
-            -cdrom iso-builder/mindset-os-amd64.hybrid.iso || true
+            -cdrom iso-builder/mindset-os-amd64.hybrid.iso || QEMU_RC=$?
+          if [ "$QEMU_RC" -ne 0 ] && [ "$QEMU_RC" -ne 124 ]; then
+            echo "QEMU smoke boot exited unexpectedly with status $QEMU_RC"
+            exit "$QEMU_RC"
+          fi
           ls -lh iso-builder/qemu-boot.log || true
 
       - name: Upload MindSet OS Bootable ISO & Logs

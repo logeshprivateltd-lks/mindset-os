@@ -23,7 +23,6 @@ use mindset_os::Message;
 use mindset_sys::fs::document::{DocumentContent, DocumentHandler};
 use mindset_sys::fs::explorer::list_directory;
 use std::collections::HashMap;
-use std::path::Path;
 
 use crate::helpers::{
     benchmark_dir, create_sample_pdf, create_sample_pptx, create_test_odyssey_node,
@@ -471,12 +470,8 @@ fn test_comb_f04_ram_f05_notch_transitions() {
 // ===========================================================================
 #[test]
 fn test_comb_f07_research_f10_particles() {
-    let doc_path = if Path::new("docs/GAMIFIED_LEARNING_MAP.md").exists() {
-        Path::new("docs/GAMIFIED_LEARNING_MAP.md")
-    } else {
-        Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md")
-    };
-    let doc_text = std::fs::read_to_string(doc_path).expect("Read gamification research doc");
+    let doc_path = crate::helpers::workspace_asset("docs/GAMIFIED_LEARNING_MAP.md");
+    let doc_text = std::fs::read_to_string(&doc_path).expect("Read gamification research doc");
     assert!(doc_text.contains("Duolingo") && doc_text.contains("Crown"));
 
     let mut harness = HeadlessHarness::new();

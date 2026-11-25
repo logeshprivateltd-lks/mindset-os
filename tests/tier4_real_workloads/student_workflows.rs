@@ -6,7 +6,6 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
 
 use mindset_core::agent::{
     CompetitiveMcqGenerator, ExamReviewer, StudentAnswer, StudentSubmission,
@@ -82,9 +81,12 @@ fn test_scenario_s1_morning_lock_and_study_wakeup() {
 #[test]
 fn test_scenario_s2_physics_chapter_odyssey_progression() {
     // 1. Verify research documents underpin progression logic
-    let doc_path = Path::new("docs/GAMIFIED_LEARNING_MAP.md");
-    let fallback_path = Path::new("C:/MINDSETOS/docs/GAMIFIED_LEARNING_MAP.md");
-    assert!(doc_path.exists() || fallback_path.exists());
+    let doc_path = crate::helpers::workspace_asset("docs/GAMIFIED_LEARNING_MAP.md");
+    assert!(
+        doc_path.exists(),
+        "Research doc must exist at {}",
+        doc_path.display()
+    );
 
     // 2. Student navigates Unit 1: Electromagnetism & Potentials
     let mut node = create_test_odyssey_node("node-gauss-law", "Gauss's Law & Electric Flux", 0, 70);

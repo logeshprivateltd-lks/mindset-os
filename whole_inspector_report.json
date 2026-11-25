@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-25 21:35:39 UTC+0530",
+  "timestamp": "2026-11-25 22:03:32 UTC+0530",
   "workspace_root": ".",
   "executive_summary": {
     "normal_os_score": 75,
@@ -22,7 +22,7 @@
       "module_id": "files_hygiene",
       "module_name": "Module 1: Filesystem, Assets & Codebase Hygiene",
       "score": 100,
-      "summary": "Audited 293 files (5067 KB, 76743 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.",
+      "summary": "Audited 293 files (5068 KB, 76772 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.",
       "entries": [
         {
           "feature": "Pure-Rust Clean Slate (Zero Web/Tauri Clutter)",
@@ -62,11 +62,11 @@
       ],
       "actions": [],
       "metrics": {
-        "rust_lines": "76743",
-        "total_bytes": "5067 KB",
         "total_files": "293",
-        "crates_count": "8",
-        "rust_files": "195"
+        "total_bytes": "5068 KB",
+        "rust_lines": "76772",
+        "rust_files": "195",
+        "crates_count": "8"
       }
     },
     {
@@ -271,10 +271,10 @@
         }
       ],
       "metrics": {
-        "ui_theme_i18n_score": "90",
+        "i18n_en_keys": "43",
         "i18n_ta_keys": "43",
         "i18n_ml_keys": "43",
-        "i18n_en_keys": "43"
+        "ui_theme_i18n_score": "90"
       }
     },
     {

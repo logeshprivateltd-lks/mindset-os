@@ -11,6 +11,23 @@ use mindset_sys::fs::document::{
 };
 use std::path::{Path, PathBuf};
 
+/// Resolves the repository workspace root reliably from CARGO_MANIFEST_DIR (`tests/` -> parent).
+pub fn workspace_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."))
+}
+
+/// Resolves a workspace-relative asset or documentation path reliably across Windows and Linux CI.
+pub fn workspace_asset(rel_path: &str) -> PathBuf {
+    let direct = PathBuf::from(rel_path);
+    if direct.exists() {
+        return direct;
+    }
+    workspace_root().join(rel_path)
+}
+
 /// Resolves the benchmarks directory reliably regardless of invocation working directory
 pub fn benchmark_dir() -> PathBuf {
     let p1 = PathBuf::from("benchmarks");
@@ -21,11 +38,11 @@ pub fn benchmark_dir() -> PathBuf {
     if p2.exists() {
         return p2;
     }
-    let p3 = PathBuf::from("C:/MINDSETOS/tests/benchmarks");
-    if p3.exists() {
-        return p3;
+    let manifest_bench = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("benchmarks");
+    if manifest_bench.exists() {
+        return manifest_bench;
     }
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("benchmarks")
+    workspace_root().join("tests/benchmarks")
 }
 
 /// Generates a realistic high-scoring student profile targeting 590/600

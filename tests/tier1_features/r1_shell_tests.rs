@@ -21,7 +21,6 @@ use mindset_os::theme::liquidmorphism::{
 use mindset_os::theme::ThemePalette;
 use mindset_os::Message;
 use std::f32::consts::FRAC_1_SQRT_2;
-use std::path::Path;
 
 use crate::helpers::{create_test_profile, HeadlessHarness, AUTH_LOCK};
 
@@ -31,18 +30,13 @@ use crate::helpers::{create_test_profile, HeadlessHarness, AUTH_LOCK};
 
 #[test]
 fn test_f01_wallpaper_asset_presence() {
-    let wallpaper_path = Path::new("assets/wallpaper.jpg");
-    let fallback_path = Path::new("C:/MINDSETOS/assets/wallpaper.jpg");
+    let path = crate::helpers::workspace_asset("assets/wallpaper.jpg");
     assert!(
-        wallpaper_path.exists() || fallback_path.exists(),
-        "Wallpaper asset must exist at assets/wallpaper.jpg"
+        path.exists(),
+        "Wallpaper asset must exist at {}",
+        path.display()
     );
-    let path = if wallpaper_path.exists() {
-        wallpaper_path
-    } else {
-        fallback_path
-    };
-    let metadata = std::fs::metadata(path).expect("Failed to read wallpaper metadata");
+    let metadata = std::fs::metadata(&path).expect("Failed to read wallpaper metadata");
     assert!(
         metadata.len() > 10_000,
         "Wallpaper asset must be a high-resolution image (>10 KB), found {} bytes",
@@ -74,12 +68,10 @@ fn test_f01_theme_palette_token_hierarchy() {
 fn test_f01_procedural_cosmic_fallback_geometry() {
     let mut harness = HeadlessHarness::new();
     // 1. Valid bundled wallpaper asset loads into wallpaper_handle
-    let asset_path = if Path::new("assets/wallpaper.jpg").exists() {
-        "assets/wallpaper.jpg"
-    } else {
-        "C:/MINDSETOS/assets/wallpaper.jpg"
-    };
-    harness.dispatch(Message::SetWallpaperPreset(asset_path.to_string()));
+    let asset_path = crate::helpers::workspace_asset("assets/wallpaper.jpg");
+    harness.dispatch(Message::SetWallpaperPreset(
+        asset_path.to_string_lossy().into_owned(),
+    ));
     assert!(
         harness.app.wallpaper_handle.is_some(),
         "Existing wallpaper asset must load into wallpaper_handle"

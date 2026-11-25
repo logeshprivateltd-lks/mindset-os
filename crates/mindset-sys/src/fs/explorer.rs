@@ -209,6 +209,19 @@ pub fn resolve_safe_path(vault_base: &Path, requested: Option<&str>) -> Result<P
     let candidate = match requested {
         Some(p) if !p.trim().is_empty() => {
             let trimmed = p.trim();
+            #[cfg(not(target_os = "windows"))]
+            {
+                if (trimmed.len() >= 2
+                    && trimmed.as_bytes()[0].is_ascii_alphabetic()
+                    && trimmed.as_bytes()[1] == b':')
+                    || trimmed.starts_with('\\')
+                {
+                    return Err(format!(
+                        "Access denied: path '{}' escapes vault root",
+                        trimmed
+                    ));
+                }
+            }
             let p_buf = PathBuf::from(trimmed);
             if p_buf.is_absolute() {
                 let abs_norm = if p_buf.exists() {
@@ -227,8 +240,10 @@ pub fn resolve_safe_path(vault_base: &Path, requested: Option<&str>) -> Result<P
                 abs_norm
             } else {
                 use std::path::Component;
+                // Normalize Windows backslashes so '../..' and '..\..\' traversals are blocked uniformly on Linux and Windows.
+                let slash_normalized = trimmed.replace('\\', "/");
                 let mut rel_segments: Vec<std::ffi::OsString> = Vec::new();
-                for comp in p_buf.components() {
+                for comp in Path::new(&slash_normalized).components() {
                     match comp {
                         Component::Normal(seg) => rel_segments.push(seg.to_os_string()),
                         Component::CurDir => {}

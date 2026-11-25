@@ -1554,16 +1554,22 @@ theta = 0: tau = 0.
 
     #[test]
     fn test_workspace_benchmark_rubric_and_synthetic_pdfs() {
-        // Resolve rubric path with multiple fallback targets for cargo test isolation
+        let manifest_tests =
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests");
+        let rubric_manifest =
+            manifest_tests.join("benchmarks/exam_rubrics/tn_stateboard_590_rubric.json");
         let candidate_rubric_paths = [
-            "tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json",
-            "../tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json",
-            "../../tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json",
-            "C:/MINDSETOS/tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json",
+            std::path::PathBuf::from("tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json"),
+            std::path::PathBuf::from(
+                "../tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json",
+            ),
+            std::path::PathBuf::from(
+                "../../tests/benchmarks/exam_rubrics/tn_stateboard_590_rubric.json",
+            ),
+            rubric_manifest,
         ];
         let rubric_path = candidate_rubric_paths
             .iter()
-            .map(Path::new)
             .find(|p| p.exists())
             .expect("Workspace rubric JSON must exist");
 
@@ -1574,33 +1580,43 @@ theta = 0: tau = 0.
         // Resolve sample exam text paths
         let candidate_sample_paths = [
             (
-                "tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
-                "tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                std::path::PathBuf::from(
+                    "tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
+                ),
+                std::path::PathBuf::from(
+                    "tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                ),
             ),
             (
-                "../tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
-                "../tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                std::path::PathBuf::from(
+                    "../tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
+                ),
+                std::path::PathBuf::from(
+                    "../tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                ),
             ),
             (
-                "../../tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
-                "../../tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                std::path::PathBuf::from(
+                    "../../tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
+                ),
+                std::path::PathBuf::from(
+                    "../../tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                ),
             ),
             (
-                "C:/MINDSETOS/tests/benchmarks/sample_exams/tn_class12_physics_590.txt",
-                "C:/MINDSETOS/tests/benchmarks/sample_exams/tn_class12_physics_590.pdf",
+                manifest_tests.join("benchmarks/sample_exams/tn_class12_physics_590.txt"),
+                manifest_tests.join("benchmarks/sample_exams/tn_class12_physics_590.pdf"),
             ),
         ];
 
-        let (txt_path_str, pdf_path_str) = candidate_sample_paths
+        let (txt_path, pdf_path) = candidate_sample_paths
             .iter()
-            .find(|(txt, _)| Path::new(txt).exists())
-            .copied()
+            .find(|(txt, _)| txt.exists())
             .expect("Sample 590 text must exist");
 
-        let perfect_text = fs::read_to_string(txt_path_str).expect("Read sample text");
+        let perfect_text = fs::read_to_string(txt_path).expect("Read sample text");
 
         // Synthesize valid PDF binary if not already generated
-        let pdf_path = Path::new(pdf_path_str);
         if !pdf_path.exists() {
             let page = mindset_sys::fs::document::PdfPage {
                 page_number: 1,
@@ -1613,8 +1629,8 @@ theta = 0: tau = 0.
         }
 
         // Evaluate plaintext version
-        let txt_sheet = ExamReviewer::evaluate(Path::new(txt_path_str), &rubric)
-            .expect("Evaluate plaintext 590 paper");
+        let txt_sheet =
+            ExamReviewer::evaluate(txt_path, &rubric).expect("Evaluate plaintext 590 paper");
         assert_eq!(txt_sheet.total_score, 18.0);
         assert_eq!(txt_sheet.percentage, 100.0);
         assert!(txt_sheet.achieved_590_crown);
@@ -1631,33 +1647,43 @@ theta = 0: tau = 0.
         // Test deductions paper
         let candidate_deduction_paths = [
             (
-                "tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
-                "tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                std::path::PathBuf::from(
+                    "tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
+                ),
+                std::path::PathBuf::from(
+                    "tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                ),
             ),
             (
-                "../tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
-                "../tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                std::path::PathBuf::from(
+                    "../tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
+                ),
+                std::path::PathBuf::from(
+                    "../tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                ),
             ),
             (
-                "../../tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
-                "../../tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                std::path::PathBuf::from(
+                    "../../tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
+                ),
+                std::path::PathBuf::from(
+                    "../../tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                ),
             ),
             (
-                "C:/MINDSETOS/tests/benchmarks/sample_exams/tn_class12_physics_deductions.txt",
-                "C:/MINDSETOS/tests/benchmarks/sample_exams/tn_class12_physics_deductions.pdf",
+                manifest_tests.join("benchmarks/sample_exams/tn_class12_physics_deductions.txt"),
+                manifest_tests.join("benchmarks/sample_exams/tn_class12_physics_deductions.pdf"),
             ),
         ];
 
-        let (ded_txt_str, ded_pdf_str) = candidate_deduction_paths
+        let (ded_txt_path, ded_pdf_path) = candidate_deduction_paths
             .iter()
-            .find(|(txt, _)| Path::new(txt).exists())
-            .copied()
+            .find(|(txt, _)| txt.exists())
             .expect("Deductions text must exist");
 
-        let ded_text = fs::read_to_string(ded_txt_str).expect("Read deductions text");
+        let ded_text = fs::read_to_string(ded_txt_path).expect("Read deductions text");
 
         // Synthesize deductions PDF
-        let ded_pdf_path = Path::new(ded_pdf_str);
         if !ded_pdf_path.exists() {
             let page = mindset_sys::fs::document::PdfPage {
                 page_number: 1,
@@ -1669,8 +1695,8 @@ theta = 0: tau = 0.
             let _ = fs::write(ded_pdf_path, &pdf_bytes);
         }
 
-        let ded_sheet = ExamReviewer::evaluate(Path::new(ded_txt_str), &rubric)
-            .expect("Evaluate deductions paper");
+        let ded_sheet =
+            ExamReviewer::evaluate(ded_txt_path, &rubric).expect("Evaluate deductions paper");
 
         assert_eq!(ded_sheet.total_score, 16.5);
         assert!(!ded_sheet.achieved_590_crown);

@@ -1036,16 +1036,17 @@ mod tests {
         let mut gen = CompetitiveMcqGenerator::new();
         let initial_count = gen.question_count();
 
+        let manifest_mcq = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/benchmarks/mcq_datasets");
         let candidate_dirs = [
-            "tests/benchmarks/mcq_datasets",
-            "../tests/benchmarks/mcq_datasets",
-            "../../tests/benchmarks/mcq_datasets",
-            "C:/MINDSETOS/tests/benchmarks/mcq_datasets",
+            std::path::PathBuf::from("tests/benchmarks/mcq_datasets"),
+            std::path::PathBuf::from("../tests/benchmarks/mcq_datasets"),
+            std::path::PathBuf::from("../../tests/benchmarks/mcq_datasets"),
+            manifest_mcq,
         ];
 
         let benchmark_dir = candidate_dirs
             .iter()
-            .map(Path::new)
             .find(|p| p.exists())
             .expect("MCQ benchmark directory must exist");
 
@@ -1088,16 +1089,17 @@ mod tests {
     #[test]
     fn test_load_benchmarks_deduplicates_existing_ids() {
         let mut gen = CompetitiveMcqGenerator::new();
+        let manifest_mcq = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/benchmarks/mcq_datasets");
         let candidate_dirs = [
-            "tests/benchmarks/mcq_datasets",
-            "../tests/benchmarks/mcq_datasets",
-            "../../tests/benchmarks/mcq_datasets",
-            "C:/MINDSETOS/tests/benchmarks/mcq_datasets",
+            std::path::PathBuf::from("tests/benchmarks/mcq_datasets"),
+            std::path::PathBuf::from("../tests/benchmarks/mcq_datasets"),
+            std::path::PathBuf::from("../../tests/benchmarks/mcq_datasets"),
+            manifest_mcq,
         ];
 
         let benchmark_dir = candidate_dirs
             .iter()
-            .map(Path::new)
             .find(|p| p.exists())
             .expect("MCQ benchmark directory must exist");
 
