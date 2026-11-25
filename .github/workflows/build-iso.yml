@@ -29,7 +29,7 @@ jobs:
           path: |
             ${{ runner.temp }}/cargo-registry
             ${{ runner.temp }}/cargo-git
-          key: trixie-cargo-reg-${{ hashFiles('**/Cargo.toml') }}
+          key: trixie-cargo-reg-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'crates/*/Cargo.toml', 'services/*/Cargo.toml', 'bins/*/Cargo.toml', 'tests/Cargo.toml') }}
 
       - name: Compile Rust Binaries & Build Debian 13 ISO in Trixie Container
         run: |
@@ -40,6 +40,19 @@ jobs:
             -w /workspace \
             debian:trixie \
             bash -euo pipefail -c '
+              HOST_UID_GID="$(stat -c %u:%g /workspace)"
+              cleanup_workspace() {
+                # Unmount any leftover chroot pseudo-filesystems on early failure before cleanup
+                for m in dev/pts dev proc sys run; do
+                  mountpoint -q "/workspace/iso-builder/chroot/$m" 2>/dev/null && umount -lf "/workspace/iso-builder/chroot/$m" 2>/dev/null || true
+                done
+                # Remove root-owned intermediate dirs (chroot contains 0700 dirs that break host post-steps)
+                rm -rf /workspace/target /workspace/iso-builder/chroot /workspace/iso-builder/binary /workspace/iso-builder/cache /workspace/iso-builder/.build
+                chown -R "$HOST_UID_GID" /workspace/iso-builder /root/.cargo/registry /root/.cargo/git 2>/dev/null || true
+                [ -f /workspace/Cargo.lock ] && chown "$HOST_UID_GID" /workspace/Cargo.lock 2>/dev/null || true
+              }
+              trap cleanup_workspace EXIT
+
               export DEBIAN_FRONTEND=noninteractive
               echo "Acquire::Retries \"3\";" > /etc/apt/apt.conf.d/99mindset
               echo "Acquire::http::Timeout \"30\";" >> /etc/apt/apt.conf.d/99mindset
