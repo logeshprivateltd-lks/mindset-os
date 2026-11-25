@@ -162,22 +162,121 @@ pub fn compute_cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 // 3. Path Security & Scoping
 // ---------------------------------------------------------------------------
 
-pub fn resolve_safe_path(vault_base: &Path, requested: Option<&str>) -> Result<PathBuf, String> {
-    let target = match requested {
-        Some(p) if !p.trim().is_empty() => {
-            let p_buf = PathBuf::from(p);
-            if p_buf.is_absolute() {
-                p_buf
-            } else {
-                vault_base.join(p_buf)
+fn strip_verbatim_prefix(path: PathBuf) -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        let s = path.to_string_lossy();
+        if let Some(stripped) = s.strip_prefix(r"\\?\") {
+            if !stripped.starts_with("UNC\\") {
+                return PathBuf::from(stripped);
             }
         }
-        _ => vault_base.to_path_buf(),
+    }
+    path
+}
+
+fn normalize_lexical(path: &Path) -> PathBuf {
+    use std::path::Component;
+    let mut stack: Vec<std::ffi::OsString> = Vec::new();
+    let mut prefix_or_root = PathBuf::new();
+    for comp in path.components() {
+        match comp {
+            Component::Prefix(p) => prefix_or_root.push(p.as_os_str()),
+            Component::RootDir => prefix_or_root.push(comp.as_os_str()),
+            Component::CurDir => {}
+            Component::ParentDir => {
+                stack.pop();
+            }
+            Component::Normal(seg) => stack.push(seg.to_os_string()),
+        }
+    }
+    let mut out = prefix_or_root;
+    for seg in stack {
+        out.push(seg);
+    }
+    strip_verbatim_prefix(out)
+}
+
+pub fn resolve_safe_path(vault_base: &Path, requested: Option<&str>) -> Result<PathBuf, String> {
+    let base_norm = if vault_base.exists() {
+        fs::canonicalize(vault_base)
+            .map(strip_verbatim_prefix)
+            .unwrap_or_else(|_| normalize_lexical(vault_base))
+    } else {
+        normalize_lexical(vault_base)
     };
 
-    let clean = target.components().collect::<PathBuf>();
+    let candidate = match requested {
+        Some(p) if !p.trim().is_empty() => {
+            let trimmed = p.trim();
+            let p_buf = PathBuf::from(trimmed);
+            if p_buf.is_absolute() {
+                let abs_norm = if p_buf.exists() {
+                    fs::canonicalize(&p_buf)
+                        .map(strip_verbatim_prefix)
+                        .unwrap_or_else(|_| normalize_lexical(&p_buf))
+                } else {
+                    normalize_lexical(&p_buf)
+                };
+                if !abs_norm.starts_with(&base_norm) {
+                    return Err(format!(
+                        "Access denied: path '{}' escapes vault root",
+                        trimmed
+                    ));
+                }
+                abs_norm
+            } else {
+                use std::path::Component;
+                let mut rel_segments: Vec<std::ffi::OsString> = Vec::new();
+                for comp in p_buf.components() {
+                    match comp {
+                        Component::Normal(seg) => rel_segments.push(seg.to_os_string()),
+                        Component::CurDir => {}
+                        Component::ParentDir => {
+                            if rel_segments.pop().is_none() {
+                                return Err(format!(
+                                    "Access denied: path traversal '{}' escapes vault root",
+                                    trimmed
+                                ));
+                            }
+                        }
+                        Component::RootDir | Component::Prefix(_) => {
+                            return Err(format!(
+                                "Access denied: invalid path component in '{}'",
+                                trimmed
+                            ));
+                        }
+                    }
+                }
+                let mut resolved = base_norm.clone();
+                for seg in rel_segments {
+                    resolved.push(seg);
+                }
+                resolved
+            }
+        }
+        _ => base_norm.clone(),
+    };
 
-    Ok(clean)
+    if candidate.exists() && vault_base.exists() {
+        if let (Ok(canon_cand), Ok(canon_base)) = (
+            fs::canonicalize(&candidate).map(strip_verbatim_prefix),
+            fs::canonicalize(vault_base).map(strip_verbatim_prefix),
+        ) {
+            if !canon_cand.starts_with(&canon_base) {
+                return Err(
+                    "Access denied: symlink or path resolves outside vault root".to_string()
+                );
+            }
+            return Ok(canon_cand);
+        }
+    }
+
+    if !candidate.starts_with(&base_norm) {
+        return Err("Access denied: resolved path outside vault root".to_string());
+    }
+
+    Ok(candidate)
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +400,9 @@ pub fn create_folder(parent_path: &str, folder_name: &str) -> Result<FileEntry, 
     if clean_name.is_empty() {
         return Err("Folder name cannot be empty".to_string());
     }
+    if clean_name.contains("..") || clean_name.contains('/') || clean_name.contains('\\') {
+        return Err("Invalid folder name: path separators and '..' are not allowed".to_string());
+    }
 
     let target_dir = PathBuf::from(parent_path).join(clean_name);
     if target_dir.exists() {
@@ -324,13 +426,21 @@ pub fn create_folder(parent_path: &str, folder_name: &str) -> Result<FileEntry, 
 }
 
 pub fn rename_item(current_path: &str, new_name: &str) -> Result<FileEntry, String> {
+    let clean_new = new_name.trim();
+    if clean_new.is_empty()
+        || clean_new.contains("..")
+        || clean_new.contains('/')
+        || clean_new.contains('\\')
+    {
+        return Err("Invalid target name".to_string());
+    }
     let source = PathBuf::from(current_path);
     if !source.exists() {
         return Err(format!("Source path '{}' does not exist", current_path));
     }
 
     let parent = source.parent().ok_or("Cannot rename root path")?;
-    let target = parent.join(new_name.trim());
+    let target = parent.join(clean_new);
 
     if target.exists() {
         return Err(format!("Item with name '{}' already exists", new_name));
@@ -1228,5 +1338,22 @@ mod tests {
 
         let not_found = get_rag_document(&core, &doc.id).expect("Get after delete failed");
         assert!(not_found.is_none());
+    }
+
+    #[test]
+    fn test_resolve_safe_path_blocks_traversal_and_escape() {
+        let root =
+            std::env::temp_dir().join(format!("mindset_safe_path_test_{}", std::process::id()));
+        let _ = fs::create_dir_all(root.join("sub"));
+
+        assert!(resolve_safe_path(&root, Some("../../etc/passwd")).is_err());
+        assert!(resolve_safe_path(&root, Some(r"..\..\Windows\System32")).is_err());
+        assert!(resolve_safe_path(&root, Some("sub/../../escape.txt")).is_err());
+        assert!(resolve_safe_path(&root, Some("/etc/passwd")).is_err());
+
+        let inside = resolve_safe_path(&root, Some("sub/../notes.txt")).expect("contained path ok");
+        assert!(inside.ends_with("notes.txt"));
+
+        let _ = fs::remove_dir_all(&root);
     }
 }

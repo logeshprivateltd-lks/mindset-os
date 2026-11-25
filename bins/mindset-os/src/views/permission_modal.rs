@@ -10,8 +10,8 @@ use mindset_intelligence::agent_tools::{action_description, AgentAction};
 
 use crate::ai::agent::{extract_folder_scope, AgentPermissionDecision};
 use crate::theme::{
-    danger_button, glass_card, glass_elevated, h_space, primary_button, secondary_button,
-    v_space, ThemePalette, TYPE_BODY, TYPE_CAPTION,
+    danger_button, glass_card, glass_elevated, h_space, primary_button, secondary_button, v_space,
+    ThemePalette, TYPE_BODY, TYPE_CAPTION,
 };
 use crate::Message;
 
@@ -39,7 +39,9 @@ pub fn view<'a>(
     let header = row![
         text("🛡️").size(24),
         column![
-            text("MAINdy AI PERMISSION REQUEST").size(10).color(palette.accent),
+            text("MAINdy AI PERMISSION REQUEST")
+                .size(10)
+                .color(palette.accent),
             text(title).size(16).color(palette.text_primary),
         ]
         .spacing(2),
@@ -63,8 +65,14 @@ pub fn view<'a>(
 
     let (action_icon, action_purpose) = match action {
         AgentAction::ReadDocument { .. } => ("📖", "Synthesize study notes and extract formulas"),
-        AgentAction::ListFolder { .. } => ("📁", "Discover curriculum documents to recommend study capsules"),
-        AgentAction::ControlSystem { .. } => ("⚙️", "Optimize display theme and activate distraction shields"),
+        AgentAction::ListFolder { .. } => (
+            "📁",
+            "Discover curriculum documents to recommend study capsules",
+        ),
+        AgentAction::ControlSystem { .. } => (
+            "⚙️",
+            "Optimize display theme and activate distraction shields",
+        ),
         _ => ("🤖", "Execute local student workspace enhancement"),
     };
 
@@ -73,7 +81,9 @@ pub fn view<'a>(
             row![
                 text(action_icon).size(13),
                 text("Purpose:").size(TYPE_BODY).color(palette.accent),
-                text(action_purpose).size(TYPE_BODY).color(palette.text_primary),
+                text(action_purpose)
+                    .size(TYPE_BODY)
+                    .color(palette.text_primary),
             ]
             .spacing(6)
             .align_y(Alignment::Center),
@@ -101,61 +111,60 @@ pub fn view<'a>(
 
     let buttons = row![
         button(
-            row![text("✕ Deny").size(TYPE_BODY).color(palette.danger)]
-                .align_y(Alignment::Center)
+            row![text("✕ Deny").size(TYPE_BODY).color(palette.danger)].align_y(Alignment::Center)
         )
-        .on_press(Message::AgentPermissionResponse(AgentPermissionDecision::Deny))
+        .on_press(Message::AgentPermissionResponse(
+            AgentPermissionDecision::Deny
+        ))
         .style(danger_button(palette))
         .padding([8, 16]),
         h_space(),
         button(
-            text(allow_session_label).size(TYPE_BODY).color(palette.text_primary)
+            text(allow_session_label)
+                .size(TYPE_BODY)
+                .color(palette.text_primary)
         )
-        .on_press(Message::AgentPermissionResponse(AgentPermissionDecision::AllowSession))
+        .on_press(Message::AgentPermissionResponse(
+            AgentPermissionDecision::AllowSession
+        ))
         .style(secondary_button(palette))
         .padding([8, 16]),
         button(
             row![
                 text("✓").size(14),
-                text("Allow Once").size(TYPE_BODY).color(palette.accent_text),
+                text("Allow Once")
+                    .size(TYPE_BODY)
+                    .color(palette.accent_text),
             ]
             .spacing(6)
             .align_y(Alignment::Center)
         )
-        .on_press(Message::AgentPermissionResponse(AgentPermissionDecision::AllowOnce))
+        .on_press(Message::AgentPermissionResponse(
+            AgentPermissionDecision::AllowOnce
+        ))
         .style(primary_button(palette))
         .padding([8, 20]),
     ]
     .align_y(Alignment::Center);
 
     let modal_card = container(
-        column![
-            header,
-            target_card,
-            explanation_card,
-            buttons,
-        ]
-        .spacing(16)
-        .max_width(580)
-        .padding(22),
+        column![header, target_card, explanation_card, buttons,]
+            .spacing(16)
+            .max_width(580)
+            .padding(22),
     )
     .style(move |_t| glass_elevated(palette));
 
     // Semi-transparent scrim backdrop centered modal
-    container(
-        column![
-            v_space(),
-            modal_card,
-            v_space(),
-        ]
-        .align_x(Alignment::Center)
-    )
-    .width(Length::Fill)
-    .height(Length::Fill)
-    .padding(20)
-    .style(move |_t| container::Style {
-        background: Some(iced::Background::Color(iced::Color::from_rgba(0.02, 0.03, 0.05, 0.72))),
-        ..Default::default()
-    })
-    .into()
+    container(column![v_space(), modal_card, v_space(),].align_x(Alignment::Center))
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .padding(20)
+        .style(move |_t| container::Style {
+            background: Some(iced::Background::Color(iced::Color::from_rgba(
+                0.02, 0.03, 0.05, 0.72,
+            ))),
+            ..Default::default()
+        })
+        .into()
 }

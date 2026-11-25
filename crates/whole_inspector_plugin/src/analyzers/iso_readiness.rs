@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use crate::analyzers::WorkspaceContext;
 use crate::models::{
     ActionSeverity, CapabilityMatrixEntry, CapabilityStatus, ModuleAuditResult, PrioritizedAction,
 };
+use std::collections::HashMap;
 
 /// Module 4: Bootable Debian 13 ISO Creation Readiness Audit
 pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
@@ -13,9 +13,12 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
 
     // 1. Check live-build configuration targeting trixie (amd64) and hybrid bootloaders
     let auto_config = ctx.read_file("iso-builder/auto/config").unwrap_or_default();
-    let targets_trixie = auto_config.contains("--distribution trixie") || auto_config.contains("trixie");
-    let targets_amd64 = auto_config.contains("--architectures amd64") || auto_config.contains("amd64");
-    let has_hybrid_boot = auto_config.contains("grub-efi") && (auto_config.contains("syslinux") || auto_config.contains("isolinux"));
+    let targets_trixie =
+        auto_config.contains("--distribution trixie") || auto_config.contains("trixie");
+    let targets_amd64 =
+        auto_config.contains("--architectures amd64") || auto_config.contains("amd64");
+    let has_hybrid_boot = auto_config.contains("grub-efi")
+        && (auto_config.contains("syslinux") || auto_config.contains("isolinux"));
 
     let config_line = ctx
         .find_first_occurrence("iso-builder/auto/config", "--distribution trixie")
@@ -37,7 +40,8 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "ISO".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("iso-builder/auto/config:{}", config_line),
-            notes: "live-build auto/config missing trixie, amd64, or hybrid bootloader parameters".into(),
+            notes: "live-build auto/config missing trixie, amd64, or hybrid bootloader parameters"
+                .into(),
         });
         actions.push(PrioritizedAction {
             severity: ActionSeverity::Critical,
@@ -53,7 +57,8 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
         .read_file("iso-builder/config/package-lists/mindset.list.chroot")
         .unwrap_or_default();
 
-    let has_net = package_list.contains("network-manager") && package_list.contains("wpasupplicant");
+    let has_net =
+        package_list.contains("network-manager") && package_list.contains("wpasupplicant");
     let has_wifi_firmware = package_list.contains("firmware-linux")
         && package_list.contains("firmware-iwlwifi")
         && package_list.contains("firmware-realtek")
@@ -63,14 +68,25 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let has_tts = package_list.contains("espeak-ng") || package_list.contains("piper");
     let has_fonts = package_list.contains("fonts-noto");
     let has_chromium = package_list.contains("chromium");
-    let has_graphics = package_list.contains("xserver-xorg") && package_list.contains("mesa-vulkan-drivers");
+    let has_graphics =
+        package_list.contains("xserver-xorg") && package_list.contains("mesa-vulkan-drivers");
 
     let pkg_line = ctx
-        .find_first_occurrence("iso-builder/config/package-lists/mindset.list.chroot", "firmware-iwlwifi")
+        .find_first_occurrence(
+            "iso-builder/config/package-lists/mindset.list.chroot",
+            "firmware-iwlwifi",
+        )
         .map(|(l, _)| l)
         .unwrap_or(20);
 
-    if has_net && has_wifi_firmware && has_audio && has_tts && has_fonts && has_chromium && has_graphics {
+    if has_net
+        && has_wifi_firmware
+        && has_audio
+        && has_tts
+        && has_fonts
+        && has_chromium
+        && has_graphics
+    {
         entries.push(CapabilityMatrixEntry {
             feature: "Bare-Metal PC Hardware Firmware & Package Manifest".into(),
             category: "ISO".into(),
@@ -81,20 +97,40 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     } else {
         score = score.saturating_sub(20);
         let mut missing_pkgs = Vec::new();
-        if !has_net { missing_pkgs.push("network-manager / wpasupplicant"); }
-        if !has_wifi_firmware { missing_pkgs.push("Wi-Fi firmwares (iwlwifi, realtek, atheros)"); }
-        if !has_audio { missing_pkgs.push("pipewire"); }
-        if !has_tts { missing_pkgs.push("espeak-ng / piper"); }
-        if !has_fonts { missing_pkgs.push("fonts-noto"); }
-        if !has_chromium { missing_pkgs.push("chromium"); }
-        if !has_graphics { missing_pkgs.push("Mesa/Vulkan/Xorg"); }
+        if !has_net {
+            missing_pkgs.push("network-manager / wpasupplicant");
+        }
+        if !has_wifi_firmware {
+            missing_pkgs.push("Wi-Fi firmwares (iwlwifi, realtek, atheros)");
+        }
+        if !has_audio {
+            missing_pkgs.push("pipewire");
+        }
+        if !has_tts {
+            missing_pkgs.push("espeak-ng / piper");
+        }
+        if !has_fonts {
+            missing_pkgs.push("fonts-noto");
+        }
+        if !has_chromium {
+            missing_pkgs.push("chromium");
+        }
+        if !has_graphics {
+            missing_pkgs.push("Mesa/Vulkan/Xorg");
+        }
 
         entries.push(CapabilityMatrixEntry {
             feature: "Bare-Metal PC Hardware Firmware & Package Manifest".into(),
             category: "ISO".into(),
             status: CapabilityStatus::Partial,
-            evidence: format!("iso-builder/config/package-lists/mindset.list.chroot:{}", pkg_line),
-            notes: format!("Package list missing critical bare-metal packages: {}", missing_pkgs.join(", ")),
+            evidence: format!(
+                "iso-builder/config/package-lists/mindset.list.chroot:{}",
+                pkg_line
+            ),
+            notes: format!(
+                "Package list missing critical bare-metal packages: {}",
+                missing_pkgs.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {
@@ -107,15 +143,21 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     }
 
     // 3. Pre-installed Apps: YouTube and FreeTube Chroot Hook
-    let has_youtube_desktop = ctx.has_file("iso-builder/config/includes.chroot/usr/share/applications/youtube.desktop");
+    let has_youtube_desktop =
+        ctx.has_file("iso-builder/config/includes.chroot/usr/share/applications/youtube.desktop");
     let freetube_hook = ctx
         .read_file("iso-builder/config/hooks/live/0500-install-freetube.hook.chroot")
         .unwrap_or_default();
-    let has_freetube_hook = ctx.has_file("iso-builder/config/hooks/live/0500-install-freetube.hook.chroot");
-    let has_freetube_sandbox_fix = freetube_hook.contains("4755") && freetube_hook.contains("chrome-sandbox");
+    let has_freetube_hook =
+        ctx.has_file("iso-builder/config/hooks/live/0500-install-freetube.hook.chroot");
+    let has_freetube_sandbox_fix =
+        freetube_hook.contains("4755") && freetube_hook.contains("chrome-sandbox");
 
     let ft_line = ctx
-        .find_first_occurrence("iso-builder/config/hooks/live/0500-install-freetube.hook.chroot", "4755")
+        .find_first_occurrence(
+            "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot",
+            "4755",
+        )
         .map(|(l, _)| l)
         .unwrap_or(25);
 
@@ -149,14 +191,19 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let autologin_conf = ctx
         .read_file("iso-builder/config/includes.chroot/etc/systemd/system/getty@tty1.service.d/autologin.conf")
         .unwrap_or_default();
-    let has_autologin = autologin_conf.contains("autologin achiever") || autologin_conf.contains("--autologin");
+    let has_autologin =
+        autologin_conf.contains("autologin achiever") || autologin_conf.contains("--autologin");
     let launcher_script = ctx
         .read_file("iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch")
         .unwrap_or_default();
-    let has_gpu_fallback = launcher_script.contains("WGPU_BACKEND=gl") || launcher_script.contains("LIBGL_ALWAYS_SOFTWARE");
+    let has_gpu_fallback = launcher_script.contains("WGPU_BACKEND=gl")
+        || launcher_script.contains("LIBGL_ALWAYS_SOFTWARE");
 
     let launch_line = ctx
-        .find_first_occurrence("iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch", "WGPU_BACKEND=gl")
+        .find_first_occurrence(
+            "iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch",
+            "WGPU_BACKEND=gl",
+        )
         .map(|(l, _)| l)
         .unwrap_or(45);
 
@@ -174,8 +221,12 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             feature: "Auto-Login Session & VM GPU Fallback Wrapper".into(),
             category: "ISO".into(),
             status: CapabilityStatus::Partial,
-            evidence: format!("iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:{}", launch_line),
-            notes: "Missing auto-login configuration or VM software graphics rasterizer fallback".into(),
+            evidence: format!(
+                "iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:{}",
+                launch_line
+            ),
+            notes: "Missing auto-login configuration or VM software graphics rasterizer fallback"
+                .into(),
         });
         actions.push(PrioritizedAction {
             severity: ActionSeverity::High,
@@ -220,10 +271,7 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
 
         // Check for Shebang on executable scripts (.sh and .hook.*)
         if file.rel_path.ends_with(".sh") || file.rel_path.contains(".hook.") {
-            let content = match ctx.read_file(&file.rel_path) {
-                Some(c) => c,
-                None => String::new(),
-            };
+            let content = ctx.read_file(&file.rel_path).unwrap_or_default();
             let first_line = content.lines().next().unwrap_or("").trim();
             if !first_line.starts_with("#!/bin/") {
                 missing_shebangs.push(file.rel_path.clone());
@@ -252,15 +300,24 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "ISO".into(),
             status: CapabilityStatus::Partial,
             evidence: loc.clone(),
-            notes: format!("Script errors: {} CRLF files, {} missing shebangs", crlf_violations.len(), missing_shebangs.len()),
+            notes: format!(
+                "Script errors: {} CRLF files, {} missing shebangs",
+                crlf_violations.len(),
+                missing_shebangs.len()
+            ),
         });
 
         actions.push(PrioritizedAction {
             severity: ActionSeverity::Critical,
             title: "Convert Windows CRLF line endings to Linux LF in build scripts".into(),
             location: loc,
-            finding: format!("Linux chroot fails with '\\r: command not found' when scripts have CRLF: {}", crlf_violations.join(", ")),
-            remediation: "Run dos2unix or strip carriage returns (\\r) from all .sh and .hook.chroot files.".into(),
+            finding: format!(
+                "Linux chroot fails with '\\r: command not found' when scripts have CRLF: {}",
+                crlf_violations.join(", ")
+            ),
+            remediation:
+                "Run dos2unix or strip carriage returns (\\r) from all .sh and .hook.chroot files."
+                    .into(),
         });
     }
 

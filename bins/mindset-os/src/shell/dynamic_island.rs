@@ -10,9 +10,13 @@
 
 use iced::widget::{button, column, container, row, scrollable, text, text_input};
 use iced::{Alignment, Color, Element, Length};
-use mindset_core::{MindSetCoreState, WindowId};
+use mindset_core::{ActiveOverlay, MindSetCoreState, WindowId};
+
+const NOTCH_TEXT_MUTED: Color = Color::from_rgb(0.80, 0.84, 0.88); // #CBD5E1 >= 11:1 on dark notch
+const NOTCH_TEXT_SUB: Color = Color::from_rgb(0.89, 0.91, 0.94); // #E2E8F0 >= 14:1 on dark notch
 
 use crate::storage::db::{CapsuleRecord, UserProfile};
+use crate::theme::liquidmorphism::liquid_notch;
 use crate::theme::{h_space, px_space, ThemePalette};
 use crate::Message;
 
@@ -54,17 +58,9 @@ pub fn view<'a>(
     capsules: &'a [CapsuleRecord],
     search_query: &'a str,
     is_audio_playing: bool,
-    _palette: ThemePalette,
+    palette: ThemePalette,
 ) -> Element<'a, Message> {
     let is_focused = core.pomodoro.is_running;
-    let obsidian_bg = Color::from_rgba(0.012, 0.016, 0.024, 0.98);
-    let rim_light = if is_audio_playing {
-        Color::from_rgba(0.12, 0.65, 1.0, 0.45)
-    } else if is_focused {
-        Color::from_rgba(0.98, 0.60, 0.20, 0.45)
-    } else {
-        Color::from_rgba(1.0, 1.0, 1.0, 0.16)
-    };
 
     let inner_content: Element<'a, Message> = match mode {
         IslandMode::Compact => render_compact(core, profile, is_audio_playing),
@@ -74,34 +70,22 @@ pub fn view<'a>(
         IslandMode::MaindySpeaking => render_maindy_speaking(),
     };
 
-    let pill_radius = (height / 2.0).min(20.0);
+    let notch = liquid_notch(
+        inner_content,
+        width,
+        height,
+        palette,
+        is_focused,
+        is_audio_playing,
+    );
 
-    container(inner_content)
-        .width(width)
-        .height(height)
-        .align_x(Alignment::Center)
-        .align_y(Alignment::Center)
-        .style(move |_t| container::Style {
-            background: Some(iced::Background::Color(obsidian_bg)),
-            border: iced::Border {
-                radius: iced::border::Radius::from(pill_radius),
-                color: rim_light,
-                width: 1.0,
-            },
-            shadow: iced::Shadow {
-                color: if is_audio_playing {
-                    Color::from_rgba(0.12, 0.48, 0.96, 0.35)
-                } else if is_focused {
-                    Color::from_rgba(0.98, 0.60, 0.20, 0.30)
-                } else {
-                    Color::from_rgba(0.0, 0.0, 0.0, 0.50)
-                },
-                offset: iced::Vector::new(0.0, 6.0),
-                blur_radius: 18.0,
-            },
-            ..Default::default()
-        })
-        .into()
+    if matches!(mode, IslandMode::Search | IslandMode::ControlCenter) {
+        iced::widget::mouse_area(notch)
+            .on_press(Message::NoOp)
+            .into()
+    } else {
+        notch
+    }
 }
 
 fn render_compact<'a>(
@@ -170,13 +154,9 @@ fn render_compact<'a>(
     } else {
         button(
             row![
-                text("🔍")
-                    .size(11)
-                    .color(Color::from_rgba(1.0, 1.0, 1.0, 0.70)),
+                text("🔍").size(11).color(NOTCH_TEXT_SUB),
                 text("Search").size(11).color(Color::WHITE),
-                text("Ctrl+K")
-                    .size(9)
-                    .color(Color::from_rgba(1.0, 1.0, 1.0, 0.40)),
+                text("Ctrl+K").size(9).color(NOTCH_TEXT_MUTED),
             ]
             .spacing(4)
             .align_y(Alignment::Center),
@@ -221,7 +201,7 @@ fn render_compact<'a>(
         .color(Color::from_rgb(0.98, 0.57, 0.24));
 
     let control_btn = button(text("⚙️").size(11).color(Color::WHITE))
-        .on_press(Message::SetIslandMode(IslandMode::ControlCenter))
+        .on_press(Message::ToggleOverlay(ActiveOverlay::ControlCenter))
         .style(|_t, s| {
             let bg = match s {
                 button::Status::Hovered => Color::from_rgba(1.0, 1.0, 1.0, 0.15),
@@ -328,10 +308,10 @@ fn render_search<'a>(search_query: &'a str, capsules: &'a [CapsuleRecord]) -> El
         .style(|_t, _s| text_input::Style {
             background: iced::Background::Color(Color::TRANSPARENT),
             border: iced::Border::default(),
-            icon: Color::from_rgba(1.0, 1.0, 1.0, 0.50),
-            placeholder: Color::from_rgba(1.0, 1.0, 1.0, 0.40),
+            icon: NOTCH_TEXT_SUB,
+            placeholder: NOTCH_TEXT_MUTED,
             value: Color::WHITE,
-            selection: Color::from_rgba(0.16, 0.71, 0.91, 0.40),
+            selection: Color::from_rgba(0.16, 0.71, 0.91, 0.45),
         })
         .padding(6)
         .width(Length::Fill);
@@ -468,10 +448,7 @@ fn render_control_center<'a>(
             Color::from_rgb(0.16, 0.72, 0.45),
         )
     } else {
-        (
-            "🔇 Lo-Fi Ambient: Muted",
-            Color::from_rgba(1.0, 1.0, 1.0, 0.70),
-        )
+        ("🔇 Lo-Fi Ambient: Muted", NOTCH_TEXT_SUB)
     };
     let audio_toggle_btn = button(text(audio_lbl).size(10).color(audio_color))
         .on_press(Message::ToggleAudio)
@@ -496,7 +473,7 @@ fn render_control_center<'a>(
     let light_btn = button(text("☀️ Light").size(9).color(if is_light {
         Color::WHITE
     } else {
-        Color::from_rgba(1.0, 1.0, 1.0, 0.50)
+        NOTCH_TEXT_MUTED
     }))
     .on_press(Message::SetThemeMode("AlpineMatteLight".to_string()))
     .style(move |_t, _s| button::Style {
@@ -516,7 +493,7 @@ fn render_control_center<'a>(
     let dark_btn = button(text("🌙 Dark").size(9).color(if !is_light {
         Color::WHITE
     } else {
-        Color::from_rgba(1.0, 1.0, 1.0, 0.50)
+        NOTCH_TEXT_MUTED
     }))
     .on_press(Message::SetThemeMode("ObsidianMatteDark".to_string()))
     .style(move |_t, _s| button::Style {
@@ -534,15 +511,11 @@ fn render_control_center<'a>(
     .padding([3, 8]);
 
     let theme_row = row![
-        text("Theme:")
-            .size(10)
-            .color(Color::from_rgba(1.0, 1.0, 1.0, 0.70)),
+        text("Theme:").size(10).color(NOTCH_TEXT_SUB),
         light_btn,
         dark_btn,
         h_space(),
-        text("Motion:")
-            .size(10)
-            .color(Color::from_rgba(1.0, 1.0, 1.0, 0.70)),
+        text("Motion:").size(10).color(NOTCH_TEXT_SUB),
         button(
             text(if profile.mild_motion_enabled {
                 "🌊 Dynamic (18 FPS)"
@@ -583,9 +556,7 @@ fn render_control_center<'a>(
     .padding([3, 6]);
 
     let wallpaper_row = row![
-        text("Wallpaper:")
-            .size(10)
-            .color(Color::from_rgba(1.0, 1.0, 1.0, 0.70)),
+        text("Wallpaper:").size(10).color(NOTCH_TEXT_SUB),
         wp_lake,
         wp_custom,
     ]
@@ -600,17 +571,15 @@ fn render_control_center<'a>(
         ("Minimal", "MinimalMatte"),
     ];
 
-    let mut map_theme_row = row![text("Odyssey:")
-        .size(10)
-        .color(Color::from_rgba(1.0, 1.0, 1.0, 0.70))]
-    .spacing(4)
-    .align_y(Alignment::Center);
+    let mut map_theme_row = row![text("Odyssey:").size(10).color(NOTCH_TEXT_SUB)]
+        .spacing(4)
+        .align_y(Alignment::Center);
     for (label, val) in map_themes {
         let is_sel = profile.map_theme == val;
         let btn = button(text(label).size(8).color(if is_sel {
             Color::WHITE
         } else {
-            Color::from_rgba(1.0, 1.0, 1.0, 0.50)
+            NOTCH_TEXT_MUTED
         }))
         .on_press(Message::SetMapTheme(val.to_string()))
         .style(move |_t, _s| button::Style {
@@ -678,14 +647,24 @@ fn render_maindy_speaking<'a>() -> Element<'a, Message> {
         })
     };
 
-    let bars = row![bar(8.0), bar(16.0), bar(12.0), bar(20.0), bar(14.0), bar(10.0)]
-        .spacing(3)
-        .align_y(Alignment::Center);
+    let bars = row![
+        bar(8.0),
+        bar(16.0),
+        bar(12.0),
+        bar(20.0),
+        bar(14.0),
+        bar(10.0)
+    ]
+    .spacing(3)
+    .align_y(Alignment::Center);
 
     let stop_btn = button(
-        row![text("⏹").size(10).color(Color::WHITE), text("Stop").size(10).color(Color::WHITE)]
-            .spacing(4)
-            .align_y(Alignment::Center),
+        row![
+            text("⏹").size(10).color(Color::WHITE),
+            text("Stop").size(10).color(Color::WHITE)
+        ]
+        .spacing(4)
+        .align_y(Alignment::Center),
     )
     .on_press(Message::StopTts)
     .style(|_t, s| {

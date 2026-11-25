@@ -12,16 +12,49 @@ pub enum NodeStatus {
     Locked,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NodeType {
+    Theory,
+    NumericalDrill,
+    ReviewChest,
+    UnitBoss,
+}
+
+impl NodeType {
+    pub fn display_badge(&self) -> &'static str {
+        match self {
+            Self::Theory => "Theory",
+            Self::NumericalDrill => "Numerical Drill",
+            Self::ReviewChest => "Review Chest",
+            Self::UnitBoss => "Unit Boss",
+        }
+    }
+
+    pub fn icon(&self) -> &'static str {
+        match self {
+            Self::Theory => "📖",
+            Self::NumericalDrill => "📐",
+            Self::ReviewChest => "🎁",
+            Self::UnitBoss => "⚔️",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OdysseyNode {
     pub id: String,
+    pub unit_id: String,
+    pub unit_title: String,
     pub title: String,
     pub subject: String,
     pub description: String,
+    pub node_type: NodeType,
     pub status: NodeStatus,
     pub marks: u32,
     pub max_marks: u32,
     pub xp: u32,
+    pub stars_earned: u8,
+    pub is_crown_mastered: bool,
     #[serde(default = "default_estimated_minutes")]
     pub estimated_minutes: u32,
 }
@@ -31,6 +64,45 @@ fn default_estimated_minutes() -> u32 {
 }
 
 impl OdysseyNode {
+    pub fn compute_stars(marks: u32, max_marks: u32) -> u8 {
+        if max_marks == 0 {
+            return 0;
+        }
+        let pct = (marks as f32 / max_marks as f32) * 100.0;
+        if pct >= 95.0 {
+            3
+        } else if pct >= 80.0 {
+            2
+        } else if pct >= 60.0 {
+            1
+        } else {
+            0
+        }
+    }
+
+    pub fn compute_crown(marks: u32, max_marks: u32) -> bool {
+        if max_marks == 0 {
+            return false;
+        }
+        let pct = (marks as f32 / max_marks as f32) * 100.0;
+        pct >= 98.0
+    }
+
+    pub fn update_evaluation(&mut self, marks: u32) {
+        self.marks = marks.min(self.max_marks);
+        self.stars_earned = Self::compute_stars(self.marks, self.max_marks);
+        self.is_crown_mastered = Self::compute_crown(self.marks, self.max_marks);
+    }
+
+    pub fn star_rating_display(&self) -> String {
+        match self.stars_earned {
+            3 => "★★★".to_string(),
+            2 => "★★☆".to_string(),
+            1 => "★☆☆".to_string(),
+            _ => "☆☆☆".to_string(),
+        }
+    }
+
     pub fn mastery_percentage(&self) -> u32 {
         if self.max_marks == 0 {
             0
@@ -80,50 +152,70 @@ impl OdysseyJourneyState {
         let nodes = vec![
             OdysseyNode {
                 id: "phy-101".into(),
+                unit_id: "unit-1-electromagnetism".into(),
+                unit_title: "Unit 1: Electromagnetism & Potentials".into(),
                 title: "Electrostatics & Gauss's Law".into(),
                 subject: "Physics".into(),
                 description:
                     "Electric flux, closed Gaussian surfaces, and Coulomb field derivation.".into(),
+                node_type: NodeType::Theory,
                 status: NodeStatus::InProgress,
                 marks: 85,
                 max_marks: 100,
                 xp: 250,
+                stars_earned: 2,
+                is_crown_mastered: false,
                 estimated_minutes: 35,
             },
             OdysseyNode {
                 id: "chem-102".into(),
+                unit_id: "unit-1-electromagnetism".into(),
+                unit_title: "Unit 1: Electromagnetism & Potentials".into(),
                 title: "Electrochemistry & Nernst Equation".into(),
                 subject: "Chemistry".into(),
                 description: "Cell potential, standard hydrogen electrode, and Gibbs free energy."
                     .into(),
+                node_type: NodeType::NumericalDrill,
                 status: NodeStatus::Locked,
                 marks: 0,
                 max_marks: 100,
                 xp: 220,
+                stars_earned: 0,
+                is_crown_mastered: false,
                 estimated_minutes: 40,
             },
             OdysseyNode {
                 id: "phy-103".into(),
+                unit_id: "unit-2-optics-waves".into(),
+                unit_title: "Unit 2: Wave Optics & Radiation".into(),
                 title: "Wave Optics & Huygens Principle".into(),
                 subject: "Physics".into(),
                 description:
                     "Wavefront propagation, secondary wavelets, reflection & refraction proof."
                         .into(),
+                node_type: NodeType::ReviewChest,
                 status: NodeStatus::Locked,
                 marks: 0,
                 max_marks: 100,
                 xp: 280,
+                stars_earned: 0,
+                is_crown_mastered: false,
                 estimated_minutes: 45,
             },
             OdysseyNode {
                 id: "math-104".into(),
+                unit_id: "unit-2-optics-waves".into(),
+                unit_title: "Unit 2: Wave Optics & Radiation".into(),
                 title: "Differential Equations in Oscillations".into(),
                 subject: "Mathematics".into(),
                 description: "Second order homogeneous ODEs and harmonic resonance models.".into(),
+                node_type: NodeType::UnitBoss,
                 status: NodeStatus::Locked,
                 marks: 0,
                 max_marks: 100,
                 xp: 300,
+                stars_earned: 0,
+                is_crown_mastered: false,
                 estimated_minutes: 50,
             },
         ];
@@ -191,13 +283,13 @@ impl OdysseyJourneyState {
         }
     }
 
-    /// Complete current stage and unlock next stage.
-    pub fn complete_stage(&mut self, node_id: &str) -> bool {
+    /// Complete current stage with evaluation score and unlock next stage.
+    pub fn complete_stage_with_score(&mut self, node_id: &str, marks: u32) -> bool {
         let mut completed_idx = None;
         for (i, node) in self.nodes.iter_mut().enumerate() {
             if node.id == node_id && node.status == NodeStatus::InProgress {
                 node.status = NodeStatus::Completed;
-                node.marks = node.max_marks;
+                node.update_evaluation(marks);
                 completed_idx = Some(i);
                 break;
             }
@@ -214,6 +306,17 @@ impl OdysseyJourneyState {
         } else {
             false
         }
+    }
+
+    /// Complete current stage and unlock next stage.
+    pub fn complete_stage(&mut self, node_id: &str) -> bool {
+        let max_marks = self
+            .nodes
+            .iter()
+            .find(|n| n.id == node_id)
+            .map(|n| n.max_marks)
+            .unwrap_or(100);
+        self.complete_stage_with_score(node_id, max_marks)
     }
 
     /// Embark on a specific unlocked node.
@@ -244,7 +347,11 @@ impl OdysseyJourneyState {
         if total == 0 {
             0.0
         } else {
-            let completed = self.nodes.iter().filter(|n| n.status == NodeStatus::Completed).count();
+            let completed = self
+                .nodes
+                .iter()
+                .filter(|n| n.status == NodeStatus::Completed)
+                .count();
             completed as f32 / total as f32
         }
     }
@@ -256,7 +363,10 @@ impl OdysseyJourneyState {
 
     /// Number of completed nodes
     pub fn completed_count(&self) -> usize {
-        self.nodes.iter().filter(|n| n.status == NodeStatus::Completed).count()
+        self.nodes
+            .iter()
+            .filter(|n| n.status == NodeStatus::Completed)
+            .count()
     }
 }
 
@@ -312,5 +422,101 @@ mod tests {
         assert_eq!(node0.mastery_percentage(), 85);
         assert_eq!(node0.estimated_time_display(), "35 mins");
         assert_eq!(state.overall_progress_pct(), 0);
+    }
+
+    #[test]
+    fn test_multi_chapter_units_and_node_types() {
+        let state = OdysseyJourneyState::new();
+        assert_eq!(state.nodes.len(), 4);
+        assert_eq!(state.nodes[0].unit_id, "unit-1-electromagnetism");
+        assert_eq!(state.nodes[0].node_type, NodeType::Theory);
+        assert_eq!(state.nodes[1].unit_id, "unit-1-electromagnetism");
+        assert_eq!(state.nodes[1].node_type, NodeType::NumericalDrill);
+        assert_eq!(state.nodes[2].unit_id, "unit-2-optics-waves");
+        assert_eq!(state.nodes[2].node_type, NodeType::ReviewChest);
+        assert_eq!(state.nodes[3].unit_id, "unit-2-optics-waves");
+        assert_eq!(state.nodes[3].node_type, NodeType::UnitBoss);
+
+        assert_eq!(state.nodes[0].node_type.display_badge(), "Theory");
+        assert_eq!(state.nodes[0].node_type.icon(), "📖");
+        assert_eq!(state.nodes[1].node_type.display_badge(), "Numerical Drill");
+        assert_eq!(state.nodes[2].node_type.display_badge(), "Review Chest");
+        assert_eq!(state.nodes[3].node_type.display_badge(), "Unit Boss");
+    }
+
+    #[test]
+    fn test_3_star_and_state_board_crown_mastery() {
+        assert_eq!(OdysseyNode::compute_stars(55, 100), 0);
+        assert_eq!(OdysseyNode::compute_stars(60, 100), 1);
+        assert_eq!(OdysseyNode::compute_stars(79, 100), 1);
+        assert_eq!(OdysseyNode::compute_stars(80, 100), 2);
+        assert_eq!(OdysseyNode::compute_stars(94, 100), 2);
+        assert_eq!(OdysseyNode::compute_stars(95, 100), 3);
+        assert_eq!(OdysseyNode::compute_stars(100, 100), 3);
+
+        assert!(!OdysseyNode::compute_crown(94, 100));
+        assert!(!OdysseyNode::compute_crown(97, 100));
+        assert!(OdysseyNode::compute_crown(98, 100));
+        assert!(OdysseyNode::compute_crown(100, 100));
+
+        let mut node = OdysseyNode {
+            id: "test-node".into(),
+            unit_id: "u1".into(),
+            unit_title: "Unit 1".into(),
+            title: "Test Topic".into(),
+            subject: "Physics".into(),
+            description: "Desc".into(),
+            node_type: NodeType::Theory,
+            status: NodeStatus::InProgress,
+            marks: 0,
+            max_marks: 100,
+            xp: 100,
+            stars_earned: 0,
+            is_crown_mastered: false,
+            estimated_minutes: 30,
+        };
+
+        node.update_evaluation(99);
+        assert_eq!(node.stars_earned, 3);
+        assert!(node.is_crown_mastered);
+        assert_eq!(node.star_rating_display(), "★★★");
+
+        node.update_evaluation(82);
+        assert_eq!(node.stars_earned, 2);
+        assert!(!node.is_crown_mastered);
+        assert_eq!(node.star_rating_display(), "★★☆");
+
+        node.update_evaluation(65);
+        assert_eq!(node.stars_earned, 1);
+        assert!(!node.is_crown_mastered);
+        assert_eq!(node.star_rating_display(), "★☆☆");
+
+        node.update_evaluation(40);
+        assert_eq!(node.stars_earned, 0);
+        assert!(!node.is_crown_mastered);
+        assert_eq!(node.star_rating_display(), "☆☆☆");
+    }
+
+    #[test]
+    fn test_complete_stage_with_score_evaluation() {
+        let mut state = OdysseyJourneyState::new();
+        assert_eq!(state.nodes[0].status, NodeStatus::InProgress);
+
+        let success = state.complete_stage_with_score("phy-101", 99);
+        assert!(success);
+        assert_eq!(state.nodes[0].status, NodeStatus::Completed);
+        assert_eq!(state.nodes[0].marks, 99);
+        assert_eq!(state.nodes[0].stars_earned, 3);
+        assert!(state.nodes[0].is_crown_mastered);
+        assert_eq!(state.nodes[1].status, NodeStatus::InProgress);
+
+        // Next stage completed with 82% (2 stars, no crown)
+        let success2 = state.complete_stage_with_score("chem-102", 82);
+        assert!(success2);
+        assert_eq!(state.nodes[1].status, NodeStatus::Completed);
+        assert_eq!(state.nodes[1].marks, 82);
+        assert_eq!(state.nodes[1].stars_earned, 2);
+        assert!(!state.nodes[1].is_crown_mastered);
+        assert_eq!(state.nodes[2].status, NodeStatus::InProgress);
     }
 }

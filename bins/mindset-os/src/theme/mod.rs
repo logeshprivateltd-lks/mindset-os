@@ -4,20 +4,29 @@
 //! high-contrast button styling, hardware-accelerated border glows, and zero window bleed-through.
 
 pub mod claymorphism;
+pub mod liquidmorphism;
 pub mod neumorphism;
 
 pub use claymorphism::{clay_card, clay_orb, ClayPalette};
+pub use liquidmorphism::{
+    directional_specular_rim, fresnel_sheen, liquid_card, liquid_card_style, liquid_notch,
+    liquid_notch_style, liquid_widget, liquid_widget_style, sdf_liquid_normal, sdf_rounded_box,
+    LiquidGlassProperties, LiquidMetrics, LiquidPalette,
+};
 pub use neumorphism::{neu_card, neu_inset, NeuPalette};
 
 /// Standardized 4-Tier Cognitive Typography Tokens (NERO-ENGAGEING-INSPECTOR Rubric)
-pub const TYPE_CAPTION: u32 = 10;   // Eyebrows, categories, timestamps, badges
-pub const TYPE_BODY: u32 = 12;      // Primary reading content, body copy, descriptions
-pub const TYPE_SUBHEAD: u32 = 15;   // Card headers, section subheads, prompt anchors
-pub const TYPE_METRIC: u32 = 22;    // Big metric countdowns, scores, victory XP numbers
+pub const TYPE_CAPTION: u32 = 10; // Eyebrows, categories, timestamps, badges
+pub const TYPE_BODY: u32 = 12; // Primary reading content, body copy, descriptions
+pub const TYPE_SUBHEAD: u32 = 15; // Card headers, section subheads, prompt anchors
+pub const TYPE_METRIC: u32 = 22; // Big metric countdowns, scores, victory XP numbers
 
 use iced::border::Radius;
+use iced::gradient::Linear;
 use iced::widget::{button, container, slider, text_input, Space};
-use iced::{Background, Border, Color, Length, Shadow, Vector};
+use iced::{
+    Background, Border, Color, Degrees, Element, Gradient, Length, Padding, Shadow, Vector,
+};
 use mindset_core::ThemeMode;
 
 #[derive(Debug, Clone, Copy)]
@@ -45,74 +54,128 @@ impl ThemePalette {
             ThemeMode::AlpineGlass => Self {
                 mode,
                 background: Color::from_rgb(0.72, 0.84, 0.96),
-                // Authentic translucent frosted glass with anti-glare scrim:
-                glass_surface: Color::from_rgba(1.0, 1.0, 1.0, 0.76),
-                glass_surface_elevated: Color::from_rgba(1.0, 1.0, 1.0, 0.82),
-                glass_border: Color::from_rgba(1.0, 1.0, 1.0, 0.50),
-                glass_border_focused: Color::from_rgba(0.12, 0.48, 0.96, 0.90),
-                text_primary: Color::from_rgb(0.06, 0.10, 0.20),
-                text_secondary: Color::from_rgb(0.24, 0.32, 0.48),
-                text_muted: Color::from_rgb(0.42, 0.50, 0.64),
-                accent: Color::from_rgb(0.12, 0.48, 0.96),
-                accent_hover: Color::from_rgb(0.20, 0.58, 1.00),
+                // Glacier frosted glass (crisp icy slate base eliminating washed-out milky slabs):
+                glass_surface: Color::from_rgba(0.89, 0.93, 0.98, 0.84),
+                glass_surface_elevated: Color::from_rgba(0.91, 0.94, 0.98, 0.90),
+                glass_border: Color::from_rgba(0.10, 0.18, 0.30, 0.26),
+                glass_border_focused: Color::from_rgba(0.08, 0.42, 0.88, 0.92),
+                text_primary: Color::from_rgb(0.04, 0.07, 0.14),
+                text_secondary: Color::from_rgb(0.11, 0.16, 0.26),
+                text_muted: Color::from_rgb(0.16, 0.22, 0.33),
+                accent: Color::from_rgb(0.08, 0.44, 0.90),
+                accent_hover: Color::from_rgb(0.14, 0.52, 0.96),
                 accent_text: Color::from_rgb(1.0, 1.0, 1.0),
-                danger: Color::from_rgb(0.92, 0.28, 0.28),
-                success: Color::from_rgb(0.10, 0.72, 0.42),
-                warning: Color::from_rgb(0.94, 0.62, 0.16),
+                danger: Color::from_rgb(0.82, 0.18, 0.18),
+                success: Color::from_rgb(0.08, 0.58, 0.34),
+                warning: Color::from_rgb(0.68, 0.36, 0.02),
             },
             ThemeMode::DarkSpace => Self {
                 mode,
                 background: Color::from_rgb(0.04, 0.06, 0.10),
-                // Translucent obsidian frosted glass (76-82% opacity to eliminate wallpaper bleed):
-                glass_surface: Color::from_rgba(0.08, 0.11, 0.18, 0.76),
-                glass_surface_elevated: Color::from_rgba(0.10, 0.14, 0.24, 0.82),
-                glass_border: Color::from_rgba(1.0, 1.0, 1.0, 0.45),
-                glass_border_focused: Color::from_rgba(0.40, 0.70, 1.00, 0.80),
+                // Translucent obsidian frosted glass with adaptive cool tint (>= 76% stability over any wallpaper):
+                glass_surface: Color::from_rgba(0.06, 0.09, 0.16, 0.78),
+                glass_surface_elevated: Color::from_rgba(0.08, 0.12, 0.21, 0.86),
+                glass_border: Color::from_rgba(1.0, 1.0, 1.0, 0.32),
+                glass_border_focused: Color::from_rgba(0.35, 0.72, 1.00, 0.88),
                 text_primary: Color::from_rgb(0.98, 0.99, 1.0),
-                text_secondary: Color::from_rgb(0.70, 0.78, 0.90),
-                text_muted: Color::from_rgb(0.48, 0.55, 0.68),
-                accent: Color::from_rgb(0.20, 0.60, 1.00), // Sky Cyan
-                accent_hover: Color::from_rgb(0.35, 0.70, 1.00),
+                text_secondary: Color::from_rgb(0.82, 0.87, 0.94),
+                text_muted: Color::from_rgb(0.67, 0.73, 0.83),
+                accent: Color::from_rgb(0.20, 0.62, 1.00), // Sky Cyan
+                accent_hover: Color::from_rgb(0.35, 0.72, 1.00),
                 accent_text: Color::from_rgb(0.98, 0.99, 1.0),
-                danger: Color::from_rgb(0.95, 0.30, 0.30),
-                success: Color::from_rgb(0.15, 0.80, 0.50),
-                warning: Color::from_rgb(0.96, 0.68, 0.20),
+                danger: Color::from_rgb(0.96, 0.34, 0.34),
+                success: Color::from_rgb(0.20, 0.84, 0.54),
+                warning: Color::from_rgb(0.98, 0.74, 0.24),
             },
             ThemeMode::VioletNebula => Self {
                 mode,
                 background: Color::from_rgb(0.06, 0.04, 0.12),
-                glass_surface: Color::from_rgba(0.13, 0.09, 0.22, 0.76),
-                glass_surface_elevated: Color::from_rgba(0.16, 0.11, 0.28, 0.82),
-                glass_border: Color::from_rgba(1.0, 1.0, 1.0, 0.45),
-                glass_border_focused: Color::from_rgba(0.75, 0.40, 0.98, 0.85),
+                glass_surface: Color::from_rgba(0.11, 0.08, 0.20, 0.78),
+                glass_surface_elevated: Color::from_rgba(0.14, 0.10, 0.25, 0.86),
+                glass_border: Color::from_rgba(0.92, 0.84, 1.0, 0.34),
+                glass_border_focused: Color::from_rgba(0.75, 0.44, 0.98, 0.90),
                 text_primary: Color::from_rgb(0.98, 0.98, 1.0),
-                text_secondary: Color::from_rgb(0.78, 0.72, 0.90),
-                text_muted: Color::from_rgb(0.55, 0.48, 0.68),
-                accent: Color::from_rgb(0.70, 0.30, 0.95), // Violet Nebula
-                accent_hover: Color::from_rgb(0.80, 0.42, 1.00),
+                text_secondary: Color::from_rgb(0.86, 0.82, 0.96),
+                text_muted: Color::from_rgb(0.72, 0.66, 0.88),
+                accent: Color::from_rgb(0.72, 0.34, 0.96),
+                accent_hover: Color::from_rgb(0.82, 0.46, 1.00),
                 accent_text: Color::from_rgb(0.98, 0.98, 1.0),
-                danger: Color::from_rgb(0.95, 0.30, 0.30),
-                success: Color::from_rgb(0.15, 0.80, 0.50),
-                warning: Color::from_rgb(0.96, 0.68, 0.20),
+                danger: Color::from_rgb(0.96, 0.34, 0.34),
+                success: Color::from_rgb(0.20, 0.84, 0.54),
+                warning: Color::from_rgb(0.98, 0.74, 0.24),
             },
             ThemeMode::SolarAmber => Self {
                 mode,
                 background: Color::from_rgb(0.06, 0.06, 0.08),
-                glass_surface: Color::from_rgba(0.12, 0.11, 0.14, 0.76),
-                glass_surface_elevated: Color::from_rgba(0.15, 0.13, 0.18, 0.82),
-                glass_border: Color::from_rgba(1.0, 1.0, 1.0, 0.45),
-                glass_border_focused: Color::from_rgba(0.96, 0.68, 0.20, 0.85),
+                glass_surface: Color::from_rgba(0.11, 0.10, 0.13, 0.78),
+                glass_surface_elevated: Color::from_rgba(0.14, 0.12, 0.17, 0.86),
+                glass_border: Color::from_rgba(1.0, 0.92, 0.78, 0.34),
+                glass_border_focused: Color::from_rgba(0.96, 0.68, 0.20, 0.90),
                 text_primary: Color::from_rgb(0.98, 0.99, 1.0),
-                text_secondary: Color::from_rgb(0.82, 0.78, 0.72),
-                text_muted: Color::from_rgb(0.58, 0.54, 0.48),
-                accent: Color::from_rgb(0.96, 0.68, 0.20), // Solar Amber
-                accent_hover: Color::from_rgb(1.00, 0.75, 0.30),
+                text_secondary: Color::from_rgb(0.88, 0.84, 0.76),
+                text_muted: Color::from_rgb(0.74, 0.69, 0.60),
+                accent: Color::from_rgb(0.96, 0.68, 0.20),
+                accent_hover: Color::from_rgb(1.00, 0.76, 0.32),
                 accent_text: Color::from_rgb(0.067, 0.094, 0.153),
-                danger: Color::from_rgb(0.95, 0.30, 0.30),
-                success: Color::from_rgb(0.15, 0.80, 0.50),
-                warning: Color::from_rgb(0.96, 0.68, 0.20),
+                danger: Color::from_rgb(0.96, 0.34, 0.34),
+                success: Color::from_rgb(0.20, 0.84, 0.54),
+                warning: Color::from_rgb(0.98, 0.74, 0.24),
             },
         }
+    }
+}
+
+/// Composites a foreground RGBA color over a background RGB color (`alpha` blending).
+pub fn composite_over(fg: Color, bg: Color) -> Color {
+    let a = fg.a.clamp(0.0, 1.0);
+    Color {
+        r: fg.r * a + bg.r * (1.0 - a),
+        g: fg.g * a + bg.g * (1.0 - a),
+        b: fg.b * a + bg.b * (1.0 - a),
+        a: 1.0,
+    }
+}
+
+/// Computes sRGB relative luminance according to WCAG 2.1.
+pub fn relative_luminance(c: Color) -> f32 {
+    fn linearize(channel: f32) -> f32 {
+        if channel <= 0.04045 {
+            channel / 12.92
+        } else {
+            ((channel + 0.055) / 1.055).powf(2.4)
+        }
+    }
+    0.2126 * linearize(c.r) + 0.7152 * linearize(c.g) + 0.0722 * linearize(c.b)
+}
+
+/// Computes WCAG 2.1 contrast ratio between foreground and background colors (`>= 4.5` AA, `>= 7.0` AAA).
+pub fn wcag_contrast_ratio(fg: Color, bg: Color) -> f32 {
+    let fg_rgb = composite_over(fg, bg);
+    let l1 = relative_luminance(fg_rgb);
+    let l2 = relative_luminance(bg);
+    let (hi, lo) = if l1 >= l2 { (l1, l2) } else { (l2, l1) };
+    (hi + 0.05) / (lo + 0.05)
+}
+
+/// Blends an adaptive tint layer over a frosted scrim while keeping a subtle alpha channel.
+pub fn blend_frost_tint(tint: Color, scrim: Color) -> Color {
+    let a = tint.a.clamp(0.0, 1.0);
+    Color {
+        r: tint.r * a + scrim.r * (1.0 - a),
+        g: tint.g * a + scrim.g * (1.0 - a),
+        b: tint.b * a + scrim.b * (1.0 - a),
+        a: (scrim.a + a * (1.0 - scrim.a)).min(0.94),
+    }
+}
+
+/// Returns the 24–32% adaptive tint layer color used over frosted glass chrome to guarantee contrast
+/// across bright minimalist, dark neon, and busy high-detail wallpapers.
+pub fn adaptive_frost_tint(palette: ThemePalette) -> Color {
+    match palette.mode {
+        ThemeMode::AlpineGlass => Color::from_rgba(0.74, 0.83, 0.95, 0.28), // 28% glacier slate tint
+        ThemeMode::DarkSpace => Color::from_rgba(0.06, 0.14, 0.28, 0.28), // 28% obsidian cyan tint
+        ThemeMode::VioletNebula => Color::from_rgba(0.18, 0.10, 0.32, 0.28), // 28% nebula tint
+        ThemeMode::SolarAmber => Color::from_rgba(0.18, 0.14, 0.08, 0.28), // 28% amber obsidian tint
     }
 }
 
@@ -133,152 +196,175 @@ pub fn px_space(w: f32, h: f32) -> Space {
 }
 
 // ============================================================================
-// Container Styles — High-Opacity Frosted Glass with Layered Shadows
+// Container Styles — Frosted Glass Chrome & Matte Neomorphic Windows
 // ============================================================================
 
-pub fn glass_card(palette: ThemePalette) -> container::Style {
+/// Frosted glass chrome style (floating OS bars, notch, control center, dock, popovers)
+/// with a 24–32% adaptive tint layer blended over an elevated frost scrim and specular border.
+pub fn frosted_glass_style(palette: ThemePalette, radius: f32, elevated: bool) -> container::Style {
+    let scrim = if elevated {
+        palette.glass_surface_elevated
+    } else {
+        palette.glass_surface
+    };
+    let tint = adaptive_frost_tint(palette);
+    let top_left_tint = blend_frost_tint(
+        Color {
+            a: if elevated { 0.32 } else { 0.28 },
+            ..tint
+        },
+        scrim,
+    );
+    let bottom_right_tint = blend_frost_tint(Color { a: 0.24, ..tint }, scrim);
+
+    let gradient = Linear::new(Degrees(135.0))
+        .add_stop(0.0, top_left_tint)
+        .add_stop(1.0, bottom_right_tint);
+
+    let border_color = match (palette.mode, elevated) {
+        (ThemeMode::AlpineGlass, true) => Color::from_rgba(1.0, 1.0, 1.0, 0.65),
+        (ThemeMode::AlpineGlass, false) => Color::from_rgba(1.0, 1.0, 1.0, 0.50),
+        (_, true) => Color::from_rgba(1.0, 1.0, 1.0, 0.26),
+        (_, false) => Color::from_rgba(1.0, 1.0, 1.0, 0.18),
+    };
+
     container::Style {
         text_color: Some(palette.text_primary),
-        background: Some(Background::Color(palette.glass_surface)),
+        background: Some(Background::Gradient(Gradient::Linear(gradient))),
         border: Border {
-            color: Color::from_rgba(1.0, 1.0, 1.0, 0.38),
+            color: border_color,
             width: 1.0,
-            radius: Radius::from(16.0),
+            radius: Radius::from(radius),
         },
         shadow: Shadow {
-            color: Color::from_rgba(0.04, 0.10, 0.22, 0.18),
-            offset: Vector::new(1.0, 6.0),
-            blur_radius: 20.0,
+            color: Color::from_rgba(0.02, 0.06, 0.16, if elevated { 0.28 } else { 0.20 }),
+            offset: Vector::new(0.0, if elevated { 10.0 } else { 6.0 }),
+            blur_radius: if elevated { 28.0 } else { 18.0 },
         },
         ..Default::default()
     }
+}
+
+/// Wraps floating chrome in a 1px top-left specular rim highlight framing an inner frosted surface.
+pub fn frosted_glass_container<'a, M: 'a>(
+    palette: ThemePalette,
+    radius: f32,
+    elevated: bool,
+    content: impl Into<Element<'a, M>>,
+) -> Element<'a, M> {
+    let rim_color = match palette.mode {
+        ThemeMode::AlpineGlass => Color::from_rgba(1.0, 1.0, 1.0, 0.78),
+        _ => Color::from_rgba(1.0, 1.0, 1.0, 0.28),
+    };
+    let inner_radius = (radius - 1.0).max(4.0);
+    let inner = container(content)
+        .style(move |_| frosted_glass_style(palette, inner_radius, elevated))
+        .clip(true);
+
+    container(inner)
+        .padding(Padding {
+            top: 1.0,
+            left: 1.0,
+            bottom: 0.0,
+            right: 0.0,
+        })
+        .style(move |_| container::Style {
+            background: Some(Background::Color(rim_color)),
+            border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: Radius::from(radius),
+            },
+            shadow: Shadow {
+                color: Color::from_rgba(0.02, 0.06, 0.16, if elevated { 0.28 } else { 0.18 }),
+                offset: Vector::new(0.0, if elevated { 10.0 } else { 5.0 }),
+                blur_radius: if elevated { 26.0 } else { 16.0 },
+            },
+            ..Default::default()
+        })
+        .into()
+}
+
+pub fn glass_card(palette: ThemePalette) -> container::Style {
+    frosted_glass_style(palette, 16.0, false)
 }
 
 pub fn glass_elevated(palette: ThemePalette) -> container::Style {
-    container::Style {
-        text_color: Some(palette.text_primary),
-        background: Some(Background::Color(palette.glass_surface_elevated)),
-        border: Border {
-            color: Color::from_rgba(1.0, 1.0, 1.0, 0.45),
-            width: 1.0,
-            radius: Radius::from(18.0),
-        },
-        shadow: Shadow {
-            color: Color::from_rgba(0.02, 0.08, 0.20, 0.24),
-            offset: Vector::new(1.5, 8.0),
-            blur_radius: 26.0,
-        },
-        ..Default::default()
-    }
+    frosted_glass_style(palette, 18.0, true)
 }
 
 pub fn glass_panel(palette: ThemePalette) -> container::Style {
-    container::Style {
-        text_color: Some(palette.text_primary),
-        background: Some(Background::Color(palette.glass_surface)),
-        border: Border {
-            color: palette.glass_border,
-            width: 1.0,
-            radius: Radius::from(10.0),
-        },
-        shadow: Shadow::default(),
-        ..Default::default()
-    }
+    frosted_glass_style(palette, 10.0, false)
 }
 
 pub fn top_bar_style(palette: ThemePalette) -> container::Style {
-    container::Style {
-        text_color: Some(palette.text_primary),
-        background: Some(Background::Color(palette.glass_surface_elevated)),
-        border: Border {
-            color: Color::from_rgba(1.0, 1.0, 1.0, 0.42),
-            width: 1.0,
-            radius: Radius::from(22.0),
-        },
-        shadow: Shadow {
-            color: Color::from_rgba(0.02, 0.06, 0.15, 0.18),
-            offset: Vector::new(1.0, 5.0),
-            blur_radius: 18.0,
-        },
-        ..Default::default()
-    }
+    frosted_glass_style(palette, 20.0, true)
 }
 
 pub fn dock_style(palette: ThemePalette) -> container::Style {
-    container::Style {
-        text_color: Some(palette.text_primary),
-        background: Some(Background::Color(palette.glass_surface_elevated)),
-        border: Border {
-            color: Color::from_rgba(1.0, 1.0, 1.0, 0.40),
-            width: 1.2,
-            radius: Radius::from(24.0),
-        },
-        shadow: Shadow {
-            color: Color::from_rgba(0.02, 0.06, 0.15, 0.32),
-            offset: Vector::new(0.0, 10.0),
-            blur_radius: 30.0,
-        },
-        ..Default::default()
-    }
+    frosted_glass_style(palette, 22.0, true)
 }
 
 pub fn modal_backdrop() -> container::Style {
     container::Style {
         text_color: None,
-        background: Some(Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.55))),
+        background: Some(Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.42))),
         border: Border::default(),
         shadow: Shadow::default(),
         ..Default::default()
     }
 }
 
-/// Window chrome style guaranteeing zero bleed-through from desktop widgets.
+/// Window chrome style using matte Neomorphism (guaranteed zero bleed-through over desktop).
 pub fn window_chrome_style(palette: ThemePalette, is_focused: bool) -> container::Style {
+    let neu = NeuPalette::for_theme(palette.mode);
     let border_color = if is_focused {
         palette.glass_border_focused
     } else {
-        palette.glass_border
-    };
-
-    let bg_color = if palette.mode == ThemeMode::AlpineGlass {
-        Color::from_rgba(0.96, 0.98, 1.0, 0.98)
-    } else {
-        Color::from_rgba(0.08, 0.11, 0.18, 0.98)
+        Color {
+            a: 0.35,
+            ..neu.shadow_light
+        }
     };
 
     container::Style {
-        text_color: Some(palette.text_primary),
-        background: Some(Background::Color(bg_color)),
+        text_color: Some(neu.text_primary),
+        background: Some(Background::Color(neu.surface_base)),
         border: Border {
             color: border_color,
             width: if is_focused { 1.5 } else { 1.0 },
             radius: Radius::from(16.0),
         },
         shadow: Shadow {
-            color: Color::from_rgba(0.0, 0.02, 0.08, if is_focused { 0.48 } else { 0.22 }),
-            offset: Vector::new(0.0, if is_focused { 16.0 } else { 6.0 }),
-            blur_radius: if is_focused { 40.0 } else { 20.0 },
+            color: Color::from_rgba(
+                neu.shadow_dark.r,
+                neu.shadow_dark.g,
+                neu.shadow_dark.b,
+                if is_focused { 0.56 } else { 0.30 },
+            ),
+            offset: Vector::new(0.0, if is_focused { 14.0 } else { 6.0 }),
+            blur_radius: if is_focused { 36.0 } else { 18.0 },
         },
         ..Default::default()
     }
 }
 
-/// Native OS window titlebar style with top border radii, subtle specular rim, and bottom border.
+/// Native OS window titlebar style using extruded matte Neomorphic surface.
 pub fn window_titlebar_style(palette: ThemePalette, is_focused: bool) -> container::Style {
-    let bg_color = if palette.mode == ThemeMode::AlpineGlass {
-        Color::from_rgba(0.92, 0.95, 0.99, if is_focused { 0.95 } else { 0.88 })
+    let neu = NeuPalette::for_theme(palette.mode);
+    let bg_color = if is_focused {
+        neu.surface_elevated
     } else {
-        Color::from_rgba(0.06, 0.08, 0.13, if is_focused { 0.96 } else { 0.88 })
+        neu.surface_base
     };
 
     container::Style {
-        text_color: Some(palette.text_primary),
+        text_color: Some(neu.text_primary),
         background: Some(Background::Color(bg_color)),
         border: Border {
-            color: if is_focused {
-                Color::from_rgba(1.0, 1.0, 1.0, 0.12)
-            } else {
-                Color::from_rgba(1.0, 1.0, 1.0, 0.05)
+            color: Color {
+                a: 0.35,
+                ..neu.shadow_light
             },
             width: 0.5,
             radius: Radius {
@@ -323,21 +409,40 @@ pub fn styled_button(
                 (b, bo, palette.accent_text)
             }
             ButtonVariant::Secondary => {
+                let is_light = palette.mode == ThemeMode::AlpineGlass;
                 let (b, bo) = match status {
-                    button::Status::Active => {
-                        (Color::from_rgba(1.0, 1.0, 1.0, 0.10), palette.glass_border)
-                    }
+                    button::Status::Active => (
+                        if is_light {
+                            Color::from_rgba(0.08, 0.14, 0.26, 0.09)
+                        } else {
+                            Color::from_rgba(1.0, 1.0, 1.0, 0.10)
+                        },
+                        palette.glass_border,
+                    ),
                     button::Status::Hovered => (
-                        Color::from_rgba(1.0, 1.0, 1.0, 0.20),
+                        if is_light {
+                            Color::from_rgba(0.08, 0.14, 0.26, 0.16)
+                        } else {
+                            Color::from_rgba(1.0, 1.0, 1.0, 0.20)
+                        },
                         palette.glass_border_focused,
                     ),
                     button::Status::Pressed => (
-                        Color::from_rgba(1.0, 1.0, 1.0, 0.28),
+                        if is_light {
+                            Color::from_rgba(0.08, 0.14, 0.26, 0.24)
+                        } else {
+                            Color::from_rgba(1.0, 1.0, 1.0, 0.28)
+                        },
                         palette.glass_border_focused,
                     ),
-                    button::Status::Disabled => {
-                        (Color::from_rgba(1.0, 1.0, 1.0, 0.02), Color::TRANSPARENT)
-                    }
+                    button::Status::Disabled => (
+                        if is_light {
+                            Color::from_rgba(0.08, 0.14, 0.26, 0.03)
+                        } else {
+                            Color::from_rgba(1.0, 1.0, 1.0, 0.03)
+                        },
+                        Color::TRANSPARENT,
+                    ),
                 };
                 (b, bo, palette.text_primary)
             }
@@ -445,10 +550,7 @@ pub fn traffic_light_button(
                 },
                 symbol_color,
             ),
-            button::Status::Disabled => (
-                Color::from_rgba(0.4, 0.4, 0.4, 0.25),
-                Color::TRANSPARENT,
-            ),
+            button::Status::Disabled => (Color::from_rgba(0.4, 0.4, 0.4, 0.25), Color::TRANSPARENT),
             button::Status::Active => {
                 let color = if is_focused {
                     base_color

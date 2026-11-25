@@ -8,14 +8,18 @@ use iced::widget::{button, column, container, row, scrollable, text};
 use iced::{Alignment, Color, Element, Length};
 use mindset_core::{MindSetCoreState, STUDY_TOPICS};
 
+use crate::theme::neumorphism::{neu_card, neu_inset, NeuPalette};
 use crate::theme::{
-    glass_card, glass_elevated, h_space, primary_button, px_space, secondary_button, ThemePalette,
-    TYPE_BODY, TYPE_CAPTION,
+    h_space, primary_button, px_space, secondary_button, ThemePalette, TYPE_BODY, TYPE_CAPTION,
 };
 use crate::Message;
 
 pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a, Message> {
-    let active_idx = core.study_reader.active_tab_index.min(STUDY_TOPICS.len() - 1);
+    let neu = NeuPalette::for_theme(palette.mode);
+    let active_idx = core
+        .study_reader
+        .active_tab_index
+        .min(STUDY_TOPICS.len() - 1);
     let topic = &STUDY_TOPICS[active_idx];
 
     let streak_count = core.today.streak.count;
@@ -23,17 +27,23 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
     let is_focused = core.preferences.focus_dnd || core.pomodoro.is_running;
 
     // ========================================================================
-    // 1. Left Sidebar: Table of Contents & Chapter Navigator
+    // 1. Left Sidebar: Clean Matte Neomorphic Chapter Navigator
     // ========================================================================
     let mut chapter_list = column![].spacing(6);
 
     for (i, t) in STUDY_TOPICS.iter().enumerate() {
         let is_selected = i == active_idx;
+        let sel_bg = Color::from_rgba(palette.accent.r, palette.accent.g, palette.accent.b, 0.16);
+        let hover_bg = Color::from_rgba(palette.accent.r, palette.accent.g, palette.accent.b, 0.08);
         let item_btn = button(
             row![
                 text(if is_selected { "●" } else { "○" })
                     .size(9)
-                    .color(if is_selected { palette.accent } else { palette.text_muted }),
+                    .color(if is_selected {
+                        palette.accent
+                    } else {
+                        neu.text_muted
+                    }),
                 column![
                     text(t.title)
                         .size(12)
@@ -46,13 +56,11 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                             ..Default::default()
                         })
                         .color(if is_selected {
-                            palette.text_primary
+                            neu.text_primary
                         } else {
-                            palette.text_secondary
+                            neu.text_muted
                         }),
-                    text(t.subject)
-                        .size(10)
-                        .color(palette.text_muted),
+                    text(t.subject).size(10).color(neu.text_muted),
                 ]
                 .spacing(2),
             ]
@@ -62,9 +70,9 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
         .on_press(Message::SelectStudyTab(i))
         .style(move |_t, s| {
             let bg = if is_selected {
-                Color::from_rgba(0.12, 0.48, 0.96, 0.22)
+                sel_bg
             } else if s == button::Status::Hovered {
-                Color::from_rgba(1.0, 1.0, 1.0, 0.10)
+                hover_bg
             } else {
                 Color::TRANSPARENT
             };
@@ -73,7 +81,7 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                 border: iced::Border {
                     radius: iced::border::Radius::from(8.0),
                     color: if is_selected {
-                        palette.glass_border_focused
+                        palette.accent
                     } else {
                         Color::TRANSPARENT
                     },
@@ -96,7 +104,7 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                 weight: iced::font::Weight::Bold,
                 ..Default::default()
             })
-            .color(palette.text_primary),
+            .color(neu.text_primary),
         h_space(),
         container(
             text(format!("{}/{}", active_idx + 1, STUDY_TOPICS.len()))
@@ -105,33 +113,45 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
         )
         .padding([2, 6])
         .style(move |_t| container::Style {
-            background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.05))),
+            background: Some(iced::Background::Color(neu.surface_elevated)),
             border: iced::Border {
                 radius: iced::border::Radius::from(6.0),
-                color: Color::from_rgba(1.0, 1.0, 1.0, 0.10),
-                width: 0.5,
+                color: Color {
+                    a: 0.35,
+                    ..neu.shadow_light
+                },
+                width: 0.8,
             },
             ..Default::default()
         }),
     ]
     .align_y(Alignment::Center);
 
-    let sidebar_footer = container(
+    let sidebar_footer = neu_card(
         column![
             row![
-                text(format!("🔥 {streak_count}d Streak")).size(10).color(palette.accent),
+                text(format!("🔥 {streak_count}d Streak"))
+                    .size(10)
+                    .color(palette.accent),
                 h_space(),
-                text(format!("{total_xp} XP")).size(10).color(palette.success),
+                text(format!("{total_xp} XP"))
+                    .size(10)
+                    .color(palette.success),
             ]
             .align_y(Alignment::Center),
-            text(if is_focused { "⏱️ Deep Focus Active" } else { "📖 Eye-Care Reading Active" })
-                .size(9)
-                .color(palette.text_muted),
+            text(if is_focused {
+                "⏱️ Deep Focus Active"
+            } else {
+                "📖 Eye-Care Reading Active"
+            })
+            .size(9)
+            .color(neu.text_muted),
         ]
         .spacing(4),
-    )
-    .padding(10)
-    .style(move |_t| glass_card(palette));
+        &neu,
+        12.0,
+        1.0,
+    );
 
     let sidebar = container(
         column![
@@ -146,9 +166,12 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
     .width(Length::Fixed(240.0))
     .height(Length::Fill)
     .style(move |_t| container::Style {
-        background: Some(iced::Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.15))),
+        background: Some(iced::Background::Color(neu.surface_inset)),
         border: iced::Border {
-            color: palette.glass_border,
+            color: Color {
+                a: 0.35,
+                ..neu.shadow_light
+            },
             width: 1.0,
             ..Default::default()
         },
@@ -156,7 +179,7 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
     });
 
     // ========================================================================
-    // 2. Right Pane: Comfortable Digital Book Reading Sanctuary
+    // 2. Right Pane: Matte Neomorphic Digital Book Reading Sanctuary
     // ========================================================================
     let breadcrumb_bar = row![
         text(topic.subject.to_uppercase())
@@ -166,26 +189,29 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                 ..Default::default()
             })
             .color(palette.accent),
-        text("•").size(10).color(palette.text_muted),
+        text("•").size(10).color(neu.text_muted),
         text("NCERT Standard Reference")
             .size(10)
-            .color(palette.text_muted),
+            .color(neu.text_muted),
         h_space(),
         container(
             row![
                 text("👁️").size(11),
                 px_space(2.0, 0.0),
-                text("Comfort Reading Mode").size(10).color(palette.text_secondary),
+                text("Comfort Reading Mode").size(10).color(neu.text_muted),
             ]
             .align_y(Alignment::Center),
         )
         .padding([2, 8])
         .style(move |_t| container::Style {
-            background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.04))),
+            background: Some(iced::Background::Color(neu.surface_inset)),
             border: iced::Border {
                 radius: iced::border::Radius::from(6.0),
-                color: Color::from_rgba(1.0, 1.0, 1.0, 0.08),
-                width: 0.5,
+                color: Color {
+                    a: 0.35,
+                    ..neu.shadow_light
+                },
+                width: 0.8,
             },
             ..Default::default()
         }),
@@ -198,9 +224,9 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
             weight: iced::font::Weight::Bold,
             ..Default::default()
         })
-        .color(palette.text_primary);
+        .color(neu.text_primary);
 
-    let formula_card = container(
+    let formula_card = neu_card(
         column![
             row![
                 text("📐 CORE THEOREM / MATHEMATICAL FORMULA")
@@ -213,37 +239,28 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                 h_space(),
                 text("Board Exam Weight: 5 Marks")
                     .size(9)
-                    .color(palette.text_muted),
+                    .color(neu.text_muted),
             ]
             .align_y(Alignment::Center),
-            container(
+            neu_inset(
                 text(topic.formula)
                     .size(15)
                     .font(iced::font::Font {
                         weight: iced::font::Weight::Bold,
                         ..Default::default()
                     })
-                    .color(palette.accent_text),
-            )
-            .padding([8, 14])
-            .width(Length::Fill)
-            .style(move |_t| container::Style {
-                background: Some(iced::Background::Color(Color::from_rgba(0.08, 0.22, 0.45, 0.60))),
-                border: iced::Border {
-                    radius: iced::border::Radius::from(8.0),
-                    color: palette.glass_border_focused,
-                    width: 1.0,
-                },
-                ..Default::default()
-            }),
+                    .color(neu.text_primary),
+                &neu,
+                8.0,
+            ),
         ]
-        .spacing(8)
-        .padding(14),
-    )
-    .width(Length::Fill)
-    .style(move |_t| glass_elevated(palette));
+        .spacing(8),
+        &neu,
+        14.0,
+        1.0,
+    );
 
-    let derivation_card = container(
+    let derivation_card = neu_card(
         column![
             row![
                 text("📝 STEP-BY-STEP RIGOROUS DERIVATION")
@@ -256,19 +273,20 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                 h_space(),
                 text("Feynman Causal Progression")
                     .size(9)
-                    .color(palette.text_muted),
+                    .color(neu.text_muted),
             ]
             .align_y(Alignment::Center),
             text(topic.derivation_steps)
                 .size(TYPE_BODY)
-                .color(palette.text_primary),
+                .color(neu.text_primary),
         ]
-        .spacing(10)
-        .padding(16),
-    )
-    .width(Length::Fill)
-    .style(move |_t| glass_card(palette));
+        .spacing(10),
+        &neu,
+        14.0,
+        1.0,
+    );
 
+    // High-contrast dark amber text on a tinted amber container (WCAG AAA >= 8.9:1)
     let note_card = container(
         column![
             row![
@@ -278,27 +296,29 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
                         weight: iced::font::Weight::Bold,
                         ..Default::default()
                     })
-                    .color(palette.warning),
+                    .color(Color::from_rgb(0.471, 0.208, 0.059)), // Dark Amber #78350F
                 h_space(),
                 text("Examiner Insight")
                     .size(9)
-                    .color(palette.text_muted),
+                    .color(Color::from_rgb(0.573, 0.251, 0.055)), // Deep Amber #92400E
             ]
             .align_y(Alignment::Center),
             text(topic.board_exam_note)
                 .size(TYPE_CAPTION)
-                .color(palette.text_secondary),
+                .color(Color::from_rgb(0.271, 0.102, 0.012)), // Espresso Amber #451A03
         ]
         .spacing(8)
         .padding(14),
     )
     .width(Length::Fill)
     .style(move |_t| container::Style {
-        background: Some(iced::Background::Color(Color::from_rgba(0.25, 0.18, 0.05, 0.35))),
+        background: Some(iced::Background::Color(Color::from_rgb(
+            0.996, 0.953, 0.780,
+        ))), // Tinted Amber Container #FEF3C7
         border: iced::Border {
             radius: iced::border::Radius::from(10.0),
-            color: Color::from_rgba(0.98, 0.75, 0.20, 0.40),
-            width: 1.0,
+            color: Color::from_rgb(0.851, 0.467, 0.024), // Amber-600 border #D97706
+            width: 1.2,
         },
         ..Default::default()
     });
@@ -341,14 +361,8 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
     .style(primary_button(palette))
     .padding([8, 18]);
 
-    let navigation_footer = row![
-        prev_btn,
-        h_space(),
-        boss_btn,
-        h_space(),
-        next_btn,
-    ]
-    .align_y(Alignment::Center);
+    let navigation_footer =
+        row![prev_btn, h_space(), boss_btn, h_space(), next_btn,].align_y(Alignment::Center);
 
     let reading_content = column![
         breadcrumb_bar,

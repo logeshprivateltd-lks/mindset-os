@@ -420,7 +420,10 @@ impl ChromiumEngineBridge {
         {
             // 1. Try launching registered desktop app launcher
             if let Ok(child) = Command::new("gtk-launch").arg("youtube").spawn() {
-                return Ok(format!("Launched YouTube App via gtk-launch (PID: {})", child.id()));
+                return Ok(format!(
+                    "Launched YouTube App via gtk-launch (PID: {})",
+                    child.id()
+                ));
             }
 
             // 2. Direct Chromium standalone app mode with dedicated profile
@@ -485,7 +488,10 @@ impl ChromiumEngineBridge {
                 .args(["/C", "start", "https://www.youtube.com"])
                 .spawn()
                 .map_err(|e| format!("Failed to start YouTube: {e}"))?;
-            Ok(format!("Launched YouTube via system handler (PID: {})", child.id()))
+            Ok(format!(
+                "Launched YouTube via system handler (PID: {})",
+                child.id()
+            ))
         }
 
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
@@ -509,7 +515,10 @@ impl ChromiumEngineBridge {
                     let child = Command::new(bin)
                         .spawn()
                         .map_err(|e| format!("Failed to launch FreeTube at {bin}: {e}"))?;
-                    return Ok(format!("Launched FreeTube Ad-Free Player (PID: {})", child.id()));
+                    return Ok(format!(
+                        "Launched FreeTube Ad-Free Player (PID: {})",
+                        child.id()
+                    ));
                 }
             }
 
@@ -572,7 +581,10 @@ impl ChromiumEngineBridge {
                         ])
                         .spawn()
                         .map_err(|e| format!("Failed to spawn {bin}: {e}"))?;
-                    return Ok(format!("Launched MindSet Browser ({bin}, PID: {})", child.id()));
+                    return Ok(format!(
+                        "Launched MindSet Browser ({bin}, PID: {})",
+                        child.id()
+                    ));
                 }
             }
 
@@ -607,7 +619,10 @@ impl ChromiumEngineBridge {
                         ])
                         .spawn()
                         .map_err(|e| format!("Failed to spawn {bin}: {e}"))?;
-                    return Ok(format!("Launched MindSet Browser ({bin}, PID: {})", child.id()));
+                    return Ok(format!(
+                        "Launched MindSet Browser ({bin}, PID: {})",
+                        child.id()
+                    ));
                 }
             }
 

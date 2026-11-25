@@ -1,0 +1,81 @@
+{
+  "board": "Tamil Nadu State Board",
+  "examination": "Higher Secondary Examination (Class 12)",
+  "subject": "Physics",
+  "subject_code": "PHY-12-TN",
+  "benchmark_standard": "590/600 High Achiever Ranker Cutoff",
+  "theory_max_marks": 70,
+  "passing_marks": 25,
+  "state_board_crown_threshold_percentage": 98.0,
+  "strict_rubric_deduction_rules": [
+    {
+      "rule_id": "DED-SI-UNIT",
+      "name": "Missing or Incorrect SI Unit",
+      "deduction_marks": 0.5,
+      "description": "Any final numerical or derived scalar/vector value lacking explicit standard SI unit (e.g. N/C, V/m, Tesla, Ohm, Farad) suffers mandatory 0.5 mark deduction."
+    },
+    {
+      "rule_id": "DED-DIAGRAM-LABEL",
+      "name": "Unlabelled or Incomplete Scientific Diagram",
+      "deduction_marks": 1.0,
+      "description": "Scientific apparatus, field lines, or circuit diagrams missing coordinate axes, polarity (+/-), directional arrows, or component labels suffer mandatory 1.0 mark deduction."
+    },
+    {
+      "rule_id": "DED-DERIVATION-STEP",
+      "name": "Skipped Intermediate Vector Calculus / Calculus Step",
+      "deduction_marks": 0.5,
+      "description": "Directly jumping from closed surface integral to algebraic result without defining differential area vector dS or surface boundary conditions."
+    },
+    {
+      "rule_id": "DED-SIGNIFICANT-FIGS",
+      "name": "Improper Rounding or Precision Truncation",
+      "deduction_marks": 0.5,
+      "description": "Premature truncation of decimals during intermediate division steps yielding discrepancy > 1% in final result."
+    }
+  ],
+  "questions": [
+    {
+      "question_number": 1,
+      "topic": "Gauss's Law & Electric Flux",
+      "max_marks": 5.0,
+      "criteria": [
+        { "step": "Statement of Gauss's Law", "marks": 1.0, "mandatory_keywords": ["flux", "closed", "q", "epsilon_0"] },
+        { "step": "Closed Gaussian surface diagram with dS vector and E vector arrows", "marks": 1.0, "mandatory_keywords": ["gaussian", "surface", "ds", "e"] },
+        { "step": "Integration steps: flux = closed_integral(E . dS) = q_enclosed / epsilon_0", "marks": 2.0, "mandatory_keywords": ["4 * pi * r^2", "e", "q", "epsilon_0"] },
+        { "step": "Final scalar/vector equation with standard SI units (N m^2 C^-1)", "marks": 1.0, "mandatory_keywords": ["flux", "phi_e"] }
+      ]
+    },
+    {
+      "question_number": 2,
+      "topic": "Electric Dipole in Uniform Field",
+      "max_marks": 3.0,
+      "criteria": [
+        { "step": "Torque equation derivation: tau = p x E", "marks": 1.5, "mandatory_keywords": ["tau", "p x e"] },
+        { "step": "Cross product magnitude tau = p * E * sin(theta)", "marks": 0.5, "mandatory_keywords": ["tau", "sin(theta)"] },
+        { "step": "Special cases: stable equilibrium (0 deg) and maximum torque (90 deg)", "marks": 1.0, "mandatory_keywords": ["theta = 0", "stable", "theta = 90"] }
+      ]
+    },
+    {
+      "question_number": 3,
+      "topic": "Wheatstone's Bridge Balance Condition",
+      "max_marks": 5.0,
+      "criteria": [
+        { "step": "Statement of Kirchhoff's Current Law and Voltage Law", "marks": 1.5, "mandatory_keywords": ["kcl", "kvl"] },
+        { "step": "Wheatstone bridge four-arm circuit diagram with galvanometer G", "marks": 1.0, "mandatory_keywords": ["p", "q", "r", "s", "galvanometer", "g"] },
+        { "step": "Loop derivations under balanced condition (Ig = 0)", "marks": 1.5, "mandatory_keywords": ["ig = 0", "i1", "i2"] },
+        { "step": "Final balance relation: P / Q = R / S", "marks": 1.0, "mandatory_keywords": ["p / q = r / s"] }
+      ]
+    },
+    {
+      "question_number": 4,
+      "topic": "Biot-Savart Law on Circular Current Loop",
+      "max_marks": 5.0,
+      "criteria": [
+        { "step": "Statement and differential vector formula: dB = (mu_0 / 4pi) * (I dl x r) / r^3", "marks": 1.5, "mandatory_keywords": ["db", "mu_0", "4pi", "dl"] },
+        { "step": "Circular loop coordinate diagram with axial distance x and radius R", "marks": 1.0, "mandatory_keywords": ["circular", "radius r", "distance x"] },
+        { "step": "Integration along loop perimeter (integral dl = 2pi R)", "marks": 1.5, "mandatory_keywords": ["2 * pi * r", "mu_0"] },
+        { "step": "Final magnetic field at center B = mu_0 * I / (2 * R) with Tesla unit", "marks": 1.0, "mandatory_keywords": ["b", "tesla"] }
+      ]
+    }
+  ]
+}

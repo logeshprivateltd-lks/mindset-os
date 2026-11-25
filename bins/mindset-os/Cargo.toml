@@ -6,9 +6,17 @@ authors.workspace = true
 license.workspace = true
 description = "MindSet OS — Pure-Rust Native Desktop Visual Computing Shell"
 
+[lib]
+name = "mindset_os"
+path = "src/lib.rs"
+
 [[bin]]
 name = "mindset-os"
 path = "src/main.rs"
+
+[[bin]]
+name = "mindset-shell"
+path = "src/bin/mindset-shell.rs"
 
 [dependencies]
 mindset-core = { path = "../../crates/mindset-core" }

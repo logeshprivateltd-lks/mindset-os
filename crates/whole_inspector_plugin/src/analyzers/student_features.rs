@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use crate::analyzers::WorkspaceContext;
 use crate::models::{
     ActionSeverity, CapabilityMatrixEntry, CapabilityStatus, ModuleAuditResult, PrioritizedAction,
 };
+use std::collections::HashMap;
 
 /// Module 7: Student OS Extra Features & Vision Audit
 pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
@@ -11,12 +11,24 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let mut metrics = HashMap::new();
     let mut score: u32 = 100;
 
-    let generator_rs = ctx.read_file("bins/mindset-os/src/capsules/generator.rs").unwrap_or_default();
-    let db_rs = ctx.read_file("bins/mindset-os/src/storage/db.rs").unwrap_or_default();
-    let boss_view_rs = ctx.read_file("bins/mindset-os/src/views/verification_boss.rs").unwrap_or_default();
-    let core_verif_rs = ctx.read_file("crates/mindset-core/src/engine/verification.rs").unwrap_or_default();
-    let desktop_rs = ctx.read_file("bins/mindset-os/src/shell/desktop.rs").unwrap_or_default();
-    let odyssey_rs = ctx.read_file("bins/mindset-os/src/shell/odyssey_map.rs").unwrap_or_default();
+    let generator_rs = ctx
+        .read_file("bins/mindset-os/src/capsules/generator.rs")
+        .unwrap_or_default();
+    let db_rs = ctx
+        .read_file("bins/mindset-os/src/storage/db.rs")
+        .unwrap_or_default();
+    let boss_view_rs = ctx
+        .read_file("bins/mindset-os/src/views/verification_boss.rs")
+        .unwrap_or_default();
+    let core_verif_rs = ctx
+        .read_file("crates/mindset-core/src/engine/verification.rs")
+        .unwrap_or_default();
+    let desktop_rs = ctx
+        .read_file("bins/mindset-os/src/shell/desktop.rs")
+        .unwrap_or_default();
+    let odyssey_rs = ctx
+        .read_file("bins/mindset-os/src/shell/odyssey_map.rs")
+        .unwrap_or_default();
 
     // 1. Exam Scout & Target-to-Capsule Engine
     let has_track_blueprints = generator_rs.contains("TrackBlueprint")
@@ -28,7 +40,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let has_unclamped_score_fix = db_rs.contains("10005") || db_rs.contains("target_score_max > 0");
 
     let gen_line = ctx
-        .find_first_occurrence("bins/mindset-os/src/capsules/generator.rs", "pub struct TrackBlueprint")
+        .find_first_occurrence(
+            "bins/mindset-os/src/capsules/generator.rs",
+            "pub struct TrackBlueprint",
+        )
         .map(|(l, _)| l)
         .unwrap_or(10);
 
@@ -47,7 +62,9 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "Student OS".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("bins/mindset-os/src/capsules/generator.rs:{}", gen_line),
-            notes: "Exam blueprint engine missing dynamic track resolution or database auto-healing".into(),
+            notes:
+                "Exam blueprint engine missing dynamic track resolution or database auto-healing"
+                    .into(),
         });
         actions.push(PrioritizedAction {
             severity: ActionSeverity::High,
@@ -60,7 +77,8 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
 
     // 2. Strict Proof-of-Study Verification Boss Battle
     let has_boss_threshold = core_verif_rs.contains(">= 70") || core_verif_rs.contains("70..=89");
-    let has_speedrun_threshold = core_verif_rs.contains("85") || core_verif_rs.contains("speedrun_mode");
+    let has_speedrun_threshold =
+        core_verif_rs.contains("85") || core_verif_rs.contains("speedrun_mode");
     let has_feynman = boss_view_rs.contains("feynman") || boss_view_rs.contains("Feynman");
 
     // Strictly check that NO fake manual "mark complete" checkbox bypasses the boss
@@ -69,7 +87,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
         || desktop_rs.contains("button(\"Mark Done\"");
 
     let boss_line = ctx
-        .find_first_occurrence("crates/mindset-core/src/engine/verification.rs", "NO manual \"Mark Complete\" checkboxes")
+        .find_first_occurrence(
+            "crates/mindset-core/src/engine/verification.rs",
+            "NO manual \"Mark Complete\" checkboxes",
+        )
         .map(|(l, _)| l)
         .unwrap_or(5);
 
@@ -93,7 +114,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             feature: "Strict Proof-of-Study Verification Boss (Zero Fake Mark-Complete)".into(),
             category: "Student OS".into(),
             status: CapabilityStatus::Mock,
-            evidence: format!("crates/mindset-core/src/engine/verification.rs:{}", boss_line),
+            evidence: format!(
+                "crates/mindset-core/src/engine/verification.rs:{}",
+                boss_line
+            ),
             notes: reason.into(),
         });
 
@@ -107,9 +131,13 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     }
 
     // 3. Student Desktop Widgets & Focus Layer
-    let has_odyssey_trail = odyssey_rs.contains("OdysseyTrail") || ctx.has_file("bins/mindset-os/src/shell/odyssey_map.rs");
-    let has_scratchpad = desktop_rs.contains("Quick Study Scratchpad") || desktop_rs.contains("scratchpad");
-    let has_boss_bar = desktop_rs.contains("Daily Boss") || desktop_rs.contains("Boss Bar") || desktop_rs.contains("boss_session");
+    let has_odyssey_trail = odyssey_rs.contains("OdysseyTrail")
+        || ctx.has_file("bins/mindset-os/src/shell/odyssey_map.rs");
+    let has_scratchpad =
+        desktop_rs.contains("Quick Study Scratchpad") || desktop_rs.contains("scratchpad");
+    let has_boss_bar = desktop_rs.contains("Daily Boss")
+        || desktop_rs.contains("Boss Bar")
+        || desktop_rs.contains("boss_session");
     let has_focus_policy = ctx.has_file("crates/mindset-focus-policy/src/lib.rs")
         || ctx.has_file("services/mindset-focus-guard/src/main.rs");
 
@@ -129,17 +157,28 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     } else {
         score = score.saturating_sub(15);
         let mut missing_widgets = Vec::new();
-        if !has_odyssey_trail { missing_widgets.push("3D Syllabus Odyssey Trail"); }
-        if !has_scratchpad { missing_widgets.push("Quick Study Scratchpad"); }
-        if !has_boss_bar { missing_widgets.push("Daily Boss Bar"); }
-        if !has_focus_policy { missing_widgets.push("Focus Policy Guard"); }
+        if !has_odyssey_trail {
+            missing_widgets.push("3D Syllabus Odyssey Trail");
+        }
+        if !has_scratchpad {
+            missing_widgets.push("Quick Study Scratchpad");
+        }
+        if !has_boss_bar {
+            missing_widgets.push("Daily Boss Bar");
+        }
+        if !has_focus_policy {
+            missing_widgets.push("Focus Policy Guard");
+        }
 
         entries.push(CapabilityMatrixEntry {
             feature: "Student Focus Layer & Desktop Widgets (Odyssey Trail & Scratchpad)".into(),
             category: "Student OS".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("bins/mindset-os/src/shell/odyssey_map.rs:{}", odyssey_line),
-            notes: format!("Student focus layer missing: {}", missing_widgets.join(", ")),
+            notes: format!(
+                "Student focus layer missing: {}",
+                missing_widgets.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {

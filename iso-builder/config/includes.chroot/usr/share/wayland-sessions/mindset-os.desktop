@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=MindSet OS
+Comment=Pure-Rust Student Operating System Wayland Session
+Exec=/usr/local/bin/mindset-session
+Type=Application
+DesktopNames=MindSetOS

@@ -1,0 +1,93 @@
+{
+  "exam_name": "TNPSC Group 1 Preliminary",
+  "subject": "History, Culture, Heritage & Socio-Political Movements in Tamil Nadu",
+  "topic": "Unit 8: Heritage, Keeladi, Thirukkural & Justice Party",
+  "bilingual": true,
+  "marking_scheme": {
+    "correct_marks": 1.5,
+    "incorrect_marks": 0.0,
+    "unattempted_marks": 0.0
+  },
+  "questions": [
+    {
+      "id": "TNPSC-U8-02",
+      "question_en": "Pottery sherds inscribed with Tamil-Brahmi script dating back to the 6th century BCE were unearthed during archaeological excavations at:",
+      "question_ta": "கி.மு. 6ஆம் நூற்றாண்டைச் சேர்ந்த தமிழ்-பிராமி எழுத்துக்கள் பொறிக்கப்பட்ட மண்பாண்ட ஓடுகள் எந்த தொல்லியல் அகழ்வாராய்ச்சியின் போது கண்டெடுக்கப்பட்டன?",
+      "options_en": [
+        "Keeladi (Sivaganga district)",
+        "Adichanallur (Thoothukudi district)",
+        "Kodumanal (Erode district)",
+        "Poompuhar (Mayiladuthurai district)"
+      ],
+      "options_ta": [
+        "கீழடி (சிவகங்கை மாவட்டம்)",
+        "ஆதிச்சநல்லூர் (தூத்துக்குடி மாவட்டம்)",
+        "கொடுமணல் (ஈரோடு மாவட்டம்)",
+        "பூம்புகார் (மயிலாடுதுறை மாவட்டம்)"
+      ],
+      "correct_option_index": 0,
+      "explanation_en": "Carbon dating of charcoal and inscribed sherds found at Keeladi pushed back the antiquity of the Sangam Age and literacy in Tamil Nadu to the 6th century BCE (580 BCE).",
+      "explanation_ta": "கீழடியில் கண்டெடுக்கப்பட்ட கரிமப் பொருட்கள் மற்றும் தமிழ்-பிராமி எழுத்துப் பொறிப்புகள் சங்க காலத்தின் தொன்மையை கி.மு. 6-ஆம் நூற்றாண்டுக்கு (கி.மு. 580) கொண்டு சென்றுள்ளன."
+    },
+    {
+      "id": "TNPSC-U8-03",
+      "question_en": "The historic Non-Brahmin Manifesto was published in December 1916 by which organization?",
+      "question_ta": "வரலாற்று சிறப்புமிக்க 'பிராமணர் அல்லாதார் அறிக்கை' (Non-Brahmin Manifesto) டிசம்பர் 1916-ல் எந்த அமைப்பினால் வெளியிடப்பட்டது?",
+      "options_en": [
+        "South Indian Liberal Federation (Justice Party)",
+        "Madras Mahajana Sabha",
+        "Self-Respect Movement",
+        "Dravidar Kazhagam"
+      ],
+      "options_ta": [
+        "தென்னிந்திய நலவுரிமைச் சங்கம் (நீதிக்கட்சி)",
+        "சென்னை மகாஜன சபை",
+        "சுயமரியாதை இயக்கம்",
+        "திராவிடர் கழகம்"
+      ],
+      "correct_option_index": 0,
+      "explanation_en": "Sir P. Theagaraya Chetty and Dr. T.M. Nair founded the South Indian Liberal Federation (Justice Party) and issued the Non-Brahmin Manifesto in 1916.",
+      "explanation_ta": "சர் பி. தியாகராய செட்டி மற்றும் டாக்டர் டி.எம். நாயர் ஆகியோரால் தென்னிந்திய நலவுரிமைச் சங்கம் தொடங்கப்பட்டு 1916-ல் இந்த அறிக்கை வெளியிடப்பட்டது."
+    },
+    {
+      "id": "TNPSC-U8-04",
+      "question_en": "Which famous couplet from Thirukkural emphasizes that all human beings are equal by birth ('Pirapokkum Ella Uyirkkum')?",
+      "question_ta": "'பிறப்பொக்கும் எல்லா உயிர்க்கும்' என்ற புகழ்பெற்ற திருக்குறள் வரி மனிதர்கள் பிறப்பால் சமம் என்பதை வலியுறுத்துகிறது. இக்குறளின் அடுத்த வரி என்ன?",
+      "options_en": [
+        "சிறப்பொவ்வா செய்தொழில் வேற்றுமை யான்",
+        "அன்பிலார் எல்லாம் தமக்குரியர் அன்புடையார்",
+        "துப்பார்க்குத் துப்பாய துப்பாக்கித் துப்பார்க்குத்",
+        "செயற்கரிய செய்வார் பெரியர் சிறியர்"
+      ],
+      "options_ta": [
+        "சிறப்பொவ்வா செய்தொழில் வேற்றுமை யான்",
+        "அன்பிலார் எல்லாம் தமக்குரியர் அன்புடையார்",
+        "துப்பார்க்குத் துப்பாய துப்பாக்கித் துப்பார்க்குத்",
+        "செயற்கரிய செய்வார் பெரியர் சிறியர்"
+      ],
+      "correct_option_index": 0,
+      "explanation_en": "Kural 972 states: 'பிறப்பொக்கும் எல்லா உயிர்க்கும் சிறப்பொவ்வா செய்தொழில் வேற்றுமை யான்' — All human beings are born equal; distinctions arise only through their deeds and professional diligence.",
+      "explanation_ta": "குறள் 972: 'பிறப்பொக்கும் எல்லா உயிர்க்கும் சிறப்பொவ்வா செய்தொழில் வேற்றுமை யான்' — பிறப்பால் அனைத்து உயிர்களும் சமமே, அவரவர் செய்யும் செயல்களின் சிறப்பினால் மட்டுமே பெருமை அமையும்."
+    },
+    {
+      "id": "TNPSC-U9-02",
+      "question_en": "As per NITI Aayog's Sustainable Development Goals (SDG) India Index, Tamil Nadu consistently ranks among the top states particularly in:",
+      "question_ta": "நிதி ஆயோக்கின் நிலையான வளர்ச்சி இலக்குகள் (SDG) இந்திய குறியீட்டின்படி, தமிழ்நாடு தொடர்ந்து முன்னிலை வகிக்கும் முக்கிய துறை எது?",
+      "options_en": [
+        "No Poverty (SDG 1) and Quality Education (SDG 4)",
+        "Mining and Minerals Exploitation",
+        "Deforestation and Forest Land Transfer",
+        "Agricultural Land Shrinkage"
+      ],
+      "options_ta": [
+        "வறுமை ஒழிப்பு (SDG 1) மற்றும் தரமான கல்வி (SDG 4)",
+        "சுரங்கம் மற்றும் கனிம வள சுரண்டல்",
+        "காடழிப்பு மற்றும் வன நில பரிமாற்றம்",
+        "விவசாய நிலச் சுருக்கம்"
+      ],
+      "correct_option_index": 0,
+      "explanation_en": "Tamil Nadu ranks among the highest in SDG 1 (Zero Poverty) and SDG 4 (Quality Education) due to universal PDS, midday meals, and widespread tertiary educational infrastructure.",
+      "explanation_ta": "அனைவருக்குமான பொது விநியோகத் திட்டம், சத்துணவு மற்றும் உயர்கல்வி உள்கட்டமைப்பு ஆகியவற்றால் வறுமை ஒழிப்பு மற்றும் கல்வியில் தமிழ்நாடு தொடர்ந்து முன்னணி மாநிலமாக உள்ளது."
+    }
+  ]
+}

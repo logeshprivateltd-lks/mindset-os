@@ -1,0 +1,70 @@
+TAMIL NADU HIGHER SECONDARY EXAMINATION - CLASS 12 PHYSICS
+STUDENT NAME: Kumar S (Roll No: 1240915)
+TARGET: 590/600 (Under Review)
+SUBJECT: Physics (Theory)
+
+========================================================================
+SECTION B & C: DESCRIPTIVE DERIVATIONS & NUMERICALS
+========================================================================
+
+--- Question 1: Gauss's Law & Electric Flux ---
+Statement:
+Total flux through closed surface is q / epsilon_0.
+Formula:
+  phi_E = oint E . dS = q / epsilon_0
+
+Diagram:
+[DIAGRAM: Spherical Gaussian surface of radius r around charge q, with radial E vector and dS surface element arrows.]
+
+Derivation:
+  phi_E = E * 4 * pi * r^2
+  E = q / (4 * pi * epsilon_0 * r^2)
+  phi_E = q / epsilon_0
+
+Final Result:
+  Total Electric Flux phi_E = 1.13 * 10^5
+
+
+--- Question 2: Electric Dipole in Uniform Electric Field ---
+Torque on dipole:
+  tau = p * E * sin(theta)
+In vector form:
+  tau = p x E
+Special cases:
+  theta = 0: tau = 0 (stable)
+  theta = 90: tau = pE (max)
+  theta = 180: tau = 0 (unstable)
+
+
+--- Question 3: Wheatstone's Bridge Balance Condition ---
+Statement: KCL and KVL rules applied.
+
+Diagram:
+[DIAGRAM: Four resistors P, Q, R, S in diamond network with galvanometer G.]
+
+Derivation:
+Applying loop laws:
+  I1*P = I2*R
+  I3*Q = I4*S
+At null deflection Ig = 0, so I1 = I3 and I2 = I4.
+Dividing:
+  P / Q = R / S
+
+Final Result:
+  P / Q = R / S
+
+
+--- Question 4: Biot-Savart Law on Circular Current Loop ---
+Biot-Savart Law:
+  dB = (mu_0 / 4pi) * (I dl sin(90)) / R^2
+
+Diagram:
+[DIAGRAM: Circular coil of radius R carrying steady current I. Point P along coil axis with distance x and radius R.]
+
+Integrating along loop:
+  B = (mu_0 * I / (4 * pi * R^2)) * (2 * pi * R)
+  B = (mu_0 * I) / (2 * R)
+
+Final Answer:
+  B = 6.28 * 10^-5 Tesla (T)
+========================================================================

@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
 
 /// Configuration options for running the whole inspector plugin.
 #[derive(Debug, Clone, Serialize, Deserialize)]

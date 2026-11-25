@@ -21,9 +21,9 @@ pub struct ClayPalette {
 impl Default for ClayPalette {
     fn default() -> Self {
         Self {
-            grad_top: Color::from_rgb(0.561, 0.482, 1.0),      // #8F7BFF Soft Lavender
+            grad_top: Color::from_rgb(0.561, 0.482, 1.0), // #8F7BFF Soft Lavender
             grad_bottom: Color::from_rgb(0.357, 0.322, 0.941), // #5B52F0 Deep Periwinkle
-            rim_light: Color::from_rgba(1.0, 1.0, 1.0, 0.65),  // 2px bright inner specular rim
+            rim_light: Color::from_rgba(1.0, 1.0, 1.0, 0.65), // 2px bright inner specular rim
             outer_shadow: Color::from_rgba(0.357, 0.322, 0.941, 0.45), // Soft colored drop shadow
             text_primary: Color::WHITE,
             text_muted: Color::from_rgba(1.0, 1.0, 1.0, 0.85),
@@ -144,6 +144,96 @@ pub fn clay_bubble<'a, M: 'a>(content: impl Into<Element<'a, M>>, radius: f32) -
             color: p.outer_shadow,
             offset: Vector::new(1.5, 6.0),
             blur_radius: 16.0,
+        },
+        ..Default::default()
+    })
+    .into()
+}
+
+/// Soft warm-tinted Claymorphic tutor card with crisp dark ink (WCAG AAA >= 12:1).
+/// Replaces harsh solid purple bubbles with a tactile alabaster-lavender clay dome,
+/// top-left specular inner highlight, and soft ambient drop shadow.
+pub fn clay_tutor_card<'a, M: 'a>(
+    content: impl Into<Element<'a, M>>,
+    radius: f32,
+) -> Element<'a, M> {
+    let warm_surface = Color::from_rgb(0.976, 0.961, 1.0); // #F9F5FF soft warm lavender-cream
+    let rim = Color::from_rgba(0.45, 0.38, 0.92, 0.24);
+    let shadow_tint = Color::from_rgba(0.28, 0.22, 0.65, 0.18);
+
+    container(
+        container(content)
+            .padding([12, 16])
+            .style(move |_theme: &Theme| container::Style {
+                text_color: Some(Color::from_rgb(0.09, 0.11, 0.22)), // #171C38 dark ink
+                background: Some(Background::Color(warm_surface)),
+                border: Border {
+                    color: rim,
+                    width: 1.2,
+                    radius: radius.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(1.0, 1.0, 1.0, 0.85), // Top-left inner matte highlight
+                    offset: Vector::new(-2.0, -2.0),
+                    blur_radius: 5.0,
+                },
+                ..Default::default()
+            }),
+    )
+    .style(move |_theme: &Theme| container::Style {
+        background: None,
+        border: Border {
+            radius: radius.into(),
+            ..Default::default()
+        },
+        shadow: Shadow {
+            color: shadow_tint,
+            offset: Vector::new(2.0, 6.0),
+            blur_radius: 16.0,
+        },
+        ..Default::default()
+    })
+    .into()
+}
+
+/// Soft honey-tinted Claymorphic inline card for interactive Study Capsules & confirmations.
+pub fn clay_capsule_card<'a, M: 'a>(
+    content: impl Into<Element<'a, M>>,
+    radius: f32,
+) -> Element<'a, M> {
+    let warm_cream = Color::from_rgb(1.0, 0.976, 0.941); // #FFF9F0 warm tactile clay
+    let rim = Color::from_rgba(0.92, 0.54, 0.12, 0.34);
+    let shadow_tint = Color::from_rgba(0.45, 0.24, 0.04, 0.14);
+
+    container(
+        container(content)
+            .padding(14)
+            .style(move |_theme: &Theme| container::Style {
+                text_color: Some(Color::from_rgb(0.11, 0.10, 0.14)),
+                background: Some(Background::Color(warm_cream)),
+                border: Border {
+                    color: rim,
+                    width: 1.2,
+                    radius: radius.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(1.0, 1.0, 1.0, 0.90),
+                    offset: Vector::new(-2.0, -2.0),
+                    blur_radius: 5.0,
+                },
+                ..Default::default()
+            }),
+    )
+    .style(move |_theme: &Theme| container::Style {
+        background: None,
+        border: Border {
+            radius: radius.into(),
+            ..Default::default()
+        },
+        shadow: Shadow {
+            color: shadow_tint,
+            offset: Vector::new(2.0, 6.0),
+            blur_radius: 14.0,
         },
         ..Default::default()
     })

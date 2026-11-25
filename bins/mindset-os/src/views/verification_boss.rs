@@ -108,32 +108,33 @@ pub fn view<'a>(
 
     let titlebar_title = row![
         text("⚔️").size(13),
-        text(format!("Proof-of-Study Verification: {}", session.boss_name))
-            .size(12)
-            .font(iced::font::Font {
-                weight: iced::font::Weight::Semibold,
-                ..Default::default()
-            })
-            .color(palette.text_primary),
+        text(format!(
+            "Proof-of-Study Verification: {}",
+            session.boss_name
+        ))
+        .size(12)
+        .font(iced::font::Font {
+            weight: iced::font::Weight::Semibold,
+            ..Default::default()
+        })
+        .color(palette.text_primary),
     ]
     .spacing(6)
     .align_y(Alignment::Center);
 
-    let titlebar_tag = container(
-        text("Mandatory Study Gate")
-            .size(9)
-            .color(palette.warning),
-    )
-    .padding([2, 6])
-    .style(move |_t| container::Style {
-        background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.04))),
-        border: iced::Border {
-            radius: iced::border::Radius::from(4.0),
-            color: Color::from_rgba(1.0, 1.0, 1.0, 0.08),
-            width: 0.5,
-        },
-        ..Default::default()
-    });
+    let titlebar_tag = container(text("Mandatory Study Gate").size(9).color(palette.warning))
+        .padding([2, 6])
+        .style(move |_t| container::Style {
+            background: Some(iced::Background::Color(Color::from_rgba(
+                1.0, 1.0, 1.0, 0.04,
+            ))),
+            border: iced::Border {
+                radius: iced::border::Radius::from(4.0),
+                color: Color::from_rgba(1.0, 1.0, 1.0, 0.08),
+                width: 0.5,
+            },
+            ..Default::default()
+        });
 
     let titlebar = container(
         row![
@@ -168,19 +169,17 @@ pub fn view<'a>(
         .spacing(2),
         h_space(),
         container(
-            row![
-                text(match &capsule_state {
-                    CapsuleState::Completed { .. } => "✓ VERIFIED",
-                    CapsuleState::NeedsRemediation { .. } => "⚠️ REVIEW NEEDED",
-                    _ => "⚔️ CHALLENGE IN PROGRESS",
-                })
-                .size(TYPE_CAPTION)
-                .color(match &capsule_state {
-                    CapsuleState::Completed { .. } => palette.success,
-                    CapsuleState::NeedsRemediation { .. } => palette.warning,
-                    _ => palette.accent,
-                }),
-            ]
+            row![text(match &capsule_state {
+                CapsuleState::Completed { .. } => "✓ VERIFIED",
+                CapsuleState::NeedsRemediation { .. } => "⚠️ REVIEW NEEDED",
+                _ => "⚔️ CHALLENGE IN PROGRESS",
+            })
+            .size(TYPE_CAPTION)
+            .color(match &capsule_state {
+                CapsuleState::Completed { .. } => palette.success,
+                CapsuleState::NeedsRemediation { .. } => palette.warning,
+                _ => palette.accent,
+            }),]
             .align_y(Alignment::Center),
         )
         .padding([4, 10])
@@ -228,7 +227,9 @@ pub fn view<'a>(
     });
 
     let hp_display = row![
-        text("BOSS HEALTH:").size(TYPE_CAPTION).color(palette.text_muted),
+        text("BOSS HEALTH:")
+            .size(TYPE_CAPTION)
+            .color(palette.text_muted),
         text(format!("{:.0} / 100 HP", session.current_hp))
             .size(TYPE_BODY)
             .color(hp_color),
@@ -248,7 +249,9 @@ pub fn view<'a>(
                 .size(TYPE_SUBHEAD)
                 .color(palette.success),
             row![
-                text("🎯 Verified Mastery:").size(TYPE_BODY).color(palette.accent),
+                text("🎯 Verified Mastery:")
+                    .size(TYPE_BODY)
+                    .color(palette.accent),
                 text(format!(
                     "+{:.1} Marks locked into Predicted Exam Score.",
                     active_capsule.map(|c| c.mark_value).unwrap_or(3.5)
@@ -462,7 +465,9 @@ pub fn view<'a>(
                 text(format!("Problem {}: {}", q_idx + 1, q.problem_statement))
                     .size(TYPE_BODY)
                     .color(palette.text_secondary),
-                text(&q.given_values).size(TYPE_CAPTION).color(palette.accent),
+                text(&q.given_values)
+                    .size(TYPE_CAPTION)
+                    .color(palette.accent),
                 opts_col,
             ]
             .spacing(8)
@@ -504,7 +509,9 @@ pub fn view<'a>(
                     .color(word_color),
             ]
             .align_y(Alignment::Center),
-            text(&feynman.prompt).size(TYPE_BODY).color(palette.text_secondary),
+            text(&feynman.prompt)
+                .size(TYPE_BODY)
+                .color(palette.text_secondary),
             feynman_input_box,
             row![
                 text("Key terms expected:")

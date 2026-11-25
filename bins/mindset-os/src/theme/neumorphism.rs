@@ -28,15 +28,15 @@ impl NeuPalette {
         Self {
             surface_base: Color::from_rgb(0.91, 0.933, 0.957), // #E8EEF4
             surface_elevated: Color::from_rgb(0.941, 0.957, 0.976), // #F0F4F9
-            surface_inset: Color::from_rgb(0.875, 0.902, 0.937), // #DFE6EF
+            surface_inset: Color::from_rgb(0.865, 0.895, 0.933), // #DDE4EE
             shadow_light: Color::from_rgba(1.0, 1.0, 1.0, 0.90), // Crisp top-left light highlight
             shadow_dark: Color::from_rgba(0.639, 0.694, 0.776, 0.60), // #A3B1C6 at 0.60
-            text_primary: Color::from_rgb(0.086, 0.125, 0.165), // #16202A
-            text_muted: Color::from_rgb(0.35, 0.42, 0.49),      // #5A6B7C
-            accent_primary: Color::from_rgb(0.08, 0.56, 0.78),  // #148FC7
-            status_streak: Color::from_rgb(0.95, 0.52, 0.14),   // #F28524
-            status_done: Color::from_rgb(0.16, 0.72, 0.45),     // #29B873
-            status_boss: Color::from_rgb(0.92, 0.70, 0.03),     // #EAB308
+            text_primary: Color::from_rgb(0.067, 0.102, 0.161), // #111A29
+            text_muted: Color::from_rgb(0.255, 0.314, 0.392),  // #415064 (>= 6.5:1)
+            accent_primary: Color::from_rgb(0.06, 0.44, 0.78), // #0F70C7
+            status_streak: Color::from_rgb(0.85, 0.40, 0.06),  // High-contrast Amber-Orange
+            status_done: Color::from_rgb(0.08, 0.56, 0.34),    // #148F57
+            status_boss: Color::from_rgb(0.70, 0.45, 0.02),    // Deep Amber Gold
         }
     }
 
@@ -48,12 +48,12 @@ impl NeuPalette {
             surface_inset: Color::from_rgb(0.082, 0.098, 0.129), // #151921
             shadow_light: Color::from_rgba(1.0, 1.0, 1.0, 0.08), // Subtle top-left light bevel
             shadow_dark: Color::from_rgba(0.0, 0.0, 0.0, 0.75), // Deep dark drop shadow
-            text_primary: Color::from_rgb(0.93, 0.95, 0.97),    // #EDF2F7
-            text_muted: Color::from_rgb(0.58, 0.64, 0.72),      // #94A3B8
-            accent_primary: Color::from_rgb(0.16, 0.71, 0.91),  // #28B4E8
-            status_streak: Color::from_rgb(0.98, 0.57, 0.24),   // #FB923C
-            status_done: Color::from_rgb(0.20, 0.83, 0.60),     // #34D399
-            status_boss: Color::from_rgb(0.98, 0.80, 0.08),     // #FACC15
+            text_primary: Color::from_rgb(0.95, 0.97, 0.99),    // #F2F7FC
+            text_muted: Color::from_rgb(0.69, 0.75, 0.84),      // #B0BFD6 (>= 6.5:1)
+            accent_primary: Color::from_rgb(0.24, 0.74, 0.96),  // #3DBDF5
+            status_streak: Color::from_rgb(0.98, 0.62, 0.28),   // #FB9E47
+            status_done: Color::from_rgb(0.24, 0.86, 0.62),     // #3DDB9E
+            status_boss: Color::from_rgb(0.98, 0.82, 0.22),     // #FAD138
         }
     }
 
@@ -65,12 +65,12 @@ impl NeuPalette {
             surface_inset: Color::from_rgb(0.086, 0.067, 0.125), // #161120
             shadow_light: Color::from_rgba(1.0, 1.0, 1.0, 0.10),
             shadow_dark: Color::from_rgba(0.0, 0.0, 0.0, 0.80),
-            text_primary: Color::from_rgb(0.95, 0.91, 1.0),     // #F3E8FF
-            text_muted: Color::from_rgb(0.66, 0.33, 0.97),      // #A855F7
-            accent_primary: Color::from_rgb(0.75, 0.52, 0.99),  // #C084FC
-            status_streak: Color::from_rgb(0.98, 0.57, 0.24),
-            status_done: Color::from_rgb(0.20, 0.83, 0.60),
-            status_boss: Color::from_rgb(0.98, 0.80, 0.08),
+            text_primary: Color::from_rgb(0.96, 0.93, 1.0), // #F5EDFF
+            text_muted: Color::from_rgb(0.78, 0.68, 0.96),  // #C7ADF5 (>= 7:1)
+            accent_primary: Color::from_rgb(0.78, 0.56, 1.0), // #C78FFF
+            status_streak: Color::from_rgb(0.98, 0.62, 0.28),
+            status_done: Color::from_rgb(0.24, 0.86, 0.62),
+            status_boss: Color::from_rgb(0.98, 0.82, 0.22),
         }
     }
 
@@ -82,12 +82,12 @@ impl NeuPalette {
             surface_inset: Color::from_rgb(0.090, 0.078, 0.063), // #171410
             shadow_light: Color::from_rgba(1.0, 1.0, 1.0, 0.08),
             shadow_dark: Color::from_rgba(0.0, 0.0, 0.0, 0.75),
-            text_primary: Color::from_rgb(0.99, 0.95, 0.78),    // #FEF3C7
-            text_muted: Color::from_rgb(0.85, 0.47, 0.02),      // #D97706
-            accent_primary: Color::from_rgb(0.96, 0.62, 0.04),  // #F59E0B
-            status_streak: Color::from_rgb(0.98, 0.57, 0.24),
-            status_done: Color::from_rgb(0.20, 0.83, 0.60),
-            status_boss: Color::from_rgb(0.98, 0.80, 0.08),
+            text_primary: Color::from_rgb(0.99, 0.96, 0.84), // #FEF5D6
+            text_muted: Color::from_rgb(0.92, 0.76, 0.46),   // #EBC275 (>= 7:1)
+            accent_primary: Color::from_rgb(0.98, 0.68, 0.14), // #FAAD24
+            status_streak: Color::from_rgb(0.98, 0.62, 0.28),
+            status_done: Color::from_rgb(0.24, 0.86, 0.62),
+            status_boss: Color::from_rgb(0.98, 0.82, 0.22),
         }
     }
 

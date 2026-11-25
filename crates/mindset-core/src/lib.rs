@@ -28,9 +28,14 @@ pub use engine::{
     TargetCapsulePlan, VerificationScoreBreakdown, VerifiedCapsuleRecord,
 };
 pub use mindful::{MindfulGuardState, OnboardingWizardState, WizardStep};
-pub use odyssey::{NodeStatus, OdysseyJourneyState, OdysseyNode, StageAction, TrophyCard};
+pub use odyssey::{
+    NodeStatus, NodeType, OdysseyJourneyState, OdysseyNode, StageAction, TrophyCard,
+};
 pub use pomodoro::{PomodoroEngine, POMODORO_PRESETS};
-pub use preferences::{PreferencesTab, SystemPreferences, ThemeMode, ToastMessage, ToastQueue};
+pub use preferences::{
+    NotificationAction, NotificationSeverity, OsNotificationBus, PreferencesTab, SystemPreferences,
+    ThemeMode, ToastMessage, ToastQueue,
+};
 pub use study_reader::{StudyReaderState, StudyTopic, STUDY_TOPICS};
 pub use tasks::{SubjectQuota, TaskItem, TaskQuotaStore};
 pub use today::{FutureSelfSnapshot, RingProgress, StreakSnapshot, TaskSnapshot, TodayState};

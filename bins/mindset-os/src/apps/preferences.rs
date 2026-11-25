@@ -66,7 +66,9 @@ pub fn view<'a>(
         button(
             row![
                 text("✏️").size(12),
-                text("Re-run Onboarding").size(11).color(palette.accent_text),
+                text("Re-run Onboarding")
+                    .size(11)
+                    .color(palette.accent_text),
             ]
             .spacing(6)
             .align_y(Alignment::Center),
@@ -244,29 +246,31 @@ fn view_focus_shields_tab<'a>(
 
     // 1. Do Not Disturb Card
     let dnd_card = container(
-        column![
-            row![
-                column![
-                    text("🌙 Do Not Disturb (DND)")
-                        .size(13)
-                        .color(palette.text_primary),
-                    text("Silence all non-critical notifications, banners, and toast sounds.")
-                        .size(11)
-                        .color(palette.text_secondary),
-                ]
-                .spacing(2),
-                h_space(),
-                button(text(if dnd_on { "ACTIVE" } else { "DISABLED" }).size(11).color(if dnd_on {
-                    palette.accent_text
-                } else {
-                    palette.text_secondary
-                }))
-                .on_press(Message::ToggleDnd)
-                .style(toggle_button(palette, dnd_on))
-                .padding([6, 16]),
+        column![row![
+            column![
+                text("🌙 Do Not Disturb (DND)")
+                    .size(13)
+                    .color(palette.text_primary),
+                text("Silence all non-critical notifications, banners, and toast sounds.")
+                    .size(11)
+                    .color(palette.text_secondary),
             ]
-            .align_y(Alignment::Center),
+            .spacing(2),
+            h_space(),
+            button(
+                text(if dnd_on { "ACTIVE" } else { "DISABLED" })
+                    .size(11)
+                    .color(if dnd_on {
+                        palette.accent_text
+                    } else {
+                        palette.text_secondary
+                    })
+            )
+            .on_press(Message::ToggleDnd)
+            .style(toggle_button(palette, dnd_on))
+            .padding([6, 16]),
         ]
+        .align_y(Alignment::Center),]
         .padding(16),
     )
     .width(Length::Fill)
@@ -327,28 +331,26 @@ fn view_focus_shields_tab<'a>(
 
     // 4. Pomodoro Interval Configuration
     let pomo_card = container(
-        column![
-            row![
-                column![
-                    text("⏱️ Pomodoro Session Defaults")
-                        .size(13)
-                        .color(palette.text_primary),
-                    text(format!(
-                        "Current interval: {} min study • {} min break",
-                        core.pomodoro.duration_mins, core.pomodoro.break_mins
-                    ))
-                    .size(11)
-                    .color(palette.text_secondary),
-                ]
-                .spacing(2),
-                h_space(),
-                button(text("Cycle Preset (25 / 50 / 90m)").size(11))
-                    .on_press(Message::CyclePomodoroPreset)
-                    .style(secondary_button(palette))
-                    .padding([6, 12]),
+        column![row![
+            column![
+                text("⏱️ Pomodoro Session Defaults")
+                    .size(13)
+                    .color(palette.text_primary),
+                text(format!(
+                    "Current interval: {} min study • {} min break",
+                    core.pomodoro.duration_mins, core.pomodoro.break_mins
+                ))
+                .size(11)
+                .color(palette.text_secondary),
             ]
-            .align_y(Alignment::Center),
+            .spacing(2),
+            h_space(),
+            button(text("Cycle Preset (25 / 50 / 90m)").size(11))
+                .on_press(Message::CyclePomodoroPreset)
+                .style(secondary_button(palette))
+                .padding([6, 12]),
         ]
+        .align_y(Alignment::Center),]
         .padding(16),
     )
     .width(Length::Fill)
@@ -426,13 +428,16 @@ fn view_audio_radios_tab<'a>(
     .style(move |_t| glass_card(palette));
 
     // 3. Radios & Connectivity Card
-    let wifi_btn = button(text(if airplane_on {
-        "📶 Wi-Fi (Disabled by Airplane Mode)"
-    } else if wifi_on {
-        "📶 Wi-Fi: Connected (HomeWiFi 5G)"
-    } else {
-        "📶 Wi-Fi: OFF"
-    }).size(11))
+    let wifi_btn = button(
+        text(if airplane_on {
+            "📶 Wi-Fi (Disabled by Airplane Mode)"
+        } else if wifi_on {
+            "📶 Wi-Fi: Connected (HomeWiFi 5G)"
+        } else {
+            "📶 Wi-Fi: OFF"
+        })
+        .size(11),
+    )
     .on_press(if airplane_on {
         Message::ToggleAirplaneMode
     } else {
@@ -441,13 +446,16 @@ fn view_audio_radios_tab<'a>(
     .style(toggle_button(palette, wifi_on && !airplane_on))
     .padding([6, 12]);
 
-    let bt_btn = button(text(if airplane_on {
-        "ᛒ Bluetooth (Disabled by Airplane Mode)"
-    } else if bt_on {
-        "ᛒ Bluetooth: ON"
-    } else {
-        "ᛒ Bluetooth: OFF"
-    }).size(11))
+    let bt_btn = button(
+        text(if airplane_on {
+            "ᛒ Bluetooth (Disabled by Airplane Mode)"
+        } else if bt_on {
+            "ᛒ Bluetooth: ON"
+        } else {
+            "ᛒ Bluetooth: OFF"
+        })
+        .size(11),
+    )
     .on_press(if airplane_on {
         Message::ToggleAirplaneMode
     } else {
@@ -456,11 +464,14 @@ fn view_audio_radios_tab<'a>(
     .style(toggle_button(palette, bt_on && !airplane_on))
     .padding([6, 12]);
 
-    let airplane_btn = button(text(if airplane_on {
-        "✈️ Airplane Mode: ACTIVE"
-    } else {
-        "✈️ Airplane Mode: OFF"
-    }).size(11))
+    let airplane_btn = button(
+        text(if airplane_on {
+            "✈️ Airplane Mode: ACTIVE"
+        } else {
+            "✈️ Airplane Mode: OFF"
+        })
+        .size(11),
+    )
     .on_press(Message::ToggleAirplaneMode)
     .style(toggle_button(palette, airplane_on))
     .padding([6, 12]);
@@ -504,8 +515,16 @@ fn view_language_region_tab<'a>(
         let is_sel = curr_lang == code;
         button(
             column![
-                text(name).size(12).color(if is_sel { palette.accent_text } else { palette.text_primary }),
-                text(script).size(10).color(if is_sel { palette.accent_text } else { palette.text_secondary }),
+                text(name).size(12).color(if is_sel {
+                    palette.accent_text
+                } else {
+                    palette.text_primary
+                }),
+                text(script).size(10).color(if is_sel {
+                    palette.accent_text
+                } else {
+                    palette.text_secondary
+                }),
             ]
             .spacing(2)
             .align_x(Alignment::Center),
@@ -597,10 +616,14 @@ fn view_maindy_ai_keys_tab<'a>(
 
     let style_btn = |code: &'static str, label: &'static str| {
         let is_sel = curr_style == code;
-        button(text(label).size(11).color(if is_sel { palette.accent_text } else { palette.text_primary }))
-            .on_press(Message::SetMaindyStyle(code.to_string()))
-            .style(toggle_button(palette, is_sel))
-            .padding([6, 12])
+        button(text(label).size(11).color(if is_sel {
+            palette.accent_text
+        } else {
+            palette.text_primary
+        }))
+        .on_press(Message::SetMaindyStyle(code.to_string()))
+        .style(toggle_button(palette, is_sel))
+        .padding([6, 12])
     };
 
     let style_card = container(
@@ -719,12 +742,16 @@ fn view_maindy_ai_keys_tab<'a>(
     let profile_card = container(
         column![
             row![
-                text("👤 Student Profile & Personalization").size(13).color(palette.text_primary),
+                text("👤 Student Profile & Personalization")
+                    .size(13)
+                    .color(palette.text_primary),
                 h_space(),
                 button(
                     row![
                         text("✏️").size(11),
-                        text("Re-run Onboarding / Edit Profile").size(11).color(palette.accent_text),
+                        text("Re-run Onboarding / Edit Profile")
+                            .size(11)
+                            .color(palette.accent_text),
                     ]
                     .spacing(6)
                     .align_y(Alignment::Center)
@@ -778,24 +805,24 @@ fn view_maindy_ai_keys_tab<'a>(
 
             let item_row = row![
                 text(time_str).size(10).color(palette.text_muted),
-                text(&record.action_type).size(11).color(palette.text_primary),
+                text(&record.action_type)
+                    .size(11)
+                    .color(palette.text_primary),
                 text("•").size(10).color(palette.text_muted),
-                text(&record.target_resource).size(10).color(palette.text_secondary),
+                text(&record.target_resource)
+                    .size(10)
+                    .color(palette.text_secondary),
                 h_space(),
-                container(
-                    text(&record.status)
-                        .size(9)
-                        .color(palette.accent_text)
-                )
-                .padding([2, 6])
-                .style(move |_t| container::Style {
-                    background: Some(iced::Background::Color(status_color)),
-                    border: iced::Border {
-                        radius: 4.0.into(),
+                container(text(&record.status).size(9).color(palette.accent_text))
+                    .padding([2, 6])
+                    .style(move |_t| container::Style {
+                        background: Some(iced::Background::Color(status_color)),
+                        border: iced::Border {
+                            radius: 4.0.into(),
+                            ..Default::default()
+                        },
                         ..Default::default()
-                    },
-                    ..Default::default()
-                }),
+                    }),
             ]
             .spacing(8)
             .align_y(Alignment::Center);
@@ -851,11 +878,18 @@ fn view_maindy_ai_keys_tab<'a>(
     .max_width(720)
     .style(move |_t| glass_card(palette));
 
-    column![profile_card, style_card, byok_card, local_ai_card, tts_card, activity_log_card]
-        .spacing(16)
-        .align_x(Alignment::Center)
-        .width(Length::Fill)
-        .into()
+    column![
+        profile_card,
+        style_card,
+        byok_card,
+        local_ai_card,
+        tts_card,
+        activity_log_card
+    ]
+    .spacing(16)
+    .align_x(Alignment::Center)
+    .width(Length::Fill)
+    .into()
 }
 
 // ----------------------------------------------------------------------------

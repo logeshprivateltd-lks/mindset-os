@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
 use crate::analyzers::WorkspaceContext;
 use crate::models::{
     ActionSeverity, CapabilityMatrixEntry, CapabilityStatus, ModuleAuditResult, PrioritizedAction,
 };
+use std::collections::{HashMap, HashSet};
 
 /// Module 5: UI, Visual Design System & Multi-Language Audit
 pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
@@ -11,12 +11,16 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let mut metrics = HashMap::new();
     let mut score: u32 = 100;
 
-    let main_rs = ctx.read_file("bins/mindset-os/src/main.rs").unwrap_or_default();
+    let main_rs = ctx
+        .read_file("bins/mindset-os/src/main.rs")
+        .unwrap_or_default();
 
     // 1. Neumorphism & Claymorphism Design System Tokens
     let has_neumorphism = ctx.has_file("bins/mindset-os/src/theme/neumorphism.rs");
     let has_claymorphism = ctx.has_file("bins/mindset-os/src/theme/claymorphism.rs");
-    let theme_mod = ctx.read_file("bins/mindset-os/src/theme/mod.rs").unwrap_or_default();
+    let theme_mod = ctx
+        .read_file("bins/mindset-os/src/theme/mod.rs")
+        .unwrap_or_default();
     let has_glass_tokens = theme_mod.contains("glass_card") && theme_mod.contains("glass_elevated");
 
     let theme_line = ctx
@@ -39,7 +43,8 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "UI".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("bins/mindset-os/src/theme/mod.rs:{}", theme_line),
-            notes: "Theme module missing specialized Neumorphism or Claymorphism token definitions".into(),
+            notes: "Theme module missing specialized Neumorphism or Claymorphism token definitions"
+                .into(),
         });
         actions.push(PrioritizedAction {
             severity: ActionSeverity::Medium,
@@ -91,7 +96,11 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "UI".into(),
             status: CapabilityStatus::Mock,
             evidence: loc.clone(),
-            notes: format!("Found {} hardcoded mock placeholder strings in UI: '{}'", found_mock_strings.len(), first.2),
+            notes: format!(
+                "Found {} hardcoded mock placeholder strings in UI: '{}'",
+                found_mock_strings.len(),
+                first.2
+            ),
         });
 
         actions.push(PrioritizedAction {
@@ -99,13 +108,15 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             title: "Replace hardcoded placeholder strings with real student data".into(),
             location: loc,
             finding: format!("Hardcoded mock string '{}' remains in UI view.", first.2),
-            remediation: "Bind UI elements to live user profile, SQLite records, or active exam blueprints.".into(),
+            remediation:
+                "Bind UI elements to live user profile, SQLite records, or active exam blueprints."
+                    .into(),
         });
     }
 
     // 3. Tunnel Vision Side-Rail Restoration
-    let has_tunnel_vision_restore = main_rs.contains("tunnel_vision_active = false")
-        || main_rs.contains("ToggleTunnelVision");
+    let has_tunnel_vision_restore =
+        main_rs.contains("tunnel_vision_active = false") || main_rs.contains("ToggleTunnelVision");
 
     let tv_line = ctx
         .find_first_occurrence("bins/mindset-os/src/main.rs", "ToggleTunnelVision")
@@ -133,15 +144,24 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             severity: ActionSeverity::Medium,
             title: "Ensure Tunnel Vision toggle restores top bar and launcher".into(),
             location: format!("bins/mindset-os/src/main.rs:{}", tv_line),
-            finding: "Exiting Tunnel Vision must reliably re-enable shell rails and indicators.".into(),
-            remediation: "Verify ToggleTunnelVision updates state cleanly to restore top bar visibility.".into(),
+            finding: "Exiting Tunnel Vision must reliably re-enable shell rails and indicators."
+                .into(),
+            remediation:
+                "Verify ToggleTunnelVision updates state cleanly to restore top bar visibility."
+                    .into(),
         });
     }
 
     // 4. Multi-Language (i18n) Audit: Compare en.json, ta.json, ml.json
-    let en_raw = ctx.read_file("bins/mindset-os/src/i18n/en.json").unwrap_or_default();
-    let ta_raw = ctx.read_file("bins/mindset-os/src/i18n/ta.json").unwrap_or_default();
-    let ml_raw = ctx.read_file("bins/mindset-os/src/i18n/ml.json").unwrap_or_default();
+    let en_raw = ctx
+        .read_file("bins/mindset-os/src/i18n/en.json")
+        .unwrap_or_default();
+    let ta_raw = ctx
+        .read_file("bins/mindset-os/src/i18n/ta.json")
+        .unwrap_or_default();
+    let ml_raw = ctx
+        .read_file("bins/mindset-os/src/i18n/ml.json")
+        .unwrap_or_default();
 
     let en_keys: HashSet<String> = serde_json::from_str::<HashMap<String, String>>(&en_raw)
         .map(|m| m.into_keys().collect())
@@ -168,7 +188,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "UI".into(),
             status: CapabilityStatus::Pass,
             evidence: "bins/mindset-os/src/i18n/en.json:1".into(),
-            notes: format!("100% parity across English, Tamil, and Malayalam (all {} translation keys mapped)", en_keys.len()),
+            notes: format!(
+                "100% parity across English, Tamil, and Malayalam (all {} translation keys mapped)",
+                en_keys.len()
+            ),
         });
     } else {
         score = score.saturating_sub(15);
@@ -177,14 +200,22 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "UI".into(),
             status: CapabilityStatus::Partial,
             evidence: "bins/mindset-os/src/i18n/en.json:1".into(),
-            notes: format!("Missing translation keys: TA missing {}, ML missing {}", missing_in_ta.len(), missing_in_ml.len()),
+            notes: format!(
+                "Missing translation keys: TA missing {}, ML missing {}",
+                missing_in_ta.len(),
+                missing_in_ml.len()
+            ),
         });
 
         actions.push(PrioritizedAction {
             severity: ActionSeverity::Medium,
             title: "Add missing localization keys to ta.json and ml.json".into(),
             location: "bins/mindset-os/src/i18n/ta.json:1".into(),
-            finding: format!("Translation keys missing: TA [{}], ML [{}]", missing_in_ta.join(", "), missing_in_ml.join(", ")),
+            finding: format!(
+                "Translation keys missing: TA [{}], ML [{}]",
+                missing_in_ta.join(", "),
+                missing_in_ml.join(", ")
+            ),
             remediation: "Ensure all keys present in en.json exist in ta.json and ml.json.".into(),
         });
     }

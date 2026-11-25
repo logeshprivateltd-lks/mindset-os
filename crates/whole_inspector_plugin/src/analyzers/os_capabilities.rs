@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use crate::analyzers::WorkspaceContext;
 use crate::models::{
     ActionSeverity, CapabilityMatrixEntry, CapabilityStatus, ModuleAuditResult, PrioritizedAction,
 };
+use std::collections::HashMap;
 
 /// Module 3: Standard Operating System Capability Audit
 pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
@@ -11,20 +11,38 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let mut metrics = HashMap::new();
     let mut score: u32 = 100;
 
-    let main_rs = ctx.read_file("bins/mindset-os/src/main.rs").unwrap_or_default();
-    let top_bar_rs = ctx.read_file("bins/mindset-os/src/shell/top_bar.rs").unwrap_or_default();
-    let browser_rs = ctx.read_file("bins/mindset-os/src/apps/browser.rs").unwrap_or_default();
-    let file_explorer_rs = ctx.read_file("bins/mindset-os/src/apps/file_explorer.rs").unwrap_or_default();
-    let launcher_rs = ctx.read_file("bins/mindset-os/src/shell/launcher.rs").unwrap_or_default();
-    let db_rs = ctx.read_file("bins/mindset-os/src/storage/db.rs").unwrap_or_default();
-    let motion_lib = ctx.read_file("crates/mindset-motion/src/lib.rs").unwrap_or_default();
+    let main_rs = ctx
+        .read_file("bins/mindset-os/src/main.rs")
+        .unwrap_or_default();
+    let top_bar_rs = ctx
+        .read_file("bins/mindset-os/src/shell/top_bar.rs")
+        .unwrap_or_default();
+    let browser_rs = ctx
+        .read_file("bins/mindset-os/src/apps/browser.rs")
+        .unwrap_or_default();
+    let file_explorer_rs = ctx
+        .read_file("bins/mindset-os/src/apps/file_explorer.rs")
+        .unwrap_or_default();
+    let launcher_rs = ctx
+        .read_file("bins/mindset-os/src/shell/launcher.rs")
+        .unwrap_or_default();
+    let db_rs = ctx
+        .read_file("bins/mindset-os/src/storage/db.rs")
+        .unwrap_or_default();
+    let motion_lib = ctx
+        .read_file("crates/mindset-motion/src/lib.rs")
+        .unwrap_or_default();
 
     // 1. Boot, Identity & Session Lifecycle
     let has_boot_splash = ctx.has_file("bins/mindset-os/src/shell/boot_splash.rs")
-        && ctx.read_file("bins/mindset-os/src/shell/boot_splash.rs").map(|s| s.contains("HELLO ACHIEVER")).unwrap_or(false);
+        && ctx
+            .read_file("bins/mindset-os/src/shell/boot_splash.rs")
+            .map(|s| s.contains("HELLO ACHIEVER"))
+            .unwrap_or(false);
     let has_onboarding = ctx.has_file("bins/mindset-os/src/onboarding/mod.rs");
     let has_lock_screen = ctx.has_file("bins/mindset-os/src/shell/lock_screen.rs");
-    let has_power_menu = main_rs.contains("ActiveOverlay::PowerMenu") || launcher_rs.contains("ActiveOverlay::PowerMenu");
+    let has_power_menu = main_rs.contains("ActiveOverlay::PowerMenu")
+        || launcher_rs.contains("ActiveOverlay::PowerMenu");
 
     let splash_line = ctx
         .find_first_occurrence("bins/mindset-os/src/shell/boot_splash.rs", "HELLO ACHIEVER")
@@ -58,20 +76,38 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     }
 
     // 2. Window Manager & Shell Interactive Controls
-    let has_dragging = main_rs.contains("StartWindowDrag") || main_rs.contains("wm_interaction.dragging");
-    let has_resizing = main_rs.contains("WindowResizing") || main_rs.contains("Event::Window(window::Event::Resized");
-    let has_clamping = main_rs.contains("clamp") || main_rs.contains("safe-area") || main_rs.contains("min(") || main_rs.contains("max(");
+    let has_dragging =
+        main_rs.contains("StartWindowDrag") || main_rs.contains("wm_interaction.dragging");
+    let has_resizing = main_rs.contains("WindowResizing")
+        || main_rs.contains("Event::Window(window::Event::Resized");
+    let has_clamping = main_rs.contains("clamp")
+        || main_rs.contains("safe-area")
+        || main_rs.contains("min(")
+        || main_rs.contains("max(");
     let has_z_index = main_rs.contains("bring_to_front") || main_rs.contains("focus_window");
-    let has_top_bar_3_zone = top_bar_rs.contains("MindSetLogoProgram") && top_bar_rs.contains("Dynamic Notch");
-    let has_active_overlay_enum = ctx.read_file("crates/mindset-core/src/wm.rs").map(|s| s.contains("enum ActiveOverlay")).unwrap_or(false)
-        || ctx.read_file("crates/mindset-core/src/lib.rs").map(|s| s.contains("ActiveOverlay")).unwrap_or(false);
+    let has_top_bar_3_zone =
+        top_bar_rs.contains("MindSetLogoProgram") && top_bar_rs.contains("Dynamic Notch");
+    let has_active_overlay_enum = ctx
+        .read_file("crates/mindset-core/src/wm.rs")
+        .map(|s| s.contains("enum ActiveOverlay"))
+        .unwrap_or(false)
+        || ctx
+            .read_file("crates/mindset-core/src/lib.rs")
+            .map(|s| s.contains("ActiveOverlay"))
+            .unwrap_or(false);
 
     let wm_line = ctx
         .find_first_occurrence("bins/mindset-os/src/main.rs", "StartWindowDrag")
         .map(|(l, _)| l)
         .unwrap_or(832);
 
-    if has_dragging && has_resizing && has_clamping && has_z_index && has_top_bar_3_zone && has_active_overlay_enum {
+    if has_dragging
+        && has_resizing
+        && has_clamping
+        && has_z_index
+        && has_top_bar_3_zone
+        && has_active_overlay_enum
+    {
         entries.push(CapabilityMatrixEntry {
             feature: "Floating Window Manager & Shell Geometry".into(),
             category: "Normal OS".into(),
@@ -98,9 +134,12 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     }
 
     // 3. Real File System & Vault Navigation
-    let has_fs_read_dir = file_explorer_rs.contains("fs::read_dir") || file_explorer_rs.contains("std::fs::read_dir");
-    let has_selection_state = file_explorer_rs.contains("selected_name") || file_explorer_rs.contains("selected_path");
-    let has_file_preview = file_explorer_rs.contains("preview_content") || file_explorer_rs.contains("fs::read_to_string");
+    let has_fs_read_dir =
+        file_explorer_rs.contains("fs::read_dir") || file_explorer_rs.contains("std::fs::read_dir");
+    let has_selection_state =
+        file_explorer_rs.contains("selected_name") || file_explorer_rs.contains("selected_path");
+    let has_file_preview = file_explorer_rs.contains("preview_content")
+        || file_explorer_rs.contains("fs::read_to_string");
 
     let fe_line = ctx
         .find_first_occurrence("bins/mindset-os/src/apps/file_explorer.rs", "fs::read_dir")
@@ -134,21 +173,34 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     }
 
     // 4. Networking, Internet & Real App Launching
-    let has_real_browser_launch = main_rs.contains("LaunchMindSetBrowser") || browser_rs.contains("mindset-browser");
-    let has_real_youtube_launch = main_rs.contains("LaunchYouTubeApp") || browser_rs.contains("youtube");
-    let has_real_freetube_launch = main_rs.contains("LaunchFreeTubeApp") || browser_rs.contains("freetube");
+    let has_real_browser_launch =
+        main_rs.contains("LaunchMindSetBrowser") || browser_rs.contains("mindset-browser");
+    let has_real_youtube_launch =
+        main_rs.contains("LaunchYouTubeApp") || browser_rs.contains("youtube");
+    let has_real_freetube_launch =
+        main_rs.contains("LaunchFreeTubeApp") || browser_rs.contains("freetube");
 
     // Check for distraction clutter in launcher (Edge, Netflix, Spotify)
     let has_netflix = launcher_rs.to_lowercase().contains("netflix");
     let has_spotify = launcher_rs.to_lowercase().contains("spotify");
-    let has_edge = launcher_rs.to_lowercase().contains("msedge") || launcher_rs.to_lowercase().contains("microsoft edge");
+    let has_edge = launcher_rs.to_lowercase().contains("msedge")
+        || launcher_rs.to_lowercase().contains("microsoft edge");
 
     let browser_line = ctx
-        .find_first_occurrence("bins/mindset-os/src/apps/browser.rs", "Academic Launchpad & Real Web Engine")
+        .find_first_occurrence(
+            "bins/mindset-os/src/apps/browser.rs",
+            "Academic Launchpad & Real Web Engine",
+        )
         .map(|(l, _)| l)
         .unwrap_or(1);
 
-    if has_real_browser_launch && has_real_youtube_launch && has_real_freetube_launch && !has_netflix && !has_spotify && !has_edge {
+    if has_real_browser_launch
+        && has_real_youtube_launch
+        && has_real_freetube_launch
+        && !has_netflix
+        && !has_spotify
+        && !has_edge
+    {
         entries.push(CapabilityMatrixEntry {
             feature: "Academic Web & Video App Launchers".into(),
             category: "Normal OS".into(),
@@ -175,7 +227,7 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
         actions.push(PrioritizedAction {
             severity: ActionSeverity::High,
             title: "Enforce distraction-free app launchers and purge mock browsers".into(),
-            location: format!("bins/mindset-os/src/shell/launcher.rs:1"),
+            location: "bins/mindset-os/src/shell/launcher.rs:1".to_string(),
             finding: format!("{}: student OS must focus exclusively on academic tools.", reason),
             remediation: "Ensure launcher provides direct commands for Chromium, YouTube, and FreeTube, with no commercial entertainment apps.".into(),
         });
@@ -189,7 +241,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let has_spring_at_rest = motion_lib.contains("is_at_rest(&self)");
 
     let wal_line = ctx
-        .find_first_occurrence("bins/mindset-os/src/storage/db.rs", "PRAGMA journal_mode = WAL")
+        .find_first_occurrence(
+            "bins/mindset-os/src/storage/db.rs",
+            "PRAGMA journal_mode = WAL",
+        )
         .map(|(l, _)| l)
         .unwrap_or(290);
 
@@ -198,7 +253,8 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
         .map(|(l, _)| l)
         .unwrap_or(71);
 
-    if has_sysinfo && has_audio_ctrl && has_sqlite_wal && has_sqlite_cache_cap && has_spring_at_rest {
+    if has_sysinfo && has_audio_ctrl && has_sqlite_wal && has_sqlite_cache_cap && has_spring_at_rest
+    {
         entries.push(CapabilityMatrixEntry {
             feature: "Hardware Monitoring & Low-RAM Hygiene".into(),
             category: "Normal OS".into(),
@@ -209,17 +265,28 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     } else {
         score = score.saturating_sub(15);
         let mut missing_hygiene = Vec::new();
-        if !has_sysinfo { missing_hygiene.push("sysinfo collector"); }
-        if !has_sqlite_wal { missing_hygiene.push("SQLite WAL mode"); }
-        if !has_sqlite_cache_cap { missing_hygiene.push("SQLite cache cap"); }
-        if !has_spring_at_rest { missing_hygiene.push("spring is_at_rest() guard"); }
+        if !has_sysinfo {
+            missing_hygiene.push("sysinfo collector");
+        }
+        if !has_sqlite_wal {
+            missing_hygiene.push("SQLite WAL mode");
+        }
+        if !has_sqlite_cache_cap {
+            missing_hygiene.push("SQLite cache cap");
+        }
+        if !has_spring_at_rest {
+            missing_hygiene.push("spring is_at_rest() guard");
+        }
 
         entries.push(CapabilityMatrixEntry {
             feature: "Hardware Monitoring & Low-RAM Hygiene".into(),
             category: "Normal OS".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("bins/mindset-os/src/storage/db.rs:{}", wal_line),
-            notes: format!("Low-RAM performance hygiene incomplete: {}", missing_hygiene.join(", ")),
+            notes: format!(
+                "Low-RAM performance hygiene incomplete: {}",
+                missing_hygiene.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {

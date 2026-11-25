@@ -1,20 +1,20 @@
 {
-  "timestamp": "2026-11-23 12:07:11 UTC+0530",
+  "timestamp": "2026-11-25 14:22:35 UTC+0530",
   "workspace_root": ".",
   "executive_summary": {
-    "normal_os_score": 100,
+    "normal_os_score": 75,
     "iso_readiness_score": 100,
-    "student_os_ai_score": 100,
-    "overall_score": 100,
-    "verdict_status": "DEMO / OS READY (Full Production Verification Passed)",
+    "student_os_ai_score": 97,
+    "overall_score": 91,
+    "verdict_status": "NON-CRITICAL WARNINGS (System Usable, Polish Recommended)",
     "critical_count": 0,
-    "high_count": 0,
-    "medium_count": 0,
+    "high_count": 3,
+    "medium_count": 1,
     "low_count": 0,
     "total_features_checked": 30,
-    "pass_count": 30,
-    "partial_count": 0,
-    "mock_count": 0,
+    "pass_count": 26,
+    "partial_count": 3,
+    "mock_count": 1,
     "missing_count": 0
   },
   "module_results": [
@@ -22,7 +22,7 @@
       "module_id": "files_hygiene",
       "module_name": "Module 1: Filesystem, Assets & Codebase Hygiene",
       "score": 100,
-      "summary": "Audited 349 files (5380 KB, 89994 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.",
+      "summary": "Audited 293 files (5063 KB, 76742 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.",
       "entries": [
         {
           "feature": "Pure-Rust Clean Slate (Zero Web/Tauri Clutter)",
@@ -35,14 +35,14 @@
           "feature": "Archived Legacy Exclusion",
           "category": "Normal OS",
           "status": "PASS",
-          "evidence": "Cargo.toml:19",
-          "notes": "archive/ directory cleanly excluded from workspace members in root Cargo.toml"
+          "evidence": "Cargo.toml:1",
+          "notes": "No unexcluded archive directories detected in active workspace"
         },
         {
           "feature": "Bundled Multi-Script Fonts (Tamil, Malayalam, Latin)",
           "category": "UI",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/main.rs:2789",
+          "evidence": "bins/mindset-os/src/main.rs:40",
           "notes": "All 3 NotoSans fonts bundled in assets/fonts/ and registered via .font() in app builder"
         },
         {
@@ -57,43 +57,43 @@
           "category": "Normal OS",
           "status": "PASS",
           "evidence": "assets/icons/ms_logo.svg:1",
-          "notes": "0 duplicate media assets found across 2 inspected assets"
+          "notes": "0 duplicate media assets found across 3 inspected assets"
         }
       ],
       "actions": [],
       "metrics": {
-        "rust_lines": "89994",
+        "total_bytes": "5063 KB",
+        "rust_lines": "76742",
         "crates_count": "8",
-        "total_files": "349",
-        "total_bytes": "5380 KB",
-        "rust_files": "241"
+        "rust_files": "195",
+        "total_files": "293"
       }
     },
     {
       "module_id": "deps_build",
       "module_name": "Module 2: Libraries, Dependencies, Build & Cross-Platform Health",
       "score": 100,
-      "summary": "Audited 14 workspace crates, Iced 0.14.0 feature set, release profile, and cross-platform cfg isolation. Health score: 100/100.",
+      "summary": "Audited 13 workspace crates, Iced 0.14.0 feature set, release profile, and cross-platform cfg isolation. Health score: 100/100.",
       "entries": [
         {
           "feature": "Iced 0.14.0 Desktop GUI Engine & GPU Pipeline",
           "category": "UI",
           "status": "PASS",
-          "evidence": "bins/mindset-os/Cargo.toml:19",
+          "evidence": "bins/mindset-os/Cargo.toml:27",
           "notes": "iced 0.14.0 configured with required features [wgpu, tokio, image, canvas, advanced]"
         },
         {
           "feature": "Optimized Embedded Release Profile",
           "category": "Normal OS",
           "status": "PASS",
-          "evidence": "Cargo.toml:28",
+          "evidence": "Cargo.toml:27",
           "notes": "Release profile enforces opt-level, LTO thin, codegen-units=1, panic=abort, strip=true for lean binary size"
         },
         {
           "feature": "Cross-Platform Target-OS Isolation",
           "category": "Normal OS",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/ai/tts.rs:13",
+          "evidence": "bins/mindset-os/src/ai/tts.rs:18",
           "notes": "All Windows CommandExt and CREATE_NO_WINDOW APIs strictly isolated with #[cfg(target_os = \"windows\")]"
         },
         {
@@ -101,20 +101,20 @@
           "category": "Normal OS",
           "status": "PASS",
           "evidence": "Cargo.toml:3",
-          "notes": "Verified 14 workspace member crates with shared versioning and clean dependency graph"
+          "notes": "Verified 13 workspace member crates with shared versioning and clean dependency graph"
         }
       ],
       "actions": [],
       "metrics": {
         "cargo_build_invoked": "false (static analysis active)",
-        "workspace_crates_audited": "14"
+        "workspace_crates_audited": "13"
       }
     },
     {
       "module_id": "os_capabilities",
       "module_name": "Module 3: Standard Operating System Capability Audit",
-      "score": 100,
-      "summary": "Audited boot lifecycle, window manager, real file vault, academic launchpad, and hardware controls. Standard OS score: 100/100.",
+      "score": 50,
+      "summary": "Audited boot lifecycle, window manager, real file vault, academic launchpad, and hardware controls. Standard OS score: 50/100.",
       "entries": [
         {
           "feature": "Boot, Identity & Session Lifecycle",
@@ -126,35 +126,57 @@
         {
           "feature": "Floating Window Manager & Shell Geometry",
           "category": "Normal OS",
-          "status": "PASS",
-          "evidence": "bins/mindset-os/src/main.rs:54",
-          "notes": "Interactive window dragging/resizing with viewport clamping, 3-zone top bar with vector 'MS' logo, and compile-time ActiveOverlay routing"
+          "status": "PARTIAL",
+          "evidence": "bins/mindset-os/src/main.rs:832",
+          "notes": "Window manager lacks full interactive dragging, resizing, or 3-zone top bar integration"
         },
         {
           "feature": "Real Filesystem Navigation & File Vault",
           "category": "Normal OS",
-          "status": "PASS",
-          "evidence": "bins/mindset-os/src/apps/file_explorer.rs:166",
-          "notes": "Real std::fs::read_dir traversal with click hit-testing, selection state, and live text/metadata preview (zero mock lists)"
+          "status": "MOCK",
+          "evidence": "bins/mindset-os/src/apps/file_explorer.rs:303",
+          "notes": "File Explorer appears to rely on static mock items rather than real std::fs directory reading"
         },
         {
           "feature": "Academic Web & Video App Launchers",
           "category": "Normal OS",
-          "status": "PASS",
-          "evidence": "bins/mindset-os/src/apps/browser.rs:53",
-          "notes": "Real desktop application spawning: Chromium/MindSet Browser, Official YouTube, and FreeTube (0 distraction apps like Netflix/Spotify/Edge in launcher)"
+          "status": "PARTIAL",
+          "evidence": "bins/mindset-os/src/apps/browser.rs:63",
+          "notes": "Incomplete real desktop app launch integration"
         },
         {
           "feature": "Hardware Monitoring & Low-RAM Hygiene",
           "category": "Normal OS",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/storage/db.rs:277 | crates/mindset-motion/src/lib.rs:71",
+          "evidence": "bins/mindset-os/src/storage/db.rs:285 | crates/mindset-motion/src/lib.rs:71",
           "notes": "Live CPU/RAM sysinfo, volume controls, SQLite WAL mode + 2MB cache cap, and zero-idle 60 FPS spring rest guards"
         }
       ],
-      "actions": [],
+      "actions": [
+        {
+          "severity": "HIGH",
+          "title": "Implement real window movement and resizing in main.rs",
+          "location": "bins/mindset-os/src/main.rs:832",
+          "finding": "Window dragging or geometry clamping is incomplete.",
+          "remediation": "Handle mouse delta cursor movements to update window positions and clamp within screen bounds."
+        },
+        {
+          "severity": "HIGH",
+          "title": "Replace mock file list with real std::fs directory reader",
+          "location": "bins/mindset-os/src/apps/file_explorer.rs:303",
+          "finding": "File explorer lacks real std::fs::read_dir or live file content inspection.",
+          "remediation": "Read actual directories from Study Capsules, Documents, and Downloads with selection hit-testing and content preview."
+        },
+        {
+          "severity": "HIGH",
+          "title": "Enforce distraction-free app launchers and purge mock browsers",
+          "location": "bins/mindset-os/src/shell/launcher.rs:1",
+          "finding": "Incomplete real desktop app launch integration: student OS must focus exclusively on academic tools.",
+          "remediation": "Ensure launcher provides direct commands for Chromium, YouTube, and FreeTube, with no commercial entertainment apps."
+        }
+      ],
       "metrics": {
-        "os_capabilities_score": "100"
+        "os_capabilities_score": "50"
       }
     },
     {
@@ -174,7 +196,7 @@
           "feature": "Bare-Metal PC Hardware Firmware & Package Manifest",
           "category": "ISO",
           "status": "PASS",
-          "evidence": "iso-builder/config/package-lists/mindset.list.chroot:20",
+          "evidence": "iso-builder/config/package-lists/mindset.list.chroot:62",
           "notes": "Verified complete hardware stack: Intel/Realtek/Atheros Wi-Fi firmware, PipeWire audio, espeak-ng/piper TTS, Mesa/Vulkan, and Chromium"
         },
         {
@@ -188,7 +210,7 @@
           "feature": "Auto-Login Session & VM GPU Fallback Wrapper",
           "category": "ISO",
           "status": "PASS",
-          "evidence": "iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:45",
+          "evidence": "iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:85",
           "notes": "Fullscreen auto-login on tty1 into Openbox, with WGPU_BACKEND=gl & software rasterizer fallback for VirtualBox/VMware"
         },
         {
@@ -207,14 +229,14 @@
     {
       "module_id": "ui_theme_i18n",
       "module_name": "Module 5: UI, Visual Design System & Multi-Language Audit",
-      "score": 100,
-      "summary": "Audited theme tokens, mock string absence, focus restoration, and 43 i18n keys across EN/TA/ML. Score: 100/100.",
+      "score": 90,
+      "summary": "Audited theme tokens, mock string absence, focus restoration, and 43 i18n keys across EN/TA/ML. Score: 90/100.",
       "entries": [
         {
           "feature": "Neumorphic & Claymorphic Spatial Theme Tokens",
           "category": "UI",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/theme/mod.rs:139",
+          "evidence": "bins/mindset-os/src/theme/mod.rs:288",
           "notes": "Centralized Neumorphism & Claymorphism tokens for soft specular highlights, dual-layer shadows, and frosted glass cards"
         },
         {
@@ -227,9 +249,9 @@
         {
           "feature": "Tunnel Vision Focus & Clean Side-Rail Restoration",
           "category": "UI",
-          "status": "PASS",
-          "evidence": "bins/mindset-os/src/main.rs:174",
-          "notes": "ToggleTunnelVision cleanly collapses and restores top bar and side rails without layout corruption"
+          "status": "PARTIAL",
+          "evidence": "bins/mindset-os/src/main.rs:150",
+          "notes": "Tunnel vision toggle does not cleanly restore shell panels"
         },
         {
           "feature": "Multi-Language (i18n) Dictionary Parity",
@@ -239,12 +261,20 @@
           "notes": "100% parity across English, Tamil, and Malayalam (all 43 translation keys mapped)"
         }
       ],
-      "actions": [],
+      "actions": [
+        {
+          "severity": "MEDIUM",
+          "title": "Ensure Tunnel Vision toggle restores top bar and launcher",
+          "location": "bins/mindset-os/src/main.rs:150",
+          "finding": "Exiting Tunnel Vision must reliably re-enable shell rails and indicators.",
+          "remediation": "Verify ToggleTunnelVision updates state cleanly to restore top bar visibility."
+        }
+      ],
       "metrics": {
+        "ui_theme_i18n_score": "90",
         "i18n_en_keys": "43",
-        "i18n_ml_keys": "43",
-        "ui_theme_i18n_score": "100",
-        "i18n_ta_keys": "43"
+        "i18n_ta_keys": "43",
+        "i18n_ml_keys": "43"
       }
     },
     {
@@ -271,14 +301,14 @@
           "feature": "Strict Permission-Gated OS Tool Actions",
           "category": "AI",
           "status": "PASS",
-          "evidence": "crates/mindset-intelligence/src/agent_tools.rs:52",
+          "evidence": "crates/mindset-intelligence/src/agent_tools.rs:44",
           "notes": "Zero unguarded filesystem access: ListFolder, ReadDocument, and ControlSystem strictly gated behind Allow Once / Allow Session confirmation"
         },
         {
           "feature": "Bilingual Voice TTS & Thanglish Phonetics",
           "category": "AI",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/ai/tts.rs:5",
+          "evidence": "bins/mindset-os/src/ai/tts.rs:21",
           "notes": "Dual-text pipeline (DISPLAY vs SPEECH), emoji stripping, Windows CREATE_NO_WINDOW black window suppression, and Linux piper/espeak-ng fallback"
         }
       ],
@@ -333,14 +363,14 @@
       "feature": "Archived Legacy Exclusion",
       "category": "Normal OS",
       "status": "PASS",
-      "evidence": "Cargo.toml:19",
-      "notes": "archive/ directory cleanly excluded from workspace members in root Cargo.toml"
+      "evidence": "Cargo.toml:1",
+      "notes": "No unexcluded archive directories detected in active workspace"
     },
     {
       "feature": "Bundled Multi-Script Fonts (Tamil, Malayalam, Latin)",
       "category": "UI",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/main.rs:2789",
+      "evidence": "bins/mindset-os/src/main.rs:40",
       "notes": "All 3 NotoSans fonts bundled in assets/fonts/ and registered via .font() in app builder"
     },
     {
@@ -355,27 +385,27 @@
       "category": "Normal OS",
       "status": "PASS",
       "evidence": "assets/icons/ms_logo.svg:1",
-      "notes": "0 duplicate media assets found across 2 inspected assets"
+      "notes": "0 duplicate media assets found across 3 inspected assets"
     },
     {
       "feature": "Iced 0.14.0 Desktop GUI Engine & GPU Pipeline",
       "category": "UI",
       "status": "PASS",
-      "evidence": "bins/mindset-os/Cargo.toml:19",
+      "evidence": "bins/mindset-os/Cargo.toml:27",
       "notes": "iced 0.14.0 configured with required features [wgpu, tokio, image, canvas, advanced]"
     },
     {
       "feature": "Optimized Embedded Release Profile",
       "category": "Normal OS",
       "status": "PASS",
-      "evidence": "Cargo.toml:28",
+      "evidence": "Cargo.toml:27",
       "notes": "Release profile enforces opt-level, LTO thin, codegen-units=1, panic=abort, strip=true for lean binary size"
     },
     {
       "feature": "Cross-Platform Target-OS Isolation",
       "category": "Normal OS",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/ai/tts.rs:13",
+      "evidence": "bins/mindset-os/src/ai/tts.rs:18",
       "notes": "All Windows CommandExt and CREATE_NO_WINDOW APIs strictly isolated with #[cfg(target_os = \"windows\")]"
     },
     {
@@ -383,7 +413,7 @@
       "category": "Normal OS",
       "status": "PASS",
       "evidence": "Cargo.toml:3",
-      "notes": "Verified 14 workspace member crates with shared versioning and clean dependency graph"
+      "notes": "Verified 13 workspace member crates with shared versioning and clean dependency graph"
     },
     {
       "feature": "Boot, Identity & Session Lifecycle",
@@ -395,29 +425,29 @@
     {
       "feature": "Floating Window Manager & Shell Geometry",
       "category": "Normal OS",
-      "status": "PASS",
-      "evidence": "bins/mindset-os/src/main.rs:54",
-      "notes": "Interactive window dragging/resizing with viewport clamping, 3-zone top bar with vector 'MS' logo, and compile-time ActiveOverlay routing"
+      "status": "PARTIAL",
+      "evidence": "bins/mindset-os/src/main.rs:832",
+      "notes": "Window manager lacks full interactive dragging, resizing, or 3-zone top bar integration"
     },
     {
       "feature": "Real Filesystem Navigation & File Vault",
       "category": "Normal OS",
-      "status": "PASS",
-      "evidence": "bins/mindset-os/src/apps/file_explorer.rs:166",
-      "notes": "Real std::fs::read_dir traversal with click hit-testing, selection state, and live text/metadata preview (zero mock lists)"
+      "status": "MOCK",
+      "evidence": "bins/mindset-os/src/apps/file_explorer.rs:303",
+      "notes": "File Explorer appears to rely on static mock items rather than real std::fs directory reading"
     },
     {
       "feature": "Academic Web & Video App Launchers",
       "category": "Normal OS",
-      "status": "PASS",
-      "evidence": "bins/mindset-os/src/apps/browser.rs:53",
-      "notes": "Real desktop application spawning: Chromium/MindSet Browser, Official YouTube, and FreeTube (0 distraction apps like Netflix/Spotify/Edge in launcher)"
+      "status": "PARTIAL",
+      "evidence": "bins/mindset-os/src/apps/browser.rs:63",
+      "notes": "Incomplete real desktop app launch integration"
     },
     {
       "feature": "Hardware Monitoring & Low-RAM Hygiene",
       "category": "Normal OS",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/storage/db.rs:277 | crates/mindset-motion/src/lib.rs:71",
+      "evidence": "bins/mindset-os/src/storage/db.rs:285 | crates/mindset-motion/src/lib.rs:71",
       "notes": "Live CPU/RAM sysinfo, volume controls, SQLite WAL mode + 2MB cache cap, and zero-idle 60 FPS spring rest guards"
     },
     {
@@ -431,7 +461,7 @@
       "feature": "Bare-Metal PC Hardware Firmware & Package Manifest",
       "category": "ISO",
       "status": "PASS",
-      "evidence": "iso-builder/config/package-lists/mindset.list.chroot:20",
+      "evidence": "iso-builder/config/package-lists/mindset.list.chroot:62",
       "notes": "Verified complete hardware stack: Intel/Realtek/Atheros Wi-Fi firmware, PipeWire audio, espeak-ng/piper TTS, Mesa/Vulkan, and Chromium"
     },
     {
@@ -445,7 +475,7 @@
       "feature": "Auto-Login Session & VM GPU Fallback Wrapper",
       "category": "ISO",
       "status": "PASS",
-      "evidence": "iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:45",
+      "evidence": "iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:85",
       "notes": "Fullscreen auto-login on tty1 into Openbox, with WGPU_BACKEND=gl & software rasterizer fallback for VirtualBox/VMware"
     },
     {
@@ -459,7 +489,7 @@
       "feature": "Neumorphic & Claymorphic Spatial Theme Tokens",
       "category": "UI",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/theme/mod.rs:139",
+      "evidence": "bins/mindset-os/src/theme/mod.rs:288",
       "notes": "Centralized Neumorphism & Claymorphism tokens for soft specular highlights, dual-layer shadows, and frosted glass cards"
     },
     {
@@ -472,9 +502,9 @@
     {
       "feature": "Tunnel Vision Focus & Clean Side-Rail Restoration",
       "category": "UI",
-      "status": "PASS",
-      "evidence": "bins/mindset-os/src/main.rs:174",
-      "notes": "ToggleTunnelVision cleanly collapses and restores top bar and side rails without layout corruption"
+      "status": "PARTIAL",
+      "evidence": "bins/mindset-os/src/main.rs:150",
+      "notes": "Tunnel vision toggle does not cleanly restore shell panels"
     },
     {
       "feature": "Multi-Language (i18n) Dictionary Parity",
@@ -501,14 +531,14 @@
       "feature": "Strict Permission-Gated OS Tool Actions",
       "category": "AI",
       "status": "PASS",
-      "evidence": "crates/mindset-intelligence/src/agent_tools.rs:52",
+      "evidence": "crates/mindset-intelligence/src/agent_tools.rs:44",
       "notes": "Zero unguarded filesystem access: ListFolder, ReadDocument, and ControlSystem strictly gated behind Allow Once / Allow Session confirmation"
     },
     {
       "feature": "Bilingual Voice TTS & Thanglish Phonetics",
       "category": "AI",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/ai/tts.rs:5",
+      "evidence": "bins/mindset-os/src/ai/tts.rs:21",
       "notes": "Dual-text pipeline (DISPLAY vs SPEECH), emoji stripping, Windows CREATE_NO_WINDOW black window suppression, and Linux piper/espeak-ng fallback"
     },
     {
@@ -533,6 +563,35 @@
       "notes": "3D Syllabus Odyssey Trail, debounced async SQLite scratchpad, Daily Boss Bar, and daemon focus-guard policy service"
     }
   ],
-  "action_queue": [],
-  "exit_code": 0
+  "action_queue": [
+    {
+      "severity": "HIGH",
+      "title": "Implement real window movement and resizing in main.rs",
+      "location": "bins/mindset-os/src/main.rs:832",
+      "finding": "Window dragging or geometry clamping is incomplete.",
+      "remediation": "Handle mouse delta cursor movements to update window positions and clamp within screen bounds."
+    },
+    {
+      "severity": "HIGH",
+      "title": "Replace mock file list with real std::fs directory reader",
+      "location": "bins/mindset-os/src/apps/file_explorer.rs:303",
+      "finding": "File explorer lacks real std::fs::read_dir or live file content inspection.",
+      "remediation": "Read actual directories from Study Capsules, Documents, and Downloads with selection hit-testing and content preview."
+    },
+    {
+      "severity": "HIGH",
+      "title": "Enforce distraction-free app launchers and purge mock browsers",
+      "location": "bins/mindset-os/src/shell/launcher.rs:1",
+      "finding": "Incomplete real desktop app launch integration: student OS must focus exclusively on academic tools.",
+      "remediation": "Ensure launcher provides direct commands for Chromium, YouTube, and FreeTube, with no commercial entertainment apps."
+    },
+    {
+      "severity": "MEDIUM",
+      "title": "Ensure Tunnel Vision toggle restores top bar and launcher",
+      "location": "bins/mindset-os/src/main.rs:150",
+      "finding": "Exiting Tunnel Vision must reliably re-enable shell rails and indicators.",
+      "remediation": "Verify ToggleTunnelVision updates state cleanly to restore top bar visibility."
+    }
+  ],
+  "exit_code": 1
 }

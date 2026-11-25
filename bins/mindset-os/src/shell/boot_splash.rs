@@ -105,9 +105,7 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
                 match key {
                     Key::Named(Named::Enter)
                     | Key::Named(Named::Space)
-                    | Key::Named(Named::Escape) => {
-                        Some(Action::publish(Message::FinishBootSplash))
-                    }
+                    | Key::Named(Named::Escape) => Some(Action::publish(Message::FinishBootSplash)),
                     _ => None,
                 }
             }
@@ -142,69 +140,19 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
             let auroras = [
                 // (base_x, base_y, radius, speed_x, speed_y, phase_x, phase_y, r, g, b, base_alpha)
                 (
-                    0.32,
-                    0.38,
-                    190.0,
-                    1.1,
-                    0.85,
-                    0.0,
-                    1.2,
-                    0.20,
-                    0.75,
-                    0.95,
-                    0.22,
+                    0.32, 0.38, 190.0, 1.1, 0.85, 0.0, 1.2, 0.20, 0.75, 0.95, 0.22,
                 ), // Cyan Aqua
                 (
-                    0.68,
-                    0.42,
-                    220.0,
-                    0.9,
-                    1.25,
-                    1.8,
-                    0.5,
-                    0.56,
-                    0.48,
-                    1.00,
-                    0.26,
+                    0.68, 0.42, 220.0, 0.9, 1.25, 1.8, 0.5, 0.56, 0.48, 1.00, 0.26,
                 ), // Lavender Indigo
                 (
-                    0.50,
-                    0.68,
-                    180.0,
-                    1.3,
-                    0.75,
-                    3.1,
-                    2.4,
-                    1.00,
-                    0.42,
-                    0.60,
-                    0.18,
+                    0.50, 0.68, 180.0, 1.3, 0.75, 3.1, 2.4, 1.00, 0.42, 0.60, 0.18,
                 ), // Coral Rose
                 (
-                    0.22,
-                    0.65,
-                    160.0,
-                    0.8,
-                    1.10,
-                    2.2,
-                    3.8,
-                    0.18,
-                    0.88,
-                    0.68,
-                    0.16,
+                    0.22, 0.65, 160.0, 0.8, 1.10, 2.2, 3.8, 0.18, 0.88, 0.68, 0.16,
                 ), // Emerald Mint
                 (
-                    0.76,
-                    0.26,
-                    170.0,
-                    1.0,
-                    0.90,
-                    4.0,
-                    1.7,
-                    0.42,
-                    0.36,
-                    0.96,
-                    0.20,
+                    0.76, 0.26, 170.0, 1.0, 0.90, 4.0, 1.7, 0.42, 0.36, 0.96, 0.20,
                 ), // Electric Violet
             ];
 
@@ -342,10 +290,7 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
                 Size::new(bar_w, bar_h),
                 Radius::from(2.5 * scale),
             );
-            frame.fill(
-                &track_rect,
-                Color::from_rgba(1.0, 1.0, 1.0, 0.10 * alpha),
-            );
+            frame.fill(&track_rect, Color::from_rgba(1.0, 1.0, 1.0, 0.10 * alpha));
 
             // Active progress fill
             let fill_w = (bar_w * progress).max(4.0);
@@ -354,10 +299,7 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
                 Size::new(fill_w, bar_h),
                 Radius::from(2.5 * scale),
             );
-            frame.fill(
-                &fill_rect,
-                Color::from_rgba(0.56, 0.48, 1.0, 0.95 * alpha),
-            );
+            frame.fill(&fill_rect, Color::from_rgba(0.56, 0.48, 1.0, 0.95 * alpha));
 
             // 8. Skip / Continue Hint (gentle pulse)
             let hint_alpha = (0.35 + 0.25 * (t * 5.0).sin()) * alpha;

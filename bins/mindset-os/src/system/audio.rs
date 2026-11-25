@@ -66,6 +66,76 @@ impl Source for ProceduralRainSource {
     }
 }
 
+pub struct ProceduralChimeSource {
+    sample_rate: u32,
+    sample_idx: usize,
+    total_samples: usize,
+    freq1: f32,
+    freq2: f32,
+    freq3: f32,
+}
+
+impl ProceduralChimeSource {
+    pub fn new() -> Self {
+        let sample_rate = 44100;
+        let duration_secs = 0.65;
+        Self {
+            sample_rate,
+            sample_idx: 0,
+            total_samples: (sample_rate as f32 * duration_secs).round() as usize,
+            freq1: 523.25, // C5
+            freq2: 659.25, // E5
+            freq3: 783.99, // G5
+        }
+    }
+}
+
+impl Default for ProceduralChimeSource {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Iterator for ProceduralChimeSource {
+    type Item = f32;
+
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.sample_idx >= self.total_samples {
+            return None;
+        }
+        let t = self.sample_idx as f32 / self.sample_rate as f32;
+        self.sample_idx += 1;
+
+        let decay = (-5.2 * t).exp();
+        let s1 = (2.0 * std::f32::consts::PI * self.freq1 * t).sin() * 0.40;
+        let s2 = (2.0 * std::f32::consts::PI * self.freq2 * t).sin() * 0.35;
+        let s3 = (2.0 * std::f32::consts::PI * self.freq3 * t).sin() * 0.25;
+
+        Some((s1 + s2 + s3) * decay * 0.32)
+    }
+}
+
+impl Source for ProceduralChimeSource {
+    fn current_frame_len(&self) -> Option<usize> {
+        Some(self.total_samples.saturating_sub(self.sample_idx))
+    }
+
+    fn channels(&self) -> u16 {
+        1
+    }
+
+    fn sample_rate(&self) -> u32 {
+        self.sample_rate
+    }
+
+    fn total_duration(&self) -> Option<Duration> {
+        Some(Duration::from_secs_f32(
+            self.total_samples as f32 / self.sample_rate as f32,
+        ))
+    }
+}
+
 pub struct AudioPlayer {
     _stream: Option<OutputStream>,
     stream_handle: Option<OutputStreamHandle>,
@@ -142,5 +212,76 @@ impl AudioPlayer {
             sink.stop();
         }
         self.is_playing = false;
+    }
+
+    pub fn play_chime(&self) {
+        if let Some(handle) = &self.stream_handle {
+            let candidates = [
+                Path::new("assets/audio/chime.ogg"),
+                Path::new("bins/mindset-os/assets/audio/chime.ogg"),
+            ];
+
+            for path in candidates {
+                if path.exists() {
+                    if let Ok(file) = File::open(path) {
+                        let reader = BufReader::new(file);
+                        if let Ok(source) = Decoder::new(reader) {
+                            if let Ok(sink) = Sink::try_new(handle) {
+                                sink.set_volume(0.40);
+                                sink.append(source);
+                                sink.detach();
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Zero-asset procedural C-major bell chord
+            if let Ok(sink) = Sink::try_new(handle) {
+                sink.set_volume(0.35);
+                sink.append(ProceduralChimeSource::new());
+                sink.detach();
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_procedural_chime_rounding_and_samples() {
+        let mut chime = ProceduralChimeSource::new();
+        assert_eq!(chime.total_samples, 28665);
+
+        let mut count = 0;
+        let mut max_abs: f32 = 0.0;
+        let mut tail_samples = Vec::new();
+
+        for s in chime.by_ref() {
+            assert!(s.is_finite(), "Sample must be finite");
+            assert!(s.abs() <= 1.0, "Sample must be bounded within [-1.0, 1.0]");
+            if s.abs() > max_abs {
+                max_abs = s.abs();
+            }
+            if count >= 28665 - 100 {
+                tail_samples.push(s.abs());
+            }
+            count += 1;
+        }
+
+        assert_eq!(count, 28665);
+        assert!(
+            max_abs <= 0.40,
+            "Peak amplitude should be within safe headroom"
+        );
+        assert!(chime.next().is_none());
+
+        // Tail samples decay to near silence (< 0.02)
+        for val in tail_samples {
+            assert!(val < 0.02, "Tail sample {val} must decay to near silence");
+        }
     }
 }

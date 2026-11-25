@@ -1,0 +1,15 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS — labwc Wayland Autostart
+# ==============================================================================
+
+# Ensure PipeWire audio & Bluetooth stack runs inside user session
+if command -v pipewire >/dev/null 2>&1; then
+    pipewire >/tmp/pipewire.log 2>&1 &
+    sleep 0.3
+    command -v wireplumber >/dev/null 2>&1 && wireplumber >/tmp/wireplumber.log 2>&1 &
+    command -v pipewire-pulse >/dev/null 2>&1 && pipewire-pulse >/tmp/pipewire-pulse.log 2>&1 &
+fi
+
+# Launch Pure-Rust MindSet OS Fullscreen Desktop Shell
+/usr/local/bin/mindset-os-launch &

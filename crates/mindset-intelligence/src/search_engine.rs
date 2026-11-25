@@ -149,6 +149,93 @@ impl AdBlockShield {
             (false, "Allowed (Clean Academic Content)")
         }
     }
+
+    /// Strips tracking and telemetry query parameters from URLs (e.g. utm_*, fbclid, gclid).
+    pub fn sanitize_url(&self, url: &str) -> String {
+        let tracking_params = [
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_term",
+            "utm_content",
+            "fbclid",
+            "gclid",
+            "msclkid",
+            "yclid",
+            "_ga",
+            "ref",
+            "ref_src",
+            "ref_url",
+            "ad_id",
+            "tracking_id",
+            "mc_eid",
+            "twclid",
+            "igshid",
+        ];
+
+        if let Some((base, query_str)) = url.split_once('?') {
+            let filtered_params: Vec<&str> = query_str
+                .split('&')
+                .filter(|param| {
+                    let key = param.split('=').next().unwrap_or("").to_ascii_lowercase();
+                    !tracking_params.contains(&key.as_str())
+                })
+                .collect();
+
+            if filtered_params.is_empty() {
+                base.to_string()
+            } else {
+                format!("{}?{}", base, filtered_params.join("&"))
+            }
+        } else {
+            url.to_string()
+        }
+    }
+
+    /// Evaluates a list of search results against ad and distraction filters, sanitizing URLs and stripping unwanted entries.
+    pub fn filter_and_sanitize_results(&mut self, results: Vec<SearchResult>) -> Vec<SearchResult> {
+        let mut clean = Vec::new();
+        for mut res in results {
+            // Check if title, snippet or content points to a blocked domain
+            if let Some(reason) = self
+                .should_block_domain(&res.snippet)
+                .or_else(|| self.should_block_domain(&res.full_content))
+                .or_else(|| self.should_block_domain(&res.title))
+            {
+                if reason.contains("Tracker") {
+                    self.ads_blocked_count += 1;
+                    self.data_saved_mb += 0.15;
+                } else {
+                    self.distractions_blocked_count += 1;
+                    self.data_saved_mb += 1.20;
+                }
+                let log_msg = format!("Blocked result: {} ({})", res.title, reason);
+                self.blocked_events_log.insert(0, log_msg);
+                if self.blocked_events_log.len() > 10 {
+                    self.blocked_events_log.truncate(10);
+                }
+                continue;
+            }
+
+            // Sanitize tracking params inside snippets/content if URLs are present
+            res.snippet = self.sanitize_text_urls(&res.snippet);
+            res.full_content = self.sanitize_text_urls(&res.full_content);
+            clean.push(res);
+        }
+        clean
+    }
+
+    fn sanitize_text_urls(&self, text: &str) -> String {
+        let mut words = Vec::new();
+        for word in text.split_whitespace() {
+            if word.starts_with("http://") || word.starts_with("https://") {
+                words.push(self.sanitize_url(word));
+            } else {
+                words.push(word.to_string());
+            }
+        }
+        words.join(" ")
+    }
 }
 
 /// Pre-indexed Class 12 STEM Encyclopedia database.
@@ -368,6 +455,462 @@ impl AcademicSearchEngine {
         let q = self.query.clone();
         self.search(&q, vault_notes);
     }
+
+    /// Executes a web search query through the specified connector, routing all results through AdBlockShield to sanitize URLs and block distractions.
+    pub async fn execute_web_search(
+        &mut self,
+        query: &str,
+        provider: SearchProviderType,
+    ) -> Result<Vec<SearchResult>, String> {
+        self.query = query.trim().to_string();
+
+        let raw_results = match provider {
+            SearchProviderType::Google => {
+                let connector = GoogleSearchConnector::new();
+                connector.execute_query(&self.query).await?
+            }
+            SearchProviderType::DuckDuckGo => {
+                let connector = DuckDuckGoConnector::new();
+                connector.execute_query(&self.query).await?
+            }
+            SearchProviderType::ArXiv => {
+                let connector = ArXivConnector::new();
+                connector.execute_query(&self.query).await?
+            }
+            SearchProviderType::Encyclopedia => {
+                let mut matches = Vec::new();
+                let q_lower = self.query.to_ascii_lowercase();
+                for entry in &self.encyclopedia.entries {
+                    if q_lower.is_empty()
+                        || entry.title.to_ascii_lowercase().contains(&q_lower)
+                        || entry.snippet.to_ascii_lowercase().contains(&q_lower)
+                    {
+                        matches.push(entry.clone());
+                    }
+                }
+                matches
+            }
+        };
+
+        // Filter through AdBlockShield to sanitize tracking query parameters and block ad/distraction domains
+        let clean_results = self.shield.filter_and_sanitize_results(raw_results);
+        self.results = clean_results.clone();
+        Ok(clean_results)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Web Search Connectors & Providers
+// ---------------------------------------------------------------------------
+
+/// Web search provider connector trait for live and academic query execution.
+#[allow(async_fn_in_trait)]
+pub trait WebSearchProvider: Send + Sync {
+    async fn execute_query(&self, query: &str) -> Result<Vec<SearchResult>, String>;
+}
+
+/// Supported academic and external web search provider engines.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum SearchProviderType {
+    Google,
+    DuckDuckGo,
+    ArXiv,
+    Encyclopedia,
+}
+
+impl SearchProviderType {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Google => "Google Search",
+            Self::DuckDuckGo => "DuckDuckGo",
+            Self::ArXiv => "ArXiv STEM Papers",
+            Self::Encyclopedia => "STEM Encyclopedia",
+        }
+    }
+}
+
+fn url_encode_query(q: &str) -> String {
+    let mut encoded = String::with_capacity(q.len() * 3);
+    for b in q.as_bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                encoded.push(*b as char);
+            }
+            b' ' => encoded.push_str("%20"),
+            other => {
+                encoded.push_str(&format!("%{:02X}", other));
+            }
+        }
+    }
+    encoded
+}
+
+fn build_http_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(8))
+        .user_agent("MindSetOS/1.0 (+https://mindsetos.local)")
+        .build()
+        .map_err(|e| format!("Failed to initialize HTTP client: {}", e))
+}
+
+/// Google Academic / Custom Search Connector.
+#[derive(Debug, Clone, Default)]
+pub struct GoogleSearchConnector {
+    pub api_key: Option<String>,
+    pub search_engine_id: Option<String>,
+}
+
+impl GoogleSearchConnector {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn with_credentials(api_key: String, search_engine_id: String) -> Self {
+        Self {
+            api_key: Some(api_key),
+            search_engine_id: Some(search_engine_id),
+        }
+    }
+
+    pub fn parse_cse_json(val: &serde_json::Value) -> Vec<SearchResult> {
+        let mut results = Vec::new();
+        if let Some(items) = val.get("items").and_then(|v| v.as_array()) {
+            for item in items.iter().take(5) {
+                let title = item
+                    .get("title")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Google Result")
+                    .trim()
+                    .to_string();
+                let link = item
+                    .get("link")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+                let snippet_raw = item
+                    .get("snippet")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .trim()
+                    .to_string();
+                let snippet = if link.is_empty() {
+                    snippet_raw.clone()
+                } else if snippet_raw.is_empty() {
+                    link.clone()
+                } else {
+                    format!("{} {}", snippet_raw, link)
+                };
+                results.push(SearchResult {
+                    title: title.clone(),
+                    category: "Google Search • Web".to_string(),
+                    snippet,
+                    full_content: format!("# {}\nSource: {}\n\n{}", title, link, snippet_raw),
+                    badge: "GOOG",
+                    is_vault: false,
+                });
+            }
+        }
+        results
+    }
+}
+
+impl WebSearchProvider for GoogleSearchConnector {
+    async fn execute_query(&self, query: &str) -> Result<Vec<SearchResult>, String> {
+        let q = query.trim();
+        if q.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let api_key = self
+            .api_key
+            .clone()
+            .filter(|s| !s.trim().is_empty())
+            .or_else(|| {
+                std::env::var("GOOGLE_CSE_API_KEY")
+                    .ok()
+                    .filter(|s| !s.trim().is_empty())
+            });
+        let cx = self
+            .search_engine_id
+            .clone()
+            .filter(|s| !s.trim().is_empty())
+            .or_else(|| {
+                std::env::var("GOOGLE_CSE_CX")
+                    .ok()
+                    .filter(|s| !s.trim().is_empty())
+            });
+
+        let (key, engine_id) = match (api_key, cx) {
+            (Some(k), Some(id)) => (k, id),
+            _ => {
+                return Err(
+                    "Google Custom Search API key and CSE ID are not configured (set GOOGLE_CSE_API_KEY and GOOGLE_CSE_CX)"
+                        .to_string(),
+                );
+            }
+        };
+
+        let url = format!(
+            "https://www.googleapis.com/customsearch/v1?key={}&cx={}&q={}&num=5",
+            url_encode_query(&key),
+            url_encode_query(&engine_id),
+            url_encode_query(q)
+        );
+
+        let client = build_http_client()?;
+        let resp = client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| format!("Google CSE network request failed: {}", e))?;
+
+        if !resp.status().is_success() {
+            return Err(format!("Google CSE returned HTTP {}", resp.status()));
+        }
+
+        let json: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| format!("Google CSE JSON decode failed: {}", e))?;
+
+        Ok(Self::parse_cse_json(&json))
+    }
+}
+
+/// DuckDuckGo Privacy-Preserving Academic Connector.
+#[derive(Debug, Clone, Default)]
+pub struct DuckDuckGoConnector;
+
+impl DuckDuckGoConnector {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn parse_instant_answer_json(val: &serde_json::Value) -> Vec<SearchResult> {
+        let mut results = Vec::new();
+        let heading = val
+            .get("Heading")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim();
+        let abstract_text = val
+            .get("AbstractText")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim();
+        let abstract_url = val
+            .get("AbstractURL")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .trim();
+
+        if !abstract_text.is_empty() {
+            let title = if heading.is_empty() {
+                "DuckDuckGo Instant Answer".to_string()
+            } else {
+                heading.to_string()
+            };
+            let snippet = if abstract_url.is_empty() {
+                abstract_text.to_string()
+            } else {
+                format!("{} {}", abstract_text, abstract_url)
+            };
+            results.push(SearchResult {
+                title: title.clone(),
+                category: "DuckDuckGo • Instant Answer".to_string(),
+                snippet,
+                full_content: format!("# {}\nSource: {}\n\n{}", title, abstract_url, abstract_text),
+                badge: "DDG",
+                is_vault: false,
+            });
+        }
+
+        if let Some(topics) = val.get("RelatedTopics").and_then(|v| v.as_array()) {
+            for topic in topics {
+                if results.len() >= 5 {
+                    break;
+                }
+                if let Some(text) = topic.get("Text").and_then(|v| v.as_str()) {
+                    let first_url = topic
+                        .get("FirstURL")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .trim();
+                    let title = text
+                        .split(" - ")
+                        .next()
+                        .unwrap_or("DuckDuckGo Topic")
+                        .trim()
+                        .to_string();
+                    let snippet = if first_url.is_empty() {
+                        text.to_string()
+                    } else {
+                        format!("{} {}", text, first_url)
+                    };
+                    results.push(SearchResult {
+                        title: title.clone(),
+                        category: "DuckDuckGo • Related Topic".to_string(),
+                        snippet,
+                        full_content: format!("# {}\nSource: {}\n\n{}", title, first_url, text),
+                        badge: "DDG",
+                        is_vault: false,
+                    });
+                }
+            }
+        }
+        results
+    }
+}
+
+impl WebSearchProvider for DuckDuckGoConnector {
+    async fn execute_query(&self, query: &str) -> Result<Vec<SearchResult>, String> {
+        let q = query.trim();
+        if q.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let url = format!(
+            "https://api.duckduckgo.com/?q={}&format=json&no_html=1&skip_disambig=1",
+            url_encode_query(q)
+        );
+        let client = build_http_client()?;
+        let resp = client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| format!("DuckDuckGo network request failed: {}", e))?;
+
+        if !resp.status().is_success() {
+            return Err(format!("DuckDuckGo returned HTTP {}", resp.status()));
+        }
+
+        let json: serde_json::Value = resp
+            .json()
+            .await
+            .map_err(|e| format!("DuckDuckGo JSON decode failed: {}", e))?;
+
+        Ok(Self::parse_instant_answer_json(&json))
+    }
+}
+
+/// ArXiv / OpenAlex STEM Scientific Preprint Connector.
+#[derive(Debug, Clone, Default)]
+pub struct ArXivConnector;
+
+impl ArXivConnector {
+    pub fn new() -> Self {
+        Self
+    }
+
+    pub fn parse_atom_xml(xml: &str) -> Result<Vec<SearchResult>, String> {
+        use quick_xml::events::Event;
+        use quick_xml::reader::Reader;
+
+        let mut reader = Reader::from_str(xml);
+        let mut results = Vec::new();
+        let mut in_entry = false;
+        let mut current_tag = String::new();
+        let mut title = String::new();
+        let mut summary = String::new();
+        let mut link_id = String::new();
+
+        loop {
+            match reader.read_event() {
+                Ok(Event::Start(e)) => {
+                    let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
+                    let local = name.rsplit(':').next().unwrap_or(&name).to_string();
+                    if local == "entry" {
+                        in_entry = true;
+                        title.clear();
+                        summary.clear();
+                        link_id.clear();
+                    } else if in_entry {
+                        current_tag = local;
+                    }
+                }
+                Ok(Event::Text(e)) => {
+                    if in_entry {
+                        let raw = std::str::from_utf8(&e).unwrap_or("");
+                        let text = quick_xml::escape::unescape(raw).unwrap_or_default();
+                        match current_tag.as_str() {
+                            "title" => title.push_str(&text),
+                            "summary" => summary.push_str(&text),
+                            "id" => link_id.push_str(&text),
+                            _ => {}
+                        }
+                    }
+                }
+                Ok(Event::End(e)) => {
+                    let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
+                    let local = name.rsplit(':').next().unwrap_or(&name);
+                    if local == "entry" && in_entry {
+                        in_entry = false;
+                        let clean_title = title.split_whitespace().collect::<Vec<_>>().join(" ");
+                        let clean_summary =
+                            summary.split_whitespace().collect::<Vec<_>>().join(" ");
+                        let clean_id = link_id.trim().to_string();
+                        if !clean_title.is_empty() {
+                            let snippet = if clean_id.is_empty() {
+                                clean_summary.clone()
+                            } else {
+                                format!("{} {}", clean_summary, clean_id)
+                            };
+                            results.push(SearchResult {
+                                title: clean_title.clone(),
+                                category: "ArXiv • STEM Preprint".to_string(),
+                                snippet,
+                                full_content: format!(
+                                    "# {}\nSource: {}\n\n{}",
+                                    clean_title, clean_id, clean_summary
+                                ),
+                                badge: "ARXIV",
+                                is_vault: false,
+                            });
+                        }
+                    } else if current_tag == local {
+                        current_tag.clear();
+                    }
+                }
+                Ok(Event::Eof) => break,
+                Ok(_) => {}
+                Err(e) => return Err(format!("ArXiv Atom XML parse error: {}", e)),
+            }
+        }
+
+        Ok(results)
+    }
+}
+
+impl WebSearchProvider for ArXivConnector {
+    async fn execute_query(&self, query: &str) -> Result<Vec<SearchResult>, String> {
+        let q = query.trim();
+        if q.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let url = format!(
+            "https://export.arxiv.org/api/query?search_query=all:{}&start=0&max_results=5",
+            url_encode_query(q)
+        );
+        let client = build_http_client()?;
+        let resp = client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| format!("ArXiv network request failed: {}", e))?;
+
+        if !resp.status().is_success() {
+            return Err(format!("ArXiv returned HTTP {}", resp.status()));
+        }
+
+        let xml = resp
+            .text()
+            .await
+            .map_err(|e| format!("ArXiv response read failed: {}", e))?;
+
+        Self::parse_atom_xml(&xml)
+    }
 }
 
 #[cfg(test)]
@@ -425,5 +968,88 @@ mod tests {
         // Filter by STEM Encyclopedia
         engine.set_filter(SearchFilter::Encyclopedia, &[]);
         assert_eq!(engine.active_filter, SearchFilter::Encyclopedia);
+    }
+
+    #[test]
+    fn test_ad_block_shield_url_sanitization() {
+        let shield = AdBlockShield::new();
+
+        let dirty_url = "https://ocw.mit.edu/courses/physics?utm_source=adnetwork&fbclid=abc12345&gclid=xyz987&topic=gauss";
+        let clean_url = shield.sanitize_url(dirty_url);
+        assert!(!clean_url.contains("utm_source"));
+        assert!(!clean_url.contains("fbclid"));
+        assert!(!clean_url.contains("gclid"));
+        assert!(
+            clean_url.contains("topic=gauss"),
+            "Should preserve non-tracking parameter"
+        );
+
+        let clean_input = "https://en.wikipedia.org/wiki/Nernst_equation";
+        assert_eq!(shield.sanitize_url(clean_input), clean_input);
+    }
+
+    #[tokio::test]
+    async fn test_web_search_connectors_fail_closed_and_parse_real_formats() {
+        // 1. GoogleSearchConnector must fail closed without credentials (no canned fake results)
+        let google = GoogleSearchConnector::new();
+        let g_err = google.execute_query("Gauss's law electric flux").await;
+        assert!(g_err.is_err(), "Unconfigured Google CSE must fail closed");
+
+        // 2. Encyclopedia offline search succeeds cleanly
+        let mut engine = AcademicSearchEngine::new();
+        let enc_res = engine
+            .execute_web_search("Gauss", SearchProviderType::Encyclopedia)
+            .await
+            .expect("Encyclopedia offline search must succeed");
+        assert!(!enc_res.is_empty());
+
+        // 3. ArXiv Atom XML parsing + AdBlockShield sanitization
+        let atom_xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+          <entry>
+            <id>https://arxiv.org/abs/2501.00001?utm_source=tracker&amp;fbclid=xyz</id>
+            <title>Quantum Photoelectric Verification</title>
+            <summary>Single-photon stopping potential measurements.</summary>
+          </entry>
+        </feed>"#;
+        let parsed_arxiv = ArXivConnector::parse_atom_xml(atom_xml).expect("Atom XML parse");
+        assert_eq!(parsed_arxiv.len(), 1);
+        assert_eq!(parsed_arxiv[0].badge, "ARXIV");
+        let sanitized = engine.shield.filter_and_sanitize_results(parsed_arxiv);
+        assert_eq!(sanitized.len(), 1);
+        assert!(!sanitized[0].snippet.contains("utm_source"));
+        assert!(!sanitized[0].snippet.contains("fbclid"));
+
+        // 4. DuckDuckGo JSON parsing + Google CSE JSON parsing + tracker blocking
+        let ddg_json = serde_json::json!({
+            "Heading": "Nernst Equation",
+            "AbstractText": "Relates cell reduction potential to temperature.",
+            "AbstractURL": "https://en.wikipedia.org/wiki/Nernst_equation?gclid=bad123",
+            "RelatedTopics": []
+        });
+        let ddg_res = DuckDuckGoConnector::parse_instant_answer_json(&ddg_json);
+        assert_eq!(ddg_res.len(), 1);
+        let ddg_clean = engine.shield.filter_and_sanitize_results(ddg_res);
+        assert!(!ddg_clean[0].snippet.contains("gclid"));
+
+        let cse_json = serde_json::json!({
+            "items": [
+                {
+                    "title": "MIT Gauss Law",
+                    "link": "https://ocw.mit.edu/gauss?utm_campaign=promo",
+                    "snippet": "Electric flux through closed surfaces."
+                },
+                {
+                    "title": "Blocked Tracker",
+                    "link": "https://doubleclick.net/ad",
+                    "snippet": "Ad network"
+                }
+            ]
+        });
+        let cse_res = GoogleSearchConnector::parse_cse_json(&cse_json);
+        assert_eq!(cse_res.len(), 2);
+        let cse_clean = engine.shield.filter_and_sanitize_results(cse_res);
+        assert_eq!(cse_clean.len(), 1);
+        assert!(!cse_clean[0].snippet.contains("utm_campaign"));
     }
 }

@@ -13,8 +13,8 @@ use iced::{Alignment, Color, Element, Length};
 use mindset_sys::network::NetworkStatus;
 
 use crate::theme::{
-    glass_card, glass_elevated, h_space, primary_button, px_space, secondary_button,
-    ThemePalette, TYPE_BODY, TYPE_CAPTION, TYPE_SUBHEAD,
+    glass_card, glass_elevated, h_space, primary_button, px_space, secondary_button, ThemePalette,
+    TYPE_BODY, TYPE_CAPTION, TYPE_SUBHEAD,
 };
 use crate::Message;
 
@@ -32,15 +32,25 @@ pub fn view<'a>(
             .connected_ssid
             .as_deref()
             .unwrap_or("Active Connection");
-        ("●", format!("Online • {latency}ms latency • Wi-Fi: {ssid}"), palette.success)
+        (
+            "●",
+            format!("Online • {latency}ms latency • Wi-Fi: {ssid}"),
+            palette.success,
+        )
     } else {
-        ("○", "Offline • No Active Internet Connection".to_string(), palette.danger)
+        (
+            "○",
+            "Offline • No Active Internet Connection".to_string(),
+            palette.danger,
+        )
     };
 
     let network_badge = container(
         row![
             text(status_dot).size(TYPE_CAPTION).color(status_color),
-            text(status_text).size(TYPE_CAPTION).color(palette.text_secondary),
+            text(status_text)
+                .size(TYPE_CAPTION)
+                .color(palette.text_secondary),
         ]
         .spacing(6)
         .align_y(Alignment::Center),

@@ -10,6 +10,8 @@ pub enum WindowId {
     Today,
     Tasks,
     StudyReader,
+    OdysseyMap,
+    Scratchpad,
     LayaAiChat,
     ProgressStats,
     Settings,
@@ -25,6 +27,8 @@ impl WindowId {
             WindowId::Today => "Today — Deep Focus Dashboard",
             WindowId::Tasks => "Syllabus Quotas & Goals",
             WindowId::StudyReader => "Study Session Reader",
+            WindowId::OdysseyMap => "3D Syllabus Odyssey",
+            WindowId::Scratchpad => "Quick Study Scratchpad",
             WindowId::LayaAiChat => "Maindy AI Tutor",
             WindowId::ProgressStats => "Progress & Analytics",
             WindowId::Settings => "MindSet Preferences",
@@ -40,6 +44,8 @@ impl WindowId {
             WindowId::Today => "☀️",
             WindowId::Tasks => "📋",
             WindowId::StudyReader => "📖",
+            WindowId::OdysseyMap => "🗺️",
+            WindowId::Scratchpad => "📝",
             WindowId::LayaAiChat => "🧠",
             WindowId::ProgressStats => "📊",
             WindowId::Settings => "⚙️",
@@ -55,6 +61,8 @@ impl WindowId {
             WindowId::Today => (840.0, 580.0),
             WindowId::Tasks => (780.0, 520.0),
             WindowId::StudyReader => (920.0, 620.0),
+            WindowId::OdysseyMap => (860.0, 560.0),
+            WindowId::Scratchpad => (660.0, 480.0),
             WindowId::LayaAiChat => (760.0, 540.0),
             WindowId::ProgressStats => (800.0, 520.0),
             WindowId::Settings => (720.0, 480.0),
@@ -115,6 +123,7 @@ impl WindowInstance {
 pub enum ActiveOverlay {
     #[default]
     None,
+    SystemMenu,
     Launcher,
     ControlCenter,
     OdysseyMap,
@@ -136,6 +145,8 @@ pub enum DesktopWidgetId {
     ScholarBriefing,
     OdysseyTrail,
     Scratchpad,
+    VerificationBoss,
+    QuickTutor,
 }
 
 impl DesktopWidgetId {
@@ -144,6 +155,8 @@ impl DesktopWidgetId {
             DesktopWidgetId::ScholarBriefing => "Daily AI Briefing",
             DesktopWidgetId::OdysseyTrail => "3D Syllabus Odyssey Trail",
             DesktopWidgetId::Scratchpad => "Quick Study Scratchpad",
+            DesktopWidgetId::VerificationBoss => "Active Boss Challenge",
+            DesktopWidgetId::QuickTutor => "Quick Tutor Capsule",
         }
     }
 }
@@ -188,6 +201,16 @@ impl Default for DesktopLayoutConfig {
 
 impl DesktopLayoutConfig {
     pub fn new() -> Self {
+        let mut odyssey_placement =
+            DesktopWidgetPlacement::new(DesktopWidgetId::OdysseyTrail, 410.0, 130.0, 460.0, 310.0);
+        // Heavy views live inside launchable Dock floating windows by default;
+        // desktop shows at most 2 compact Side HUD widgets (Active Capsule + Streak/Focus).
+        odyssey_placement.is_visible = false;
+
+        let mut scratchpad_placement =
+            DesktopWidgetPlacement::new(DesktopWidgetId::Scratchpad, 410.0, 455.0, 460.0, 140.0);
+        scratchpad_placement.is_visible = false;
+
         Self {
             free_placement: false,
             widget_order: vec![
@@ -196,9 +219,15 @@ impl DesktopLayoutConfig {
                 DesktopWidgetId::Scratchpad,
             ],
             placements: vec![
-                DesktopWidgetPlacement::new(DesktopWidgetId::ScholarBriefing, 410.0, 16.0, 460.0, 100.0),
-                DesktopWidgetPlacement::new(DesktopWidgetId::OdysseyTrail, 410.0, 130.0, 460.0, 310.0),
-                DesktopWidgetPlacement::new(DesktopWidgetId::Scratchpad, 410.0, 455.0, 460.0, 140.0),
+                DesktopWidgetPlacement::new(
+                    DesktopWidgetId::ScholarBriefing,
+                    410.0,
+                    16.0,
+                    310.0,
+                    140.0,
+                ),
+                odyssey_placement,
+                scratchpad_placement,
             ],
         }
     }
@@ -207,7 +236,10 @@ impl DesktopLayoutConfig {
         self.placements.iter().find(|p| p.id == id)
     }
 
-    pub fn get_placement_mut(&mut self, id: DesktopWidgetId) -> Option<&mut DesktopWidgetPlacement> {
+    pub fn get_placement_mut(
+        &mut self,
+        id: DesktopWidgetId,
+    ) -> Option<&mut DesktopWidgetPlacement> {
         self.placements.iter_mut().find(|p| p.id == id)
     }
 
@@ -236,6 +268,8 @@ impl WindowManager {
             WindowId::Today,
             WindowId::Tasks,
             WindowId::StudyReader,
+            WindowId::OdysseyMap,
+            WindowId::Scratchpad,
             WindowId::LayaAiChat,
             WindowId::ProgressStats,
             WindowId::Settings,
@@ -272,7 +306,10 @@ impl WindowManager {
         self.widget_layout.get_placement(id)
     }
 
-    pub fn get_widget_placement_mut(&mut self, id: DesktopWidgetId) -> Option<&mut DesktopWidgetPlacement> {
+    pub fn get_widget_placement_mut(
+        &mut self,
+        id: DesktopWidgetId,
+    ) -> Option<&mut DesktopWidgetPlacement> {
         self.widget_layout.get_placement_mut(id)
     }
 

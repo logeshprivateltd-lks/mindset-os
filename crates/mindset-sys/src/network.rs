@@ -86,7 +86,11 @@ impl NetworkManager {
             return NetworkStatus {
                 is_wifi_enabled: true,
                 is_online,
-                connected_ssid: if is_online { Some("Connected Network".to_string()) } else { None },
+                connected_ssid: if is_online {
+                    Some("Connected Network".to_string())
+                } else {
+                    None
+                },
                 ip_address: None,
                 signal_percent: if is_online { 85 } else { 0 },
                 latency_ms,
@@ -144,7 +148,11 @@ impl NetworkManager {
 
         #[cfg(target_os = "windows")]
         {
-            let admin_arg = if enable { "admin=enabled" } else { "admin=disabled" };
+            let admin_arg = if enable {
+                "admin=enabled"
+            } else {
+                "admin=disabled"
+            };
             let _ = Command::new("netsh")
                 .args(["interface", "set", "interface", "Wi-Fi", admin_arg])
                 .output();
@@ -175,7 +183,9 @@ impl NetworkManager {
                 }
             }
 
-            let output = cmd.output().map_err(|e| format!("Failed to run nmcli: {e}"))?;
+            let output = cmd
+                .output()
+                .map_err(|e| format!("Failed to run nmcli: {e}"))?;
             if output.status.success() {
                 let msg = String::from_utf8_lossy(&output.stdout).trim().to_string();
                 Ok(if msg.is_empty() {
@@ -233,7 +243,9 @@ impl NetworkManager {
         // Check if Wi-Fi radio is on
         if let Ok(output) = Command::new("nmcli").args(["radio", "wifi"]).output() {
             if output.status.success() {
-                let text = String::from_utf8_lossy(&output.stdout).trim().to_lowercase();
+                let text = String::from_utf8_lossy(&output.stdout)
+                    .trim()
+                    .to_lowercase();
                 is_wifi_enabled = text.contains("enabled");
             }
         }
@@ -300,7 +312,14 @@ impl NetworkManager {
         let mut results: Vec<WifiNetwork> = Vec::new();
 
         if let Ok(output) = Command::new("nmcli")
-            .args(["-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY", "device", "wifi", "list"])
+            .args([
+                "-t",
+                "-f",
+                "IN-USE,SSID,SIGNAL,SECURITY",
+                "device",
+                "wifi",
+                "list",
+            ])
             .output()
         {
             if output.status.success() {
@@ -328,7 +347,11 @@ impl NetworkManager {
                             results.push(WifiNetwork {
                                 ssid,
                                 signal_percent,
-                                security: if security.is_empty() { "Open".to_string() } else { security },
+                                security: if security.is_empty() {
+                                    "Open".to_string()
+                                } else {
+                                    security
+                                },
                                 in_use,
                             });
                         }
@@ -337,7 +360,11 @@ impl NetworkManager {
             }
         }
 
-        results.sort_by(|a, b| b.in_use.cmp(&a.in_use).then_with(|| b.signal_percent.cmp(&a.signal_percent)));
+        results.sort_by(|a, b| {
+            b.in_use
+                .cmp(&a.in_use)
+                .then_with(|| b.signal_percent.cmp(&a.signal_percent))
+        });
         results
     }
 
@@ -350,14 +377,20 @@ impl NetworkManager {
         let mut connected_ssid = None;
         let mut signal_percent = 0;
 
-        if let Ok(output) = Command::new("netsh").args(["wlan", "show", "interfaces"]).output() {
+        if let Ok(output) = Command::new("netsh")
+            .args(["wlan", "show", "interfaces"])
+            .output()
+        {
             if output.status.success() {
                 let text = String::from_utf8_lossy(&output.stdout);
                 for line in text.lines() {
                     let trimmed = line.trim();
                     if trimmed.starts_with("State") && trimmed.contains("disconnected") {
                         connected_ssid = None;
-                    } else if trimmed.starts_with("SSID") && !trimmed.starts_with("SSID name") && !trimmed.starts_with("BSSID") {
+                    } else if trimmed.starts_with("SSID")
+                        && !trimmed.starts_with("SSID name")
+                        && !trimmed.starts_with("BSSID")
+                    {
                         if let Some(idx) = trimmed.find(':') {
                             let name = trimmed[idx + 1..].trim();
                             if !name.is_empty() {
@@ -401,12 +434,18 @@ impl NetworkManager {
 
         // 1. First get active connected SSID
         let mut active_ssid = None;
-        if let Ok(output) = Command::new("netsh").args(["wlan", "show", "interfaces"]).output() {
+        if let Ok(output) = Command::new("netsh")
+            .args(["wlan", "show", "interfaces"])
+            .output()
+        {
             if output.status.success() {
                 let text = String::from_utf8_lossy(&output.stdout);
                 for line in text.lines() {
                     let trimmed = line.trim();
-                    if trimmed.starts_with("SSID") && !trimmed.starts_with("SSID name") && !trimmed.starts_with("BSSID") {
+                    if trimmed.starts_with("SSID")
+                        && !trimmed.starts_with("SSID name")
+                        && !trimmed.starts_with("BSSID")
+                    {
                         if let Some(idx) = trimmed.find(':') {
                             let name = trimmed[idx + 1..].trim();
                             if !name.is_empty() {
@@ -419,7 +458,10 @@ impl NetworkManager {
         }
 
         // 2. Scan available networks
-        if let Ok(output) = Command::new("netsh").args(["wlan", "show", "networks"]).output() {
+        if let Ok(output) = Command::new("netsh")
+            .args(["wlan", "show", "networks"])
+            .output()
+        {
             if output.status.success() {
                 let text = String::from_utf8_lossy(&output.stdout);
                 let mut current_ssid: Option<String> = None;
@@ -477,7 +519,11 @@ impl NetworkManager {
             }
         }
 
-        results.sort_by(|a, b| b.in_use.cmp(&a.in_use).then_with(|| b.signal_percent.cmp(&a.signal_percent)));
+        results.sort_by(|a, b| {
+            b.in_use
+                .cmp(&a.in_use)
+                .then_with(|| b.signal_percent.cmp(&a.signal_percent))
+        });
         results
     }
 }

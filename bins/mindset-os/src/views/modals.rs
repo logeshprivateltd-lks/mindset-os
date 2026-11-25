@@ -3,13 +3,14 @@
 //! Provides compile-time modal routing for Launcher (Ctrl+K), Control Center,
 //! Mindful Guard distraction shield, Odyssey Gamified Map, and Quick Setup Wizard.
 
-use iced::widget::{button, column, container, row, scrollable, text};
+use iced::widget::{button, column, container, mouse_area, row, scrollable, text};
 use iced::{Alignment, Color, Element, Length};
-use mindset_core::{ActiveOverlay, MindSetCoreState, NodeStatus, WizardStep};
+use mindset_core::{ActiveOverlay, MindSetCoreState, NodeStatus, WindowId, WizardStep};
 
 use crate::theme::{
-    danger_button, glass_card, glass_elevated, h_space, modal_backdrop, primary_button, px_space,
-    secondary_button, styled_button, v_space, ButtonVariant, ThemePalette,
+    danger_button, frosted_glass_container, glass_card, glass_elevated, h_space, modal_backdrop,
+    primary_button, px_space, secondary_button, styled_button, v_space, ButtonVariant,
+    ThemePalette,
 };
 use crate::Message;
 
@@ -29,20 +30,19 @@ pub fn view<'a>(
     wifi_menu_open: bool,
     wifi_connecting_ssid: Option<&'a str>,
     wifi_password_input: &'a str,
+    lock_screen: &'a crate::shell::lock_screen::LockScreenState,
+    profile: &'a crate::storage::db::UserProfile,
+    active_exam_evaluation: Option<&'a mindset_core::agent::exam_reviewer::EvaluationSheet>,
+    exam_eval_status: Option<&'a str>,
+    hud_visible: bool,
 ) -> Option<Element<'a, Message>> {
     if overlay == ActiveOverlay::None {
         return None;
     }
 
-    // Anchored side widget for Notifications (avoids centered modal dialog)
-    if overlay == ActiveOverlay::Notifications {
-        return Some(render_anchored_notifications(core, palette));
-    }
-
-    let modal_content = match overlay {
-        ActiveOverlay::None => return None,
-        ActiveOverlay::Launcher => crate::shell::launcher::view(core, palette, search_query),
-        ActiveOverlay::ControlCenter => crate::shell::control_center::view(
+    // 1. Anchored Top-Right Control Center beneath the system tray (never centered)
+    if overlay == ActiveOverlay::ControlCenter {
+        let cc_card = mouse_area(crate::shell::control_center::view(
             core,
             palette,
             network_status,
@@ -50,15 +50,83 @@ pub fn view<'a>(
             wifi_menu_open,
             wifi_connecting_ssid,
             wifi_password_input,
-        ),
-        ActiveOverlay::LockScreen => crate::shell::lock_screen::view(palette),
+        ))
+        .on_press(Message::NoOp);
+
+        let anchored_shell = container(column![
+            row![h_space(), cc_card].align_y(Alignment::Start),
+            v_space(),
+        ])
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .padding(iced::Padding {
+            top: 46.0,
+            right: 18.0,
+            bottom: 16.0,
+            left: 16.0,
+        });
+
+        return Some(
+            mouse_area(anchored_shell)
+                .on_press(Message::CloseOverlays)
+                .into(),
+        );
+    }
+
+    // 2. Anchored Top-Left System Menu beneath the "MS OS" top-bar logo
+    if overlay == ActiveOverlay::SystemMenu {
+        let menu_card =
+            mouse_area(render_system_menu(core, palette, hud_visible)).on_press(Message::NoOp);
+
+        let anchored_shell = container(column![
+            row![menu_card, h_space()].align_y(Alignment::Start),
+            v_space(),
+        ])
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .padding(iced::Padding {
+            top: 46.0,
+            right: 16.0,
+            bottom: 16.0,
+            left: 18.0,
+        });
+
+        return Some(
+            mouse_area(anchored_shell)
+                .on_press(Message::CloseOverlays)
+                .into(),
+        );
+    }
+
+    // 3. Anchored Top-Right Notifications Drawer with outside-click dismissal
+    if overlay == ActiveOverlay::Notifications {
+        return Some(render_anchored_notifications(core, palette));
+    }
+
+    // Lock screen is security-gated: never dismiss on outside click
+    let allow_outside_dismiss = matches!(
+        overlay,
+        ActiveOverlay::Launcher
+            | ActiveOverlay::WindowSwitcher
+            | ActiveOverlay::OdysseyMap
+            | ActiveOverlay::PowerMenu
+    );
+
+    let modal_content = match overlay {
+        ActiveOverlay::None
+        | ActiveOverlay::ControlCenter
+        | ActiveOverlay::SystemMenu
+        | ActiveOverlay::Notifications => unreachable!(),
+        ActiveOverlay::Launcher => crate::shell::launcher::view(core, palette, search_query),
+        ActiveOverlay::LockScreen => crate::shell::lock_screen::view(lock_screen, profile, palette),
         ActiveOverlay::WindowSwitcher => crate::shell::window_switcher::view(core, palette),
         ActiveOverlay::MindfulGuard => render_mindful_guard(core, palette),
         ActiveOverlay::OdysseyMap => render_odyssey_map(core, palette),
         ActiveOverlay::QuickSetupWizard => render_wizard(core, palette),
-        ActiveOverlay::Notifications => unreachable!(),
         ActiveOverlay::PowerMenu => render_power_menu(palette),
-        ActiveOverlay::ExamReport => crate::views::exam_report::view(core, palette),
+        ActiveOverlay::ExamReport => {
+            crate::views::exam_report::view(core, palette, active_exam_evaluation, exam_eval_status)
+        }
         ActiveOverlay::VerificationBoss => crate::views::verification_boss::view(
             core,
             palette,
@@ -75,11 +143,16 @@ pub fn view<'a>(
         }
     };
 
-    // Modal dialog centered over dim backdrop
+    let foreground = if allow_outside_dismiss {
+        mouse_area(modal_content).on_press(Message::NoOp).into()
+    } else {
+        modal_content
+    };
+
     let backdrop = container(
         column![
             v_space(),
-            row![h_space(), modal_content, h_space(),].align_y(Alignment::Center),
+            row![h_space(), foreground, h_space()].align_y(Alignment::Center),
             v_space(),
         ]
         .align_x(Alignment::Center),
@@ -88,7 +161,79 @@ pub fn view<'a>(
     .height(Length::Fill)
     .style(move |_t| modal_backdrop());
 
-    Some(backdrop.into())
+    if allow_outside_dismiss {
+        Some(mouse_area(backdrop).on_press(Message::CloseOverlays).into())
+    } else {
+        Some(backdrop.into())
+    }
+}
+
+fn render_system_menu<'a>(
+    core: &'a MindSetCoreState,
+    palette: ThemePalette,
+    hud_visible: bool,
+) -> Element<'a, Message> {
+    let hud_label = if hud_visible {
+        "◫  Hide Desktop Side HUD"
+    } else {
+        "◫  Show Desktop Side HUD"
+    };
+
+    let menu_btn = |label: &'a str, msg: Message| {
+        button(text(label).size(12).color(palette.text_primary))
+            .on_press(msg)
+            .style(secondary_button(palette))
+            .padding([7, 12])
+            .width(Length::Fill)
+    };
+
+    let content = column![
+        row![
+            text("MS OS").size(13).color(palette.text_primary),
+            h_space(),
+            text(if core.preferences.focus_dnd {
+                "Focus DND"
+            } else {
+                "Debian Edition"
+            })
+            .size(10)
+            .color(palette.text_muted),
+        ]
+        .align_y(Alignment::Center),
+        menu_btn(
+            "⊞  App Launcher (Ctrl+K)",
+            Message::ToggleOverlay(ActiveOverlay::Launcher)
+        ),
+        menu_btn(hud_label, Message::ToggleSideHud),
+        menu_btn(
+            "🗺️  3D Syllabus Odyssey",
+            Message::OpenWindow(WindowId::OdysseyMap)
+        ),
+        menu_btn(
+            "📝  Quick Scratchpad",
+            Message::OpenWindow(WindowId::Scratchpad)
+        ),
+        menu_btn(
+            "⚙️  System Preferences",
+            Message::OpenWindow(WindowId::Settings)
+        ),
+        px_space(0.0, 2.0),
+        menu_btn(
+            "🔒  Lock Screen (Super+L)",
+            Message::ToggleOverlay(ActiveOverlay::LockScreen)
+        ),
+        menu_btn("🚪  Log Out Session", Message::SystemLogout),
+        menu_btn("🔄  Reboot", Message::SystemReboot),
+        button(text("⏻  Power Off").size(12).color(Color::WHITE))
+            .on_press(Message::SystemPowerOff)
+            .style(danger_button(palette))
+            .padding([7, 12])
+            .width(Length::Fill),
+    ]
+    .spacing(6)
+    .padding(14);
+
+    frosted_glass_container(palette, 16.0, true, container(content).width(248))
 }
 
 // ----------------------------------------------------------------------------
@@ -359,7 +504,9 @@ fn render_anchored_notifications<'a>(
         button(container(row![]).width(Length::Fill).height(Length::Fill))
             .on_press(Message::CloseOverlays)
             .style(|_t, _s| button::Style {
-                background: Some(iced::Background::Color(Color::from_rgba(0.0, 0.0, 0.0, 0.14))),
+                background: Some(iced::Background::Color(Color::from_rgba(
+                    0.0, 0.0, 0.0, 0.14,
+                ))),
                 ..Default::default()
             })
             .padding(0)
@@ -389,21 +536,12 @@ fn render_anchored_notifications<'a>(
         })
         .padding(0);
 
-    let side_column = column![
-        top_dismiss,
-        drawer_content,
-        bottom_dismiss,
-    ]
-    .width(360);
+    let side_column = column![top_dismiss, drawer_content, bottom_dismiss,].width(360);
 
-    row![
-        click_dismiss(),
-        side_column,
-        right_dismiss,
-    ]
-    .width(Length::Fill)
-    .height(Length::Fill)
-    .into()
+    row![click_dismiss(), side_column, right_dismiss,]
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .into()
 }
 
 fn render_notifications<'a>(
@@ -428,7 +566,9 @@ fn render_notifications<'a>(
         container(text("0").size(10).color(palette.text_muted))
             .padding([1, 6])
             .style(move |_t| container::Style {
-                background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.08))),
+                background: Some(iced::Background::Color(Color::from_rgba(
+                    1.0, 1.0, 1.0, 0.08,
+                ))),
                 border: iced::Border {
                     radius: iced::border::Radius::from(10.0),
                     ..Default::default()
@@ -440,9 +580,7 @@ fn render_notifications<'a>(
     let header = row![
         row![
             text("🔔").size(14),
-            text("Notifications")
-                .size(13)
-                .color(palette.text_primary),
+            text("Notifications").size(13).color(palette.text_primary),
             count_badge,
         ]
         .spacing(6)
@@ -464,9 +602,7 @@ fn render_notifications<'a>(
         container(
             column![
                 text("✨").size(24),
-                text("All Caught Up")
-                    .size(13)
-                    .color(palette.text_primary),
+                text("All Caught Up").size(13).color(palette.text_primary),
                 text("No pending study tasks, focus alerts, or notifications.")
                     .size(11)
                     .color(palette.text_muted),
@@ -485,7 +621,9 @@ fn render_notifications<'a>(
             let icon_badge = container(text(&t.icon).size(15))
                 .padding(6)
                 .style(move |_t| container::Style {
-                    background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.12))),
+                    background: Some(iced::Background::Color(Color::from_rgba(
+                        1.0, 1.0, 1.0, 0.12,
+                    ))),
                     border: iced::Border {
                         radius: iced::border::Radius::from(8.0),
                         ..Default::default()
@@ -544,34 +682,19 @@ fn render_notifications<'a>(
     ]
     .align_y(Alignment::Center);
 
-    // 4. Assemble Glassmorphic Drawer Container
-    container(
-        column![
-            header,
-            subtitle,
-            content,
-            footer,
-        ]
-        .spacing(10)
-        .padding(14),
-    )
-    .width(360)
-    .style(move |_t| container::Style {
-        background: Some(iced::Background::Color(palette.glass_surface_elevated)),
-        border: iced::Border {
-            radius: iced::border::Radius::from(16.0),
-            color: palette.glass_border,
-            width: 1.0,
-        },
-        shadow: iced::Shadow {
-            color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
-            offset: iced::Vector::new(0.0, 8.0),
-            blur_radius: 22.0,
-        },
-        text_color: Some(palette.text_primary),
-        ..Default::default()
-    })
-    .into()
+    // 4. Assemble Frosted Glass Notification Drawer with outside-click capture
+    let drawer = frosted_glass_container(
+        palette,
+        16.0,
+        true,
+        container(
+            column![header, subtitle, content, footer]
+                .spacing(10)
+                .padding(14),
+        )
+        .width(360),
+    );
+    mouse_area(drawer).on_press(Message::NoOp).into()
 }
 
 fn render_power_menu<'a>(palette: ThemePalette) -> Element<'a, Message> {

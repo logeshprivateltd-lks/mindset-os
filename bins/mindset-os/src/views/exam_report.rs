@@ -7,16 +7,22 @@
 
 use iced::widget::{button, column, container, row, scrollable, text};
 use iced::{Alignment, Element, Length};
+use mindset_core::agent::exam_reviewer::EvaluationSheet;
 use mindset_core::agent::exam_scout::{ExamProfile, ExamScoutAgent, RoiQuadrant};
 use mindset_core::MindSetCoreState;
 
 use crate::theme::{
-    glass_card, glass_elevated, h_space, primary_button, secondary_button, ThemePalette,
-    TYPE_BODY, TYPE_CAPTION, TYPE_METRIC, TYPE_SUBHEAD,
+    glass_card, glass_elevated, h_space, primary_button, secondary_button, ThemePalette, TYPE_BODY,
+    TYPE_CAPTION, TYPE_METRIC, TYPE_SUBHEAD,
 };
 use crate::Message;
 
-pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a, Message> {
+pub fn view<'a>(
+    core: &'a MindSetCoreState,
+    palette: ThemePalette,
+    active_exam_evaluation: Option<&'a EvaluationSheet>,
+    exam_eval_status: Option<&'a str>,
+) -> Element<'a, Message> {
     let profile = ExamProfile::all_builtin()
         .into_iter()
         .find(|p| p.id == core.exam_plan.exam_id)
@@ -103,7 +109,9 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
 
     let xp_card = container(
         column![
-            text("MINDSET XP").size(TYPE_CAPTION).color(palette.text_muted),
+            text("MINDSET XP")
+                .size(TYPE_CAPTION)
+                .color(palette.text_muted),
             text(format!("{} XP", core.exam_plan.mindset_xp))
                 .size(TYPE_SUBHEAD)
                 .color(palette.accent),
@@ -130,7 +138,9 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
         insights_col = insights_col.push(
             row![
                 text("•").size(TYPE_BODY).color(palette.accent),
-                text(insight.clone()).size(TYPE_BODY).color(palette.text_primary),
+                text(insight.clone())
+                    .size(TYPE_BODY)
+                    .color(palette.text_primary),
             ]
             .spacing(8)
             .align_y(Alignment::Center),
@@ -163,16 +173,20 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
             RoiQuadrant::Trap => ("⚠️ TRAP", palette.danger),
         };
 
-        let badge = container(text(badge_label).size(TYPE_CAPTION).color(palette.background))
-            .padding([3, 8])
-            .style(move |_t| container::Style {
-                background: Some(iced::Background::Color(badge_color)),
-                border: iced::Border {
-                    radius: 4.0.into(),
-                    ..Default::default()
-                },
+        let badge = container(
+            text(badge_label)
+                .size(TYPE_CAPTION)
+                .color(palette.background),
+        )
+        .padding([3, 8])
+        .style(move |_t| container::Style {
+            background: Some(iced::Background::Color(badge_color)),
+            border: iced::Border {
+                radius: 4.0.into(),
                 ..Default::default()
-            });
+            },
+            ..Default::default()
+        });
 
         let chapter_row = container(
             row![
@@ -207,7 +221,163 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
         chapters_col = chapters_col.push(chapter_row);
     }
 
-    let chapters_scroll = scrollable(chapters_col).height(Length::Fixed(220.0));
+    let chapters_scroll = scrollable(chapters_col).height(Length::Fixed(180.0));
+
+    // 5. 590/600 State Board AI Exam Paper Reviewer Panel
+    let reviewer_header = row![
+        column![
+            text("📝 590/600 EXAM PAPER REVIEWER")
+                .size(TYPE_CAPTION)
+                .color(palette.accent),
+            text("Strict Rubric Evaluator • SI Units, Diagrams, & Derivations")
+                .size(TYPE_CAPTION)
+                .color(palette.text_secondary),
+        ]
+        .spacing(2),
+        h_space(),
+        button(text("📄 Upload & Grade Student Paper").size(TYPE_CAPTION))
+            .on_press(Message::PickExamPaperToGrade)
+            .style(primary_button(palette))
+            .padding([6, 12]),
+    ]
+    .align_y(Alignment::Center);
+
+    let mut reviewer_col = column![reviewer_header].spacing(8);
+
+    if let Some(status) = exam_eval_status {
+        reviewer_col = reviewer_col.push(text(status).size(TYPE_CAPTION).color(palette.warning));
+    }
+
+    if let Some(sheet) = active_exam_evaluation {
+        let crown_badge_text = if sheet.achieved_590_crown {
+            "👑 590/600 CROWN ACHIEVED"
+        } else {
+            "🎯 BELOW 590 CROWN THRESHOLD (98%+)"
+        };
+        let crown_color = if sheet.achieved_590_crown {
+            palette.success
+        } else {
+            palette.warning
+        };
+
+        let score_summary = row![
+            column![
+                text(format!("{} — {}", sheet.subject, sheet.examination))
+                    .size(TYPE_BODY)
+                    .color(palette.text_primary),
+                text(format!(
+                    "Score: {:.1} / {:.1} ({:.1}%)  •  Total Deductions: -{:.1}",
+                    sheet.total_score, sheet.max_marks, sheet.percentage, sheet.total_deductions
+                ))
+                .size(TYPE_CAPTION)
+                .color(palette.text_secondary),
+            ]
+            .spacing(2),
+            h_space(),
+            container(
+                text(crown_badge_text)
+                    .size(TYPE_CAPTION)
+                    .color(palette.background)
+            )
+            .padding([4, 8])
+            .style(move |_t| container::Style {
+                background: Some(iced::Background::Color(crown_color)),
+                border: iced::Border {
+                    radius: 4.0.into(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }),
+        ]
+        .align_y(Alignment::Center);
+
+        reviewer_col = reviewer_col.push(score_summary);
+
+        // Itemized Questions & Deduction Breakdown
+        let mut details_col = column![].spacing(4);
+        for q_eval in &sheet.itemized_scores {
+            details_col = details_col.push(
+                row![
+                    text(format!("Q{}: {}", q_eval.question_number, q_eval.topic))
+                        .size(TYPE_CAPTION)
+                        .color(palette.text_primary),
+                    h_space(),
+                    text(format!(
+                        "{:.1} / {:.1}",
+                        q_eval.awarded_marks, q_eval.max_marks
+                    ))
+                    .size(TYPE_CAPTION)
+                    .color(if q_eval.awarded_marks >= q_eval.max_marks {
+                        palette.success
+                    } else {
+                        palette.warning
+                    }),
+                ]
+                .align_y(Alignment::Center),
+            );
+            for d in &q_eval.deductions {
+                details_col = details_col.push(
+                    text(format!(
+                        "   ↳ [{} • -{:.1}] {}",
+                        d.rule_id, d.penalty, d.reason
+                    ))
+                    .size(TYPE_CAPTION)
+                    .color(palette.danger),
+                );
+            }
+        }
+
+        if !sheet.red_pen_annotations.is_empty() {
+            details_col = details_col.push(
+                text("Red-Pen Teacher Annotations:")
+                    .size(TYPE_CAPTION)
+                    .color(palette.danger),
+            );
+            for note in sheet.red_pen_annotations.iter().take(4) {
+                details_col = details_col.push(
+                    text(format!("• {}", note))
+                        .size(TYPE_CAPTION)
+                        .color(palette.text_secondary),
+                );
+            }
+        }
+
+        details_col = details_col.push(
+            text(format!(
+                "590/600 Gap Analysis: {:.1}% vs {:.1}% target (Marks needed: {:.1})",
+                sheet.gap_analysis_590.current_percentage,
+                sheet.gap_analysis_590.target_percentage,
+                sheet.gap_analysis_590.marks_needed_for_590
+            ))
+            .size(TYPE_CAPTION)
+            .color(palette.accent),
+        );
+        for rec in sheet
+            .gap_analysis_590
+            .actionable_recommendations
+            .iter()
+            .take(3)
+        {
+            details_col = details_col.push(
+                text(format!("→ {}", rec))
+                    .size(TYPE_CAPTION)
+                    .color(palette.text_primary),
+            );
+        }
+
+        reviewer_col = reviewer_col.push(scrollable(details_col).height(Length::Fixed(130.0)));
+    } else {
+        reviewer_col = reviewer_col.push(
+            text("Upload a student answer sheet (.pdf or .txt) to receive itemized 590/600 rubric grading, SI-unit & diagram deductions, and gap analysis.")
+                .size(TYPE_CAPTION)
+                .color(palette.text_muted),
+        );
+    }
+
+    let reviewer_card = container(reviewer_col)
+        .width(Length::Fill)
+        .padding(12)
+        .style(move |_t| glass_card(palette));
 
     let bottom_actions = row![
         text("Absorbs missed study days into reserved buffer automatically with zero guilt.")
@@ -226,12 +396,14 @@ pub fn view<'a>(core: &'a MindSetCoreState, palette: ThemePalette) -> Element<'a
         metrics_row,
         insights_card,
         chapters_scroll,
+        reviewer_card,
         bottom_actions,
     ]
-    .spacing(14)
-    .max_width(740);
+    .spacing(12)
+    .max_width(760);
 
-    container(modal_body)
+    container(scrollable(modal_body).height(Length::Shrink))
+        .max_height(680)
         .padding(20)
         .style(move |_t| glass_elevated(palette))
         .into()

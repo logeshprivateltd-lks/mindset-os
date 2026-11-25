@@ -5,6 +5,7 @@
 
 pub mod agent;
 pub mod engine;
+pub mod maindy_system_bridge;
 pub mod offline_helper;
 pub mod persona;
 pub mod prompt_builder;
@@ -12,6 +13,10 @@ pub mod provider;
 pub mod tts;
 
 pub use engine::{OllamaEngine, StreamToken};
+pub use maindy_system_bridge::{
+    linux_data_root, CapsulePhase, HybridRouteResult, MaindyOsAction, MaindySystemBridge,
+    SettingsSection, StudyCapsule, SystemControl,
+};
 pub use offline_helper::OfflineStudyHelper;
 pub use persona::{build_system_prompt, parse_dual_text, DualTextResult, MaindyStyle};
 pub use prompt_builder::build_personalized_system_prompt;

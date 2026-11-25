@@ -1,0 +1,57 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS Live Hook: 020-configure-autologin.hook.chroot
+# Provisions default 'live' student user with hardware groups & greetd Wayland
+# autologin directly into /usr/local/bin/mindset-session (labwc + mindset-shell).
+# ==============================================================================
+set -e
+
+echo "==> [MindSet Hook] Provisioning 'live' user & Wayland autologin..."
+
+if ! id -u live >/dev/null 2>&1; then
+    useradd -m -s /bin/bash -c "MindSet Live Student" live
+fi
+
+echo "live:mindset" | chpasswd
+
+for grp in video audio input seat netdev sudo render plugdev; do
+    if getent group "$grp" >/dev/null 2>&1; then
+        usermod -aG "$grp" live || true
+    fi
+done
+
+mkdir -p /etc/sudoers.d
+echo "live ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/01-live-nopasswd
+chmod 0440 /etc/sudoers.d/01-live-nopasswd
+
+# Sync skel labwc config into /home/live
+if [ -d /etc/skel ]; then
+    cp -rT /etc/skel /home/live/
+fi
+
+mkdir -p /home/live/.local/share/mindset-os/vault /home/live/.local/share/mindset-os/capsules
+chmod +x /home/live/.config/mindset-os/labwc/autostart 2>/dev/null || true
+chmod +x /etc/skel/.config/mindset-os/labwc/autostart 2>/dev/null || true
+chown -R live:live /home/live
+
+# Ensure greetd Wayland autologin is strictly configured for live user
+mkdir -p /etc/greetd
+cat << 'EOF' > /etc/greetd/config.toml
+[terminal]
+vt = 1
+
+[default_session]
+command = "agreety --cmd /usr/local/bin/mindset-session"
+user = "_greetd"
+
+[initial_session]
+command = "/usr/local/bin/mindset-session"
+user = "live"
+EOF
+
+# Remove conflicting X display managers if pulled indirectly
+if systemctl list-unit-files | grep -q "^greetd.service"; then
+    systemctl enable greetd.service || true
+fi
+
+echo "==> [MindSet Hook] 'live' Wayland autologin configured."

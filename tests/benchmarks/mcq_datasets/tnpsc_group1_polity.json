@@ -1,0 +1,113 @@
+{
+  "exam_name": "TNPSC Group 1 Preliminary",
+  "subject": "Indian Polity & Tamil Nadu Administration",
+  "topic": "Constitutional Framework & Fundamental Rights",
+  "bilingual": true,
+  "marking_scheme": {
+    "correct_marks": 1.5,
+    "incorrect_marks": 0.0,
+    "unattempted_marks": 0.0
+  },
+  "questions": [
+    {
+      "id": "TNPSC-POL-01",
+      "question_en": "Which Article of the Indian Constitution guarantees the 'Right to Constitutional Remedies' (Heart and Soul of the Constitution)?",
+      "question_ta": "இந்திய அரசியலமைப்பின் எந்தப் பிரிவு 'அரசியலமைப்பு பரிகார உரிமையை' (அரசியலமைப்பின் இதயம் மற்றும் ஆன்மா) உறுதி செய்கிறது?",
+      "options_en": [
+        "Article 14",
+        "Article 19",
+        "Article 21",
+        "Article 32"
+      ],
+      "options_ta": [
+        "பிரிவு 14",
+        "பிரிவு 19",
+        "பிரிவு 21",
+        "பிரிவு 32"
+      ],
+      "correct_option_index": 3,
+      "explanation_en": "Dr. B.R. Ambedkar called Article 32 the 'Heart and Soul' of the Constitution as it empowers citizens to approach the Supreme Court directly for the enforcement of Fundamental Rights via writs.",
+      "explanation_ta": "டாக்டர் பி.ஆர். அம்பேத்கர் பிரிவு 32-ஐ அரசியலமைப்பின் 'இதயம் மற்றும் ஆன்மா' என்று அழைத்தார், ஏனெனில் இது அடிப்படை உரிமைகளை நிலைநாட்ட உச்ச நீதிமன்றத்தை நேரடியாக அணுக குடிமக்களுக்கு அதிகாரம் அளிக்கிறது."
+    },
+    {
+      "id": "TNPSC-POL-02",
+      "question_en": "The 73rd Constitutional Amendment Act, 1992 added which Schedule to the Constitution of India?",
+      "question_ta": "73வது அரசியலமைப்பு திருத்தச் சட்டம், 1992 இந்திய அரசியலமைப்பில் எந்த அட்டவணையை சேர்த்தது?",
+      "options_en": [
+        "9th Schedule",
+        "10th Schedule",
+        "11th Schedule",
+        "12th Schedule"
+      ],
+      "options_ta": [
+        "9வது அட்டவணை",
+        "10வது அட்டவணை",
+        "11வது அட்டவணை",
+        "12வது அட்டவணை"
+      ],
+      "correct_option_index": 2,
+      "explanation_en": "The 73rd Amendment gave constitutional status to Panchayati Raj institutions and added the 11th Schedule containing 29 functional items.",
+      "explanation_ta": "73வது திருத்தச் சட்டம் பஞ்சாயத்து ராஜ் நிறுவனங்களுக்கு அரசியலமைப்பு அந்தஸ்தை வழங்கி, 29 செயல்பாட்டு விடயங்களை உள்ளடக்கிய 11வது அட்டவணையை சேர்த்தது."
+    },
+    {
+      "id": "TNPSC-POL-03",
+      "question_en": "In Tamil Nadu, the Self-Respect Movement (Suya Mariyathai Iyakkam) was founded in 1925 by:",
+      "question_ta": "தமிழ்நாட்டில், சுயமரியாதை இயக்கம் 1925-ல் யாரால் தொடங்கப்பட்டது?",
+      "options_en": [
+        "C. Rajagopalachari",
+        "E.V. Ramasamy (Periyar)",
+        "C.N. Annadurai",
+        "Rettaimalai Srinivasan"
+      ],
+      "options_ta": [
+        "சி. ராஜகோபாலாச்சாரி",
+        "ஈ.வெ. ராமசாமி (பெரியார்)",
+        "சி.என். அண்ணாதுரை",
+        "இரட்டைமலை சீனிவாசன்"
+      ],
+      "correct_option_index": 1,
+      "explanation_en": "Periyar E.V. Ramasamy founded the Self-Respect Movement in 1925 to promote rationalism, gender equality, and social justice.",
+      "explanation_ta": "பகுத்தறிவு, பாலின சமத்துவம் மற்றும் சமூக நீதியை மேம்படுத்த 1925 ஆம் ஆண்டு பெரியார் ஈ.வெ. ராமசாமியால் சுயமரியாதை இயக்கம் தொடங்கப்பட்டது."
+    },
+    {
+      "id": "TNPSC-POL-04",
+      "question_en": "Under which Article can the Governor of a state reserve a Bill for the consideration of the President?",
+      "question_ta": "எந்தப் பிரிவின் கீழ் மாநில ஆளுநர் ஒரு மசோதாவை குடியரசுத் தலைவரின் பரிசீலனைக்காக நிறுத்தி வைக்கலாம்?",
+      "options_en": [
+        "Article 200",
+        "Article 213",
+        "Article 163",
+        "Article 156"
+      ],
+      "options_ta": [
+        "பிரிவு 200",
+        "பிரிவு 213",
+        "பிரிவு 163",
+        "பிரிவு 156"
+      ],
+      "correct_option_index": 0,
+      "explanation_en": "Article 200 outlines the options available to the Governor when a Bill passed by the State Legislature is presented, including reserving it for the President.",
+      "explanation_ta": "பிரிவு 200 மாநில சட்டமன்றத்தால் நிறைவேற்றப்பட்ட மசோதா ஆளுநருக்கு சமர்ப்பிக்கப்படும் போது அவருக்கு உள்ள அதிகாரங்களை விளக்குகிறது."
+    },
+    {
+      "id": "TNPSC-POL-05",
+      "question_en": "Which constitutional amendment introduced the 10% reservation for Economically Weaker Sections (EWS)?",
+      "question_ta": "பொருளாதாரத்தில் பின்தங்கிய பிரிவினருக்கு (EWS) 10% இடஒதுக்கீட்டை அறிமுகப்படுத்திய அரசியலமைப்பு திருத்தம் எது?",
+      "options_en": [
+        "101st Amendment Act",
+        "102nd Amendment Act",
+        "103rd Amendment Act",
+        "104th Amendment Act"
+      ],
+      "options_ta": [
+        "101வது திருத்தச் சட்டம்",
+        "102வது திருத்தச் சட்டம்",
+        "103வது திருத்தச் சட்டம்",
+        "104வது திருத்தச் சட்டம்"
+      ],
+      "correct_option_index": 2,
+      "explanation_en": "The 103rd Constitutional Amendment Act, 2019 amended Articles 15 and 16 to provide up to 10% reservation in education and public employment for EWS.",
+      "explanation_ta": "103வது அரசியலமைப்பு திருத்தச் சட்டம் 2019, EWS பிரிவினருக்கு கல்வி மற்றும் பொது வேலைவாய்ப்பில் 10% வரை இடஒதுக்கீடு வழங்கியது."
+    }
+  ]
+}

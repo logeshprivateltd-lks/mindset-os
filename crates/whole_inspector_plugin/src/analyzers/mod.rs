@@ -1,6 +1,6 @@
+use regex::Regex;
 use std::fs;
 use std::path::{Path, PathBuf};
-use regex::Regex;
 use walkdir::WalkDir;
 
 pub mod ai_agent_tts;
@@ -68,8 +68,22 @@ impl WorkspaceContext {
 
             let is_text = matches!(
                 ext.as_str(),
-                "rs" | "toml" | "json" | "md" | "txt" | "sh" | "hook" | "chroot" | "binary"
-                    | "yml" | "yaml" | "desktop" | "conf" | "xml" | "svg" | "wgsl" | "ps1"
+                "rs" | "toml"
+                    | "json"
+                    | "md"
+                    | "txt"
+                    | "sh"
+                    | "hook"
+                    | "chroot"
+                    | "binary"
+                    | "yml"
+                    | "yaml"
+                    | "desktop"
+                    | "conf"
+                    | "xml"
+                    | "svg"
+                    | "wgsl"
+                    | "ps1"
             ) || rel.contains(".hook.")
                 || rel.contains(".list.");
 
@@ -149,7 +163,11 @@ impl WorkspaceContext {
     }
 
     /// Find the first occurrence (1-based line number and content) of a substring in a file.
-    pub fn find_first_occurrence(&self, rel_path: &str, substring: &str) -> Option<(usize, String)> {
+    pub fn find_first_occurrence(
+        &self,
+        rel_path: &str,
+        substring: &str,
+    ) -> Option<(usize, String)> {
         let content = self.read_file(rel_path)?;
         for (i, line) in content.lines().enumerate() {
             if line.contains(substring) {

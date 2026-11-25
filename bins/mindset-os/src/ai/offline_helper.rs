@@ -16,7 +16,11 @@ impl OfflineStudyHelper {
         student_name: &str,
         target_track: &str,
     ) -> DualTextResult {
-        let name = if student_name.trim().is_empty() { "Scholar" } else { student_name.trim() };
+        let name = if student_name.trim().is_empty() {
+            "Scholar"
+        } else {
+            student_name.trim()
+        };
         let mode = MaindyStyle::from_str_code(style);
         let q = prompt.to_lowercase();
 
@@ -27,7 +31,8 @@ impl OfflineStudyHelper {
             || q.contains("add capsule")
         {
             Self::create_capsule_action_response(mode, name, prompt)
-        } else if q.contains("list folder") || q.contains("list files") || q.contains("show files") {
+        } else if q.contains("list folder") || q.contains("list files") || q.contains("show files")
+        {
             Self::list_folder_action_response(mode, name, prompt)
         } else if q.contains("read document")
             || q.contains("read file")
@@ -37,7 +42,10 @@ impl OfflineStudyHelper {
             Self::read_document_action_response(mode, name, prompt)
         } else if q.contains("open app") || q.contains("launch app") {
             Self::open_app_action_response(mode, name, prompt)
-        } else if q.contains("photoelectric") || q.contains("einstein") || q.contains("work function") {
+        } else if q.contains("photoelectric")
+            || q.contains("einstein")
+            || q.contains("work function")
+        {
             Self::photoelectric_response(mode, name)
         } else if q.contains("faraday") || q.contains("induction") || q.contains("lenz") {
             Self::faraday_response(mode, name)
@@ -51,11 +59,20 @@ impl OfflineStudyHelper {
             Self::ideal_gas_response(mode, name)
         } else if q.contains("nernst") || q.contains("emf") || q.contains("electrochem") {
             Self::nernst_response(mode, name)
-        } else if q.contains("quadratic") || q.contains("formula") && (q.contains("root") || q.contains("equation")) {
+        } else if q.contains("quadratic")
+            || q.contains("formula") && (q.contains("root") || q.contains("equation"))
+        {
             Self::quadratic_response(mode, name)
         } else if q.contains("matrix") || q.contains("determinant") {
             Self::matrices_response(mode, name)
-        } else if q.contains("hello") || q.contains("vanakkam") || q.contains("hi") || q.contains("hey") || q.contains("thala") || q.contains("pandriga") || q.contains("pandringa") {
+        } else if q.contains("hello")
+            || q.contains("vanakkam")
+            || q.contains("hi")
+            || q.contains("hey")
+            || q.contains("thala")
+            || q.contains("pandriga")
+            || q.contains("pandringa")
+        {
             Self::greeting_response(mode, name, target_track)
         } else {
             Self::general_fallback(mode, name, target_track, prompt)
@@ -74,13 +91,21 @@ impl OfflineStudyHelper {
         }
     }
 
-    fn create_capsule_action_response(mode: MaindyStyle, name: &str, prompt: &str) -> (String, String) {
+    fn create_capsule_action_response(
+        mode: MaindyStyle,
+        name: &str,
+        prompt: &str,
+    ) -> (String, String) {
         let q = prompt.to_lowercase();
         let subject = if q.contains("math") || q.contains("calculus") || q.contains("algebra") {
             "Mathematics"
         } else if q.contains("chem") || q.contains("organic") || q.contains("reaction") {
             "Chemistry"
-        } else if q.contains("bio") || q.contains("cell") || q.contains("botany") || q.contains("zoology") {
+        } else if q.contains("bio")
+            || q.contains("cell")
+            || q.contains("botany")
+            || q.contains("zoology")
+        {
             "Biology"
         } else {
             "Physics"
@@ -96,7 +121,11 @@ impl OfflineStudyHelper {
         } else {
             "High-Yield Concept Mastery"
         };
-        let topic_clean = if topic.is_empty() { "High-Yield Concept Mastery" } else { topic };
+        let topic_clean = if topic.is_empty() {
+            "High-Yield Concept Mastery"
+        } else {
+            topic
+        };
         let title = if topic_clean.len() > 50 {
             &topic_clean[..50]
         } else {
@@ -152,7 +181,11 @@ impl OfflineStudyHelper {
         }
     }
 
-    fn list_folder_action_response(mode: MaindyStyle, name: &str, prompt: &str) -> (String, String) {
+    fn list_folder_action_response(
+        mode: MaindyStyle,
+        name: &str,
+        prompt: &str,
+    ) -> (String, String) {
         let q = prompt.to_lowercase();
         let folder = if q.contains("formula") {
             "Formula Sheets"
@@ -200,7 +233,11 @@ impl OfflineStudyHelper {
         }
     }
 
-    fn read_document_action_response(mode: MaindyStyle, name: &str, prompt: &str) -> (String, String) {
+    fn read_document_action_response(
+        mode: MaindyStyle,
+        name: &str,
+        prompt: &str,
+    ) -> (String, String) {
         let q = prompt.to_lowercase();
         let file = if q.contains("formula") {
             "Formula Sheets/Physics_Formula_Sheet.txt"
@@ -376,7 +413,8 @@ impl OfflineStudyHelper {
                     • **R**: Resistance (Ohms, where $R = \\rho \\frac{{L}}{{A}}$)",
                     name = name
                 ),
-                "Ohm's Law: V equals I times R. Voltage equals current times resistance.".to_string(),
+                "Ohm's Law: V equals I times R. Voltage equals current times resistance."
+                    .to_string(),
             ),
             _ => (
                 "Ohm's Law at constant temperature:\n\n\
@@ -485,7 +523,12 @@ impl OfflineStudyHelper {
         }
     }
 
-    fn general_fallback(mode: MaindyStyle, name: &str, track: &str, prompt: &str) -> (String, String) {
+    fn general_fallback(
+        mode: MaindyStyle,
+        name: &str,
+        track: &str,
+        prompt: &str,
+    ) -> (String, String) {
         match mode {
             MaindyStyle::Thanglish => (
                 format!(
@@ -577,12 +620,8 @@ mod tests {
         assert!(!cleaned.contains("<os_action>"));
 
         // 2. List Folder
-        let res_list = OfflineStudyHelper::respond(
-            "list files in Formula Sheets",
-            "en",
-            "Karthik",
-            "JEE",
-        );
+        let res_list =
+            OfflineStudyHelper::respond("list files in Formula Sheets", "en", "Karthik", "JEE");
         let (action_opt2, _) = extract_agent_action(&res_list.display_text);
         assert!(action_opt2.is_some());
         match action_opt2.unwrap() {
@@ -593,12 +632,8 @@ mod tests {
         }
 
         // 3. Read Document
-        let res_read = OfflineStudyHelper::respond(
-            "read formula sheet for Physics",
-            "en",
-            "Karthik",
-            "JEE",
-        );
+        let res_read =
+            OfflineStudyHelper::respond("read formula sheet for Physics", "en", "Karthik", "JEE");
         let (action_opt3, _) = extract_agent_action(&res_read.display_text);
         assert!(action_opt3.is_some());
         match action_opt3.unwrap() {

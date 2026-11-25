@@ -1,8 +1,8 @@
-use std::collections::HashMap;
 use crate::analyzers::WorkspaceContext;
 use crate::models::{
     ActionSeverity, CapabilityMatrixEntry, CapabilityStatus, ModuleAuditResult, PrioritizedAction,
 };
+use std::collections::HashMap;
 
 /// Module 1: Filesystem, Assets & Codebase Hygiene Analyzer
 pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
@@ -56,20 +56,29 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             feature: "Pure-Rust Clean Slate (Zero Web/Tauri Clutter)".into(),
             category: "Normal OS".into(),
             status: CapabilityStatus::Pass,
-            evidence: "0 legacy web/Tauri files (.tsx, .ts, node_modules, package.json) found".into(),
+            evidence: "0 legacy web/Tauri files (.tsx, .ts, node_modules, package.json) found"
+                .into(),
             notes: "Workspace is 100% pure Rust and native desktop assets".into(),
         });
     } else {
         score = score.saturating_sub(20);
         let first_loc = format!("{}:1", legacy_clutter[0].rel_path);
-        let sample_files: Vec<_> = legacy_clutter.iter().take(3).map(|f| f.rel_path.as_str()).collect();
+        let sample_files: Vec<_> = legacy_clutter
+            .iter()
+            .take(3)
+            .map(|f| f.rel_path.as_str())
+            .collect();
 
         entries.push(CapabilityMatrixEntry {
             feature: "Pure-Rust Clean Slate (Zero Web/Tauri Clutter)".into(),
             category: "Normal OS".into(),
             status: CapabilityStatus::Partial,
             evidence: first_loc.clone(),
-            notes: format!("Found {} legacy web/Tauri files: {}", legacy_clutter.len(), sample_files.join(", ")),
+            notes: format!(
+                "Found {} legacy web/Tauri files: {}",
+                legacy_clutter.len(),
+                sample_files.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {
@@ -84,7 +93,7 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     // 3. Verify archived directories are cleanly excluded from active build
     let root_cargo = ctx.read_file("Cargo.toml").unwrap_or_default();
     let has_archive_dir = ctx.files.iter().any(|f| f.rel_path.starts_with("archive/"));
-    
+
     let (root_excludes_archive, root_members_has_archive) = {
         let mut inside_members = false;
         let mut inside_exclude = false;
@@ -125,7 +134,9 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
                 category: "Normal OS".into(),
                 status: CapabilityStatus::Pass,
                 evidence: format!("Cargo.toml:{}", line_no),
-                notes: "archive/ directory cleanly excluded from workspace members in root Cargo.toml".into(),
+                notes:
+                    "archive/ directory cleanly excluded from workspace members in root Cargo.toml"
+                        .into(),
             });
         } else {
             score = score.saturating_sub(15);
@@ -159,7 +170,9 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     let has_tamil_font = ctx.has_file("assets/fonts/NotoSansTamil-Regular.ttf");
     let has_malayalam_font = ctx.has_file("assets/fonts/NotoSansMalayalam-Regular.ttf");
 
-    let main_rs = ctx.read_file("bins/mindset-os/src/main.rs").unwrap_or_default();
+    let main_rs = ctx
+        .read_file("bins/mindset-os/src/main.rs")
+        .unwrap_or_default();
     let main_registers_tamil = main_rs.contains("NotoSansTamil-Regular.ttf");
     let main_registers_malayalam = main_rs.contains("NotoSansMalayalam-Regular.ttf");
     let main_registers_latin = main_rs.contains("NotoSans-Regular.ttf");
@@ -169,7 +182,13 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
         .map(|(l, _)| l)
         .unwrap_or(2789);
 
-    if has_latin_font && has_tamil_font && has_malayalam_font && main_registers_tamil && main_registers_malayalam && main_registers_latin {
+    if has_latin_font
+        && has_tamil_font
+        && has_malayalam_font
+        && main_registers_tamil
+        && main_registers_malayalam
+        && main_registers_latin
+    {
         entries.push(CapabilityMatrixEntry {
             feature: "Bundled Multi-Script Fonts (Tamil, Malayalam, Latin)".into(),
             category: "UI".into(),
@@ -180,16 +199,25 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
     } else {
         score = score.saturating_sub(15);
         let mut missing = Vec::new();
-        if !has_latin_font || !main_registers_latin { missing.push("NotoSans-Regular.ttf"); }
-        if !has_tamil_font || !main_registers_tamil { missing.push("NotoSansTamil-Regular.ttf"); }
-        if !has_malayalam_font || !main_registers_malayalam { missing.push("NotoSansMalayalam-Regular.ttf"); }
+        if !has_latin_font || !main_registers_latin {
+            missing.push("NotoSans-Regular.ttf");
+        }
+        if !has_tamil_font || !main_registers_tamil {
+            missing.push("NotoSansTamil-Regular.ttf");
+        }
+        if !has_malayalam_font || !main_registers_malayalam {
+            missing.push("NotoSansMalayalam-Regular.ttf");
+        }
 
         entries.push(CapabilityMatrixEntry {
             feature: "Bundled Multi-Script Fonts (Tamil, Malayalam, Latin)".into(),
             category: "UI".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("bins/mindset-os/src/main.rs:{}", font_reg_line),
-            notes: format!("Missing font assets or registration: {}", missing.join(", ")),
+            notes: format!(
+                "Missing font assets or registration: {}",
+                missing.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {
@@ -203,16 +231,27 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
 
     // 5. Dead / Unreferenced Rust Module Detection
     // Check bins/mindset-os/src/views/mod.rs
-    let views_mod = ctx.read_file("bins/mindset-os/src/views/mod.rs").unwrap_or_default();
+    let views_mod = ctx
+        .read_file("bins/mindset-os/src/views/mod.rs")
+        .unwrap_or_default();
     let view_files: Vec<_> = ctx
         .files
         .iter()
-        .filter(|f| f.rel_path.starts_with("bins/mindset-os/src/views/") && f.rel_path.ends_with(".rs") && !f.rel_path.ends_with("mod.rs"))
+        .filter(|f| {
+            f.rel_path.starts_with("bins/mindset-os/src/views/")
+                && f.rel_path.ends_with(".rs")
+                && !f.rel_path.ends_with("mod.rs")
+        })
         .collect();
 
     let mut unreferenced_views = Vec::new();
     for vf in &view_files {
-        let file_stem = vf.rel_path.rsplit('/').next().unwrap_or("").replace(".rs", "");
+        let file_stem = vf
+            .rel_path
+            .rsplit('/')
+            .next()
+            .unwrap_or("")
+            .replace(".rs", "");
         let mod_decl = format!("pub mod {};", file_stem);
         let alt_mod_decl = format!("mod {};", file_stem);
         if !views_mod.contains(&mod_decl) && !views_mod.contains(&alt_mod_decl) {
@@ -226,7 +265,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "UI".into(),
             status: CapabilityStatus::Pass,
             evidence: "bins/mindset-os/src/views/mod.rs:1".into(),
-            notes: format!("All {} view modules cleanly declared and active in views/mod.rs", view_files.len()),
+            notes: format!(
+                "All {} view modules cleanly declared and active in views/mod.rs",
+                view_files.len()
+            ),
         });
     } else {
         score = score.saturating_sub(10);
@@ -236,14 +278,21 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "UI".into(),
             status: CapabilityStatus::Partial,
             evidence: first_loc.clone(),
-            notes: format!("Unreferenced view modules detected: {}", unreferenced_views.join(", ")),
+            notes: format!(
+                "Unreferenced view modules detected: {}",
+                unreferenced_views.join(", ")
+            ),
         });
         actions.push(PrioritizedAction {
             severity: ActionSeverity::Medium,
             title: "Register or prune unused view modules in views/mod.rs".into(),
             location: first_loc,
-            finding: format!("Files in views/ directory are not declared in views/mod.rs: {}", unreferenced_views.join(", ")),
-            remediation: "Add 'pub mod <name>;' in views/mod.rs or remove abandoned view files.".into(),
+            finding: format!(
+                "Files in views/ directory are not declared in views/mod.rs: {}",
+                unreferenced_views.join(", ")
+            ),
+            remediation: "Add 'pub mod <name>;' in views/mod.rs or remove abandoned view files."
+                .into(),
         });
     }
 
@@ -259,7 +308,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
 
     let mut size_map: HashMap<u64, Vec<String>> = HashMap::new();
     for img in &image_assets {
-        size_map.entry(img.size_bytes).or_default().push(img.rel_path.clone());
+        size_map
+            .entry(img.size_bytes)
+            .or_default()
+            .push(img.rel_path.clone());
     }
 
     let mut duplicate_groups = Vec::new();
@@ -280,7 +332,10 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             category: "Normal OS".into(),
             status: CapabilityStatus::Pass,
             evidence: "assets/icons/ms_logo.svg:1".into(),
-            notes: format!("0 duplicate media assets found across {} inspected assets", image_assets.len()),
+            notes: format!(
+                "0 duplicate media assets found across {} inspected assets",
+                image_assets.len()
+            ),
         });
     } else {
         score = score.saturating_sub(5);
@@ -296,8 +351,12 @@ pub fn audit(ctx: &WorkspaceContext) -> ModuleAuditResult {
             severity: ActionSeverity::Low,
             title: "Deduplicate identical media asset files".into(),
             location: format!("{}:1", duplicate_groups[0][0]),
-            finding: format!("Found identical media files consuming redundant disk space: {}", sample),
-            remediation: "Consolidate duplicate media assets to a single canonical path in assets/.".into(),
+            finding: format!(
+                "Found identical media files consuming redundant disk space: {}",
+                sample
+            ),
+            remediation:
+                "Consolidate duplicate media assets to a single canonical path in assets/.".into(),
         });
     }
 

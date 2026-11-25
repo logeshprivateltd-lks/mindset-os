@@ -1,0 +1,48 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS — Wayland Session Entrypoint (labwc + mindset-shell)
+# ==============================================================================
+set -e
+
+export XDG_SESSION_TYPE=wayland
+export XDG_CURRENT_DESKTOP=MindSetOS
+export DESKTOP_SESSION=mindset-os
+export MOZ_ENABLE_WAYLAND=1
+export QT_QPA_PLATFORM=wayland
+
+# Seed user labwc configuration cleanly on first session boot
+LABWC_CFG="$HOME/.config/mindset-os/labwc"
+if [ ! -d "$LABWC_CFG" ] && [ -d "/etc/skel/.config/mindset-os/labwc" ]; then
+    mkdir -p "$HOME/.config/mindset-os"
+    cp -r /etc/skel/.config/mindset-os/labwc "$LABWC_CFG"
+    chmod +x "$LABWC_CFG/autostart" 2>/dev/null || true
+fi
+
+# Inside QEMU/KVM or virtualized GPUs without Vulkan, prevent hardware cursor / DRM stalls
+VIRT_ENV="none"
+if command -v systemd-detect-virt >/dev/null 2>&1; then
+    VIRT_ENV="$(systemd-detect-virt || echo none)"
+fi
+
+if [ "$VIRT_ENV" != "none" ]; then
+    export WLR_NO_HARDWARE_CURSORS=1
+    if ! command -v vulkaninfo >/dev/null 2>&1 || ! vulkaninfo --summary >/dev/null 2>&1; then
+        export WLR_RENDERER=pixman
+        export WGPU_BACKEND=gl
+        export LIBGL_ALWAYS_SOFTWARE=1
+    fi
+fi
+
+# Ensure XDG user dirs & writable MindSet data directories exist
+mkdir -p "$HOME/.local/share/mindset-os/vault" "$HOME/.local/share/mindset-os/capsules"
+if command -v xdg-user-dirs-update >/dev/null 2>&1; then
+    xdg-user-dirs-update || true
+fi
+
+if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+    exec labwc -C "$LABWC_CFG"
+elif command -v dbus-run-session >/dev/null 2>&1; then
+    exec dbus-run-session -- labwc -C "$LABWC_CFG"
+else
+    exec labwc -C "$LABWC_CFG"
+fi

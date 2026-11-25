@@ -1,0 +1,34 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS Live Hook: 030-branding-grub.hook.binary
+# Brands GRUB UEFI/BIOS and ISOLINUX/SYSLINUX boot entries as MindSet OS.
+# ==============================================================================
+set -e
+
+echo "==> [MindSet Hook] Applying MindSet OS GRUB & SYSLINUX boot branding..."
+
+for cfg in binary/boot/grub/grub.cfg binary/EFI/BOOT/grub.cfg binary/boot/grub/loopback.cfg; do
+    if [ -f "$cfg" ]; then
+        echo "--> Branding $cfg"
+        sed -i 's/Debian GNU\/Linux/MindSet OS (Debian 13 Trixie)/g' "$cfg"
+        sed -i 's/Live system (amd64)/MindSet OS — Boot Deep Focus Live (amd64)/g' "$cfg"
+        sed -i 's/Live system/MindSet OS — Boot Deep Focus Live/g' "$cfg"
+        sed -i 's/Debian/MindSet OS/g' "$cfg"
+    fi
+done
+
+for cfg in binary/isolinux/*.cfg binary/syslinux/*.cfg; do
+    if [ -f "$cfg" ]; then
+        echo "--> Branding $cfg"
+        sed -i 's/Live system/MindSet OS — Boot Deep Focus Live/g' "$cfg"
+        sed -i 's/Debian/MindSet OS/g' "$cfg"
+    fi
+done
+
+# Provide splash image if present in chroot assets
+if [ -f chroot/usr/share/mindset-os/wallpaper.jpg ]; then
+    mkdir -p binary/boot/grub
+    cp -f chroot/usr/share/mindset-os/wallpaper.jpg binary/boot/grub/splash.jpg 2>/dev/null || true
+fi
+
+echo "==> [MindSet Hook] GRUB & SYSLINUX branding complete."

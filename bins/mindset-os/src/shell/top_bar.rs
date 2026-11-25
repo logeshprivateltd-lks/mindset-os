@@ -1,12 +1,12 @@
 //! Dynamic Top Navigation Bar for MindSet OS
 //!
-//! Restructured 3-Zone Floating Taskbar:
-//! - Zone 1 (Left Section): Crisp minimalist vector SVG/canvas 'MS' logo button (toggles Launcher)
-//!   and app menus (File, Edit, View, Help) in a floating frosted glass pill.
-//! - Zone 2 (Center Section): Cleanly anchored center isolation clearance slot for the Dynamic Notch,
-//!   featuring floating flanking styling wings framing the notch.
-//! - Zone 3 (Right Section): System tray indicators (Wi-Fi, Volume, Notification Bell with badge)
-//!   and live formatted clock in a floating frosted glass pill.
+//! Clean 3-Zone Floating Frosted Glass Panel (elementary OS + Deepin hybrid):
+//! - Zone 1 (Left Section): Crisp minimalist 'MS OS' monogram menu button
+//!   (opens System Menu with Launcher, Side HUD Toggle, Lock, Logout, Reboot, Power Off)
+//!   and active focused application title.
+//! - Zone 2 (Center Section): Cleanly anchored center isolation clearance slot for the Dynamic Notch.
+//! - Zone 3 (Right Section): Compact system tray indicators (Wi-Fi, Audio, DND, Notifications)
+//!   and live formatted clock in a compact frosted glass pill.
 //!
 //! Copyright (c) 2026 LKS PVT LTD. All rights reserved.
 
@@ -16,7 +16,7 @@ use iced::widget::{button, container, row, text};
 use iced::{Alignment, Color, Element, Length, Point, Rectangle};
 use mindset_core::{ActiveOverlay, MindSetCoreState, WindowId};
 
-use crate::theme::{h_space, px_space, top_bar_style, ThemePalette};
+use crate::theme::{frosted_glass_container, h_space, px_space, ThemePalette};
 use crate::Message;
 
 // ----------------------------------------------------------------------------
@@ -131,10 +131,12 @@ pub fn view<'a>(
                     ..Default::default()
                 })
                 .color(palette.text_primary),
+            px_space(3.0, 0.0),
+            text("▾").size(10).color(palette.text_secondary),
         ]
         .align_y(Alignment::Center),
     )
-    .on_press(Message::ToggleOverlay(ActiveOverlay::Launcher))
+    .on_press(Message::ToggleOverlay(ActiveOverlay::SystemMenu))
     .style(move |_t, s| {
         let bg = match s {
             button::Status::Hovered => iced::Color::from_rgba(1.0, 1.0, 1.0, 0.18),
@@ -151,12 +153,14 @@ pub fn view<'a>(
     })
     .padding([2, 8]);
 
-    // Active frontmost desktop application indicator (macOS unified menubar style)
+    // Active frontmost desktop application indicator (elementary OS / macOS unified menubar style)
     let active_app_title = match core.wm.active_window() {
         Some(WindowId::Today) | None => "MindSet OS",
         Some(id) => match id {
             WindowId::StudyReader => "Study Reader",
             WindowId::LayaAiChat => "Maindy AI",
+            WindowId::OdysseyMap => "3D Odyssey",
+            WindowId::Scratchpad => "Scratchpad",
             WindowId::Tasks => "Focus Arena",
             WindowId::SearchBrowser => "MindStrict",
             WindowId::FileVault => "Study Vault",
@@ -171,15 +175,18 @@ pub fn view<'a>(
         },
     };
 
+    let divider_tint = palette.glass_border;
     let mut left_row = row![logo_btn].align_y(Alignment::Center);
 
     if active_app_title != "MindSet OS" {
         left_row = left_row
             .push(px_space(4.0, 0.0))
-            .push(container(px_space(1.0, 14.0)).style(move |_t| container::Style {
-                background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.18))),
-                ..Default::default()
-            }))
+            .push(
+                container(px_space(1.0, 14.0)).style(move |_t| container::Style {
+                    background: Some(iced::Background::Color(divider_tint)),
+                    ..Default::default()
+                }),
+            )
             .push(px_space(6.0, 0.0))
             .push(
                 text(active_app_title)
@@ -192,35 +199,51 @@ pub fn view<'a>(
             );
     }
 
-    let left_section = container(left_row)
-        .height(34)
-        .padding(iced::Padding {
-            top: 2.0,
-            right: 12.0,
-            bottom: 2.0,
-            left: 4.0,
-        })
-        .style(move |_t| top_bar_style(palette));
+    let left_hud_btn = button(text("◫").size(12).color(palette.text_secondary))
+        .on_press(Message::ToggleSideHud)
+        .style(top_bar_icon_style())
+        .padding([2, 5]);
+
+    left_row = left_row.push(px_space(4.0, 0.0)).push(left_hud_btn);
+
+    let left_section = frosted_glass_container(
+        palette,
+        17.0,
+        true,
+        container(left_row)
+            .height(32)
+            .padding(iced::Padding {
+                top: 2.0,
+                right: 8.0,
+                bottom: 2.0,
+                left: 4.0,
+            })
+            .align_y(Alignment::Center),
+    );
 
     // ------------------------------------------------------------------------
     // Zone 2: Center Section (Clean Dynamic Notch Clearance Slot)
     // ------------------------------------------------------------------------
     let center_flank = container(
-        // Dynamic Notch clearance slot (matches compact notch width 290px + margin)
-        container(row![])
-            .width(306)
-            .height(34),
+        // Dynamic Notch clearance slot (matches compact notch width 300px + margin)
+        container(row![]).width(306).height(34),
     )
     .height(34)
     .align_x(Alignment::Center)
     .align_y(Alignment::Center);
 
     // ------------------------------------------------------------------------
-    // Zone 3: Right Section (Floating Glass Pill with Tray Indicators & Live Clock)
+    // Zone 3: Right Section (Compact Frosted Tray: Wi-Fi, Audio, DND, Clock)
     // ------------------------------------------------------------------------
     let now = chrono::Local::now();
-    let clock_str = format!("{}", now.format("%a  %l:%M %p"));
-    let clock_text = text(clock_str).size(11).color(palette.text_primary);
+    let clock_str = format!("{}", now.format("%a %l:%M %p"));
+    let clock_text = text(clock_str)
+        .size(11)
+        .font(iced::font::Font {
+            weight: iced::font::Weight::Medium,
+            ..Default::default()
+        })
+        .color(palette.text_primary);
 
     let wifi_icon = if core.preferences.airplane_mode {
         "✈️"
@@ -231,7 +254,7 @@ pub fn view<'a>(
     } else {
         "📶"
     };
-    let wifi_btn = button(text(wifi_icon).size(12).color(palette.text_primary))
+    let wifi_btn = button(text(wifi_icon).size(11).color(palette.text_primary))
         .on_press(Message::ToggleOverlay(ActiveOverlay::ControlCenter))
         .style(top_bar_icon_style())
         .padding([2, 4]);
@@ -243,31 +266,47 @@ pub fn view<'a>(
     } else {
         "🔇"
     };
-    let volume_btn = button(text(vol_icon).size(12).color(palette.text_primary))
+    let volume_btn = button(text(vol_icon).size(11).color(palette.text_primary))
         .on_press(Message::ToggleOverlay(ActiveOverlay::ControlCenter))
         .style(top_bar_icon_style())
         .padding([2, 4]);
 
+    let dnd_active = core.preferences.focus_dnd;
+    let dnd_btn = button(text(if dnd_active { "🌙" } else { "🔕" }).size(11).color(
+        if dnd_active {
+            palette.accent
+        } else {
+            palette.text_secondary
+        },
+    ))
+    .on_press(Message::ToggleDnd)
+    .style(top_bar_icon_style())
+    .padding([2, 4]);
+
     let unread_count = core.toast_queue.toasts.len();
     let bell_content: Element<'a, Message> = if unread_count > 0 {
         row![
-            text("🔔").size(12).color(palette.text_primary),
+            text("🔔").size(11).color(palette.text_primary),
             px_space(2.0, 0.0),
-            container(text(format!("{}", unread_count)).size(9).color(Color::WHITE))
-                .padding([1, 4])
-                .style(move |_t| container::Style {
-                    background: Some(iced::Background::Color(palette.accent)),
-                    border: iced::Border {
-                        radius: iced::border::Radius::from(8.0),
-                        ..Default::default()
-                    },
+            container(
+                text(format!("{}", unread_count))
+                    .size(9)
+                    .color(Color::WHITE)
+            )
+            .padding([1, 4])
+            .style(move |_t| container::Style {
+                background: Some(iced::Background::Color(palette.accent)),
+                border: iced::Border {
+                    radius: iced::border::Radius::from(8.0),
                     ..Default::default()
-                }),
+                },
+                ..Default::default()
+            }),
         ]
         .align_y(Alignment::Center)
         .into()
     } else {
-        text("🔔").size(12).color(palette.text_primary).into()
+        text("🔔").size(11).color(palette.text_primary).into()
     };
 
     let bell_btn = button(bell_content)
@@ -275,37 +314,39 @@ pub fn view<'a>(
         .style(top_bar_icon_style())
         .padding([2, 4]);
 
-    // Dedicated Control Center Toggle
-    let cc_btn = button(text("🎛️").size(11).color(palette.text_primary))
-        .on_press(Message::ToggleOverlay(ActiveOverlay::ControlCenter))
-        .style(top_bar_icon_style())
-        .padding([2, 4]);
-
-    let right_section = container(
-        row![
-            wifi_btn,
-            volume_btn,
-            bell_btn,
-            cc_btn,
-            px_space(2.0, 0.0),
-            container(px_space(1.0, 12.0)).style(move |_t| container::Style {
-                background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.18))),
-                ..Default::default()
-            }),
-            px_space(2.0, 0.0),
-            clock_text,
-        ]
-        .spacing(4)
+    let right_section = frosted_glass_container(
+        palette,
+        17.0,
+        true,
+        container(
+            row![
+                wifi_btn,
+                volume_btn,
+                dnd_btn,
+                bell_btn,
+                px_space(2.0, 0.0),
+                container(px_space(1.0, 12.0)).style(move |_t| container::Style {
+                    background: Some(iced::Background::Color(divider_tint)),
+                    ..Default::default()
+                }),
+                px_space(3.0, 0.0),
+                button(clock_text)
+                    .on_press(Message::ToggleOverlay(ActiveOverlay::ControlCenter))
+                    .style(top_bar_icon_style())
+                    .padding([1, 4]),
+            ]
+            .spacing(3)
+            .align_y(Alignment::Center),
+        )
+        .height(32)
+        .padding(iced::Padding {
+            top: 2.0,
+            right: 8.0,
+            bottom: 2.0,
+            left: 6.0,
+        })
         .align_y(Alignment::Center),
-    )
-    .height(34)
-    .padding(iced::Padding {
-        top: 2.0,
-        right: 10.0,
-        bottom: 2.0,
-        left: 8.0,
-    })
-    .style(move |_t| top_bar_style(palette));
+    );
 
     // ------------------------------------------------------------------------
     // Assemble 3-Zone Floating Taskbar

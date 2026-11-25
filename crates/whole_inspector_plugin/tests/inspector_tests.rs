@@ -21,8 +21,11 @@ fn create_temp_test_dir(test_name: &str) -> PathBuf {
 fn test_detection_of_leftover_tsx_files() {
     let temp = create_temp_test_dir("tsx_detection");
     let tsx_file = temp.join("App.tsx");
-    fs::write(&tsx_file, "export default function App() { return <div>Legacy</div>; }")
-        .expect("Failed to write mock tsx");
+    fs::write(
+        &tsx_file,
+        "export default function App() { return <div>Legacy</div>; }",
+    )
+    .expect("Failed to write mock tsx");
 
     let ctx = WorkspaceContext::scan(&temp);
     let result = files_hygiene::audit(&ctx);
@@ -32,7 +35,10 @@ fn test_detection_of_leftover_tsx_files() {
         .iter()
         .find(|a| a.title.contains("legacy web/Tauri clutter"));
 
-    assert!(clutter_action.is_some(), "Leftover .tsx file was not detected by files_hygiene analyzer");
+    assert!(
+        clutter_action.is_some(),
+        "Leftover .tsx file was not detected by files_hygiene analyzer"
+    );
     let action = clutter_action.unwrap();
     assert_eq!(action.severity, ActionSeverity::High);
     assert!(action.location.contains("App.tsx"));
@@ -56,7 +62,10 @@ fn test_detection_of_crlf_in_sh_scripts() {
         .iter()
         .find(|a| a.title.contains("CRLF line endings"));
 
-    assert!(crlf_action.is_some(), "CRLF script was not detected by iso_readiness analyzer");
+    assert!(
+        crlf_action.is_some(),
+        "CRLF script was not detected by iso_readiness analyzer"
+    );
     let action = crlf_action.unwrap();
     assert_eq!(action.severity, ActionSeverity::Critical);
     assert!(action.location.contains("build_mindset_iso.sh"));
@@ -155,7 +164,10 @@ fn test_detection_of_unguarded_ai_permission_gate() {
         .iter()
         .find(|a| a.title.contains("permission modal gate"));
 
-    assert!(perm_action.is_some(), "Incomplete permission gate was not flagged as critical");
+    assert!(
+        perm_action.is_some(),
+        "Incomplete permission gate was not flagged as critical"
+    );
     assert_eq!(perm_action.unwrap().severity, ActionSeverity::Critical);
 
     let _ = fs::remove_dir_all(&temp);
@@ -180,14 +192,12 @@ fn test_end_to_end_mock_workspace_report_generation() {
     assert!(!report.capability_matrix.is_empty());
 
     // Verify artifact saving
-    assert!(
-        ReportGenerator::save_artifacts(
-            &report,
-            config.output_md.as_deref(),
-            config.output_json.as_deref()
-        )
-        .is_ok()
-    );
+    assert!(ReportGenerator::save_artifacts(
+        &report,
+        config.output_md.as_deref(),
+        config.output_json.as_deref()
+    )
+    .is_ok());
 
     assert!(temp.join("TEST_REPORT.md").exists());
     assert!(temp.join("test_report.json").exists());

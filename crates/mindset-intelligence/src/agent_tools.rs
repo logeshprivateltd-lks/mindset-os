@@ -18,21 +18,13 @@ pub enum AgentAction {
         notes_summary: String,
     },
     /// Inspects and lists filenames within an authorized student directory.
-    ListFolder {
-        path: String,
-    },
+    ListFolder { path: String },
     /// Reads a local text/markdown/note document (capped at 16 KB) to synthesize study notes.
-    ReadDocument {
-        file_path: String,
-    },
+    ReadDocument { file_path: String },
     /// Opens a MindSet OS native app window.
-    OpenApp {
-        app_id: String,
-    },
+    OpenApp { app_id: String },
     /// System control commands: themes, language, focus sessions, or browser navigation.
-    ControlSystem {
-        action: SystemControlAction,
-    },
+    ControlSystem { action: SystemControlAction },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -87,9 +79,7 @@ pub fn action_description(action: &AgentAction) -> (&'static str, String) {
                 "Start Focus Pomodoro",
                 format!("Set focus timer for {} minutes", duration_mins),
             ),
-            SystemControlAction::OpenBrowserUrl(url) => {
-                ("Open Browser Destination", url.clone())
-            }
+            SystemControlAction::OpenBrowserUrl(url) => ("Open Browser Destination", url.clone()),
         },
         AgentAction::CreateAndShowCapsule { subject, topic, .. } => (
             "Create & Show Study Capsule",

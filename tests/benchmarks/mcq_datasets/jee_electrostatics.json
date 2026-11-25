@@ -1,0 +1,72 @@
+{
+  "exam_name": "JEE Advanced",
+  "subject": "Physics",
+  "topic": "Electrostatics & Capacitance",
+  "marking_scheme": {
+    "correct_marks": 4.0,
+    "incorrect_marks": -1.0,
+    "unattempted_marks": 0.0
+  },
+  "questions": [
+    {
+      "id": "JEE-ELEC-01",
+      "question_type": "SingleCorrect",
+      "question_text": "An electric dipole of moment p is placed at the origin with its axis along the x-axis. The electric field at a point (0, y, 0) on the equatorial line is directed along:",
+      "options": [
+        "+x direction",
+        "-x direction",
+        "+y direction",
+        "-y direction"
+      ],
+      "correct_option_index": 1,
+      "explanation": "On the equatorial plane of a dipole, the electric field E_equatorial = -p / (4 * pi * epsilon_0 * y^3), which is antiparallel to the dipole moment p. Since p is along +x, E is directed along -x."
+    },
+    {
+      "id": "JEE-ELEC-02",
+      "question_type": "SingleCorrect",
+      "question_text": "A solid conducting sphere of radius R has a net charge +Q. The electrostatic potential V as a function of distance r from the center satisfies:",
+      "options": [
+        "V is zero for r < R and increases as 1/r for r > R",
+        "V is constant and non-zero for r <= R and decreases as 1/r for r > R",
+        "V decreases linearly for r <= R and falls off as 1/r^2 for r > R",
+        "V increases parabolically for r <= R and becomes constant for r > R"
+      ],
+      "correct_option_index": 1,
+      "explanation": "Inside a conductor, E = 0, so dV/dr = 0, meaning V is constant everywhere inside and on the surface: V = Q / (4 * pi * epsilon_0 * R). Outside (r > R), V = Q / (4 * pi * epsilon_0 * r)."
+    },
+    {
+      "id": "JEE-ELEC-03",
+      "question_type": "SingleCorrect",
+      "question_text": "A parallel plate capacitor with plate separation d and plate area A is filled with two dielectric slabs of dielectric constants K1 and K2, each of thickness d/2 in series. The equivalent capacitance is:",
+      "options": [
+        "(epsilon_0 * A / d) * (K1 + K2) / 2",
+        "(epsilon_0 * A / d) * (2 * K1 * K2) / (K1 + K2)",
+        "(epsilon_0 * A / d) * (K1 * K2) / (K1 + K2)",
+        "(2 * epsilon_0 * A / d) * (K1 + K2)"
+      ],
+      "correct_option_index": 1,
+      "explanation": "Two capacitors in series of thickness d/2: C1 = K1 * epsilon_0 * A / (d/2) = 2 K1 epsilon_0 A / d. C2 = 2 K2 epsilon_0 A / d. 1/C_eq = 1/C1 + 1/C2 => C_eq = (epsilon_0 * A / d) * (2 * K1 * K2) / (K1 + K2)."
+    },
+    {
+      "id": "JEE-ELEC-04",
+      "question_type": "Numerical",
+      "question_text": "Two point charges +4 uC and +1 uC are placed 30 cm apart in vacuum. At what distance (in cm) from the +4 uC charge on the line joining them is the net electric field zero?",
+      "numerical_correct_value": 20.0,
+      "tolerance": 0.1,
+      "explanation": "Let distance from +4 uC be x cm. Then distance from +1 uC is (30 - x) cm. k * 4 / x^2 = k * 1 / (30 - x)^2 => 2 / x = 1 / (30 - x) => 60 - 2x = x => 3x = 60 => x = 20 cm."
+    },
+    {
+      "id": "JEE-ELEC-05",
+      "question_type": "SingleCorrect",
+      "question_text": "The electrostatic energy stored in a charged capacitor of capacitance C and charge Q is given by:",
+      "options": [
+        "Q^2 / (2 * C)",
+        "Q * C / 2",
+        "2 * Q^2 / C",
+        "Q^2 * C / 2"
+      ],
+      "correct_option_index": 0,
+      "explanation": "Work done to charge capacitor U = int (q / C) dq = Q^2 / (2C) = 1/2 C V^2."
+    }
+  ]
+}

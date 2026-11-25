@@ -60,14 +60,7 @@ pub struct ProjectPoint {
 }
 
 /// Perspective projection with subtle 3D parallax tilt and motion sway.
-pub fn project(
-    t: f32,
-    w: f32,
-    h: f32,
-    tilt_x: f32,
-    tilt_y: f32,
-    sway: f32,
-) -> ProjectPoint {
+pub fn project(t: f32, w: f32, h: f32, tilt_x: f32, tilt_y: f32, sway: f32) -> ProjectPoint {
     let t_clamped = t.clamp(0.0, 1.0);
     let u = 0.5 + 0.22 * (2.6 * std::f32::consts::PI * t_clamped + 0.35).sin();
     let z = 1.0 - 0.52 * t_clamped;
@@ -276,8 +269,57 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                 }
             }
 
-            // 1.2 Render 3D Extruded Milestone Pucks in Painter's Order (decreasing t)
+            // 1.15 Chapter Divider Banners across distinct unit boundaries
             let n = self.nodes.len();
+            for i in 1..n {
+                if self.nodes[i].unit_id != self.nodes[i - 1].unit_id {
+                    let t_div = (i as f32 - 0.5) / (n - 1).max(1) as f32;
+                    let t = (t_div + self.scroll_offset).clamp(0.0, 1.0);
+                    let pt = project(t, w, h, tilt_x, tilt_y, sway);
+
+                    let banner_w = (150.0 * pt.z).max(95.0);
+                    let banner_h = (22.0 * pt.z).max(16.0);
+                    let banner_rect = Path::rounded_rectangle(
+                        Point::new(pt.x - banner_w * 0.5, pt.y - banner_h * 0.5),
+                        Size::new(banner_w, banner_h),
+                        iced::border::Radius::from(6.0 * pt.z),
+                    );
+                    // Dark frosted obsidian banner body
+                    frame.fill(&banner_rect, Color::from_rgba(0.07, 0.11, 0.18, 0.88));
+                    // Golden neon border
+                    frame.stroke(
+                        &banner_rect,
+                        Stroke::default()
+                            .with_color(Color::from_rgba(1.0, 0.82, 0.30, 0.75))
+                            .with_width(1.2),
+                    );
+
+                    let font_sz = (9.5 * pt.z).max(7.5);
+                    let title_trunc = if self.nodes[i].unit_title.chars().count() > 24 {
+                        format!(
+                            "{}...",
+                            self.nodes[i]
+                                .unit_title
+                                .chars()
+                                .take(22)
+                                .collect::<String>()
+                        )
+                    } else {
+                        self.nodes[i].unit_title.clone()
+                    };
+                    frame.fill_text(canvas::Text {
+                        content: title_trunc,
+                        position: Point::new(pt.x, pt.y - font_sz * 0.5),
+                        color: Color::from_rgb(1.0, 0.90, 0.65),
+                        size: iced::Pixels(font_sz),
+                        align_x: iced::alignment::Horizontal::Center.into(),
+                        align_y: iced::alignment::Vertical::Center,
+                        ..Default::default()
+                    });
+                }
+            }
+
+            // 1.2 Render 3D Extruded Milestone Pucks in Painter's Order (decreasing t)
             let mut sorted_indices: Vec<usize> = (0..n).collect();
             sorted_indices.sort_by(|&a, &b| {
                 let ta = a as f32 / (n - 1).max(1) as f32;
@@ -329,9 +371,13 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                 };
                 frame.stroke(
                     &top_path,
-                    Stroke::default()
-                        .with_color(rim_stroke)
-                        .with_width(if node.status == NodeStatus::InProgress { 1.8 } else { 1.2 }),
+                    Stroke::default().with_color(rim_stroke).with_width(
+                        if node.status == NodeStatus::InProgress {
+                            1.8
+                        } else {
+                            1.2
+                        },
+                    ),
                 );
 
                 // Centered Glyph
@@ -356,6 +402,68 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                     align_y: iced::alignment::Vertical::Center,
                     ..Default::default()
                 });
+
+                // Golden Crown Rim for >= 98% Mastery
+                if node.is_crown_mastered {
+                    let crown_ring = Path::circle(top_center, pt.r + 3.2 * pt.z);
+                    frame.stroke(
+                        &crown_ring,
+                        Stroke::default()
+                            .with_color(Color::from_rgba(1.0, 0.84, 0.0, 0.95))
+                            .with_width(1.8 * pt.z),
+                    );
+                    let crown_glow = Path::circle(top_center, pt.r + 5.0 * pt.z);
+                    frame.stroke(
+                        &crown_glow,
+                        Stroke::default()
+                            .with_color(Color::from_rgba(1.0, 0.70, 0.15, 0.40))
+                            .with_width(1.2 * pt.z),
+                    );
+                }
+
+                // 3 Miniature Gold Stars above Completed Nodes
+                if node.status == NodeStatus::Completed {
+                    let star_y = top_center.y - pt.r - 8.0 * pt.z;
+                    let star_gap = 8.5 * pt.z;
+                    let star_sz = (9.5 * pt.z).max(7.0);
+
+                    for (s_idx, k) in [-1.0f32, 0.0, 1.0].iter().enumerate() {
+                        let sx = top_center.x + k * star_gap;
+                        let sy = star_y + if *k == 0.0 { -2.0 * pt.z } else { 0.0 };
+                        let is_earned = (s_idx as u8) < node.stars_earned;
+                        let star_col = if is_earned {
+                            Color::from_rgb(1.0, 0.84, 0.18) // Bright Gold
+                        } else {
+                            Color::from_rgba(0.40, 0.44, 0.50, 0.45) // Dim Muted Slate
+                        };
+                        frame.fill_text(canvas::Text {
+                            content: "★".to_string(),
+                            position: Point::new(sx, sy - star_sz * 0.5),
+                            color: star_col,
+                            size: iced::Pixels(star_sz),
+                            align_x: iced::alignment::Horizontal::Center.into(),
+                            align_y: iced::alignment::Vertical::Center,
+                            ..Default::default()
+                        });
+                    }
+
+                    // Crown glyph insignia if State Board Crown is achieved
+                    if node.is_crown_mastered {
+                        let crown_sz = (10.5 * pt.z).max(8.0);
+                        frame.fill_text(canvas::Text {
+                            content: "👑".to_string(),
+                            position: Point::new(
+                                top_center.x,
+                                star_y - 10.0 * pt.z - crown_sz * 0.5,
+                            ),
+                            color: Color::from_rgb(1.0, 0.88, 0.22),
+                            size: iced::Pixels(crown_sz),
+                            align_x: iced::alignment::Horizontal::Center.into(),
+                            align_y: iced::alignment::Vertical::Center,
+                            ..Default::default()
+                        });
+                    }
+                }
             }
         });
 
@@ -415,15 +523,11 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                 if self.mild_motion_enabled && t_max > 0.01 {
                     let pulse_phase = ((self.ambient_tick as f32 * 0.02) % 1.0) * t_max;
                     let beacon_pt = project(pulse_phase, w, h, tilt_x, tilt_y, sway);
-                    let beacon_dot = Path::circle(
-                        Point::new(beacon_pt.x, beacon_pt.y),
-                        4.5 * beacon_pt.z,
-                    );
+                    let beacon_dot =
+                        Path::circle(Point::new(beacon_pt.x, beacon_pt.y), 4.5 * beacon_pt.z);
                     frame.fill(&beacon_dot, Color::from_rgba(0.40, 1.0, 0.75, 0.95));
-                    let beacon_ring = Path::circle(
-                        Point::new(beacon_pt.x, beacon_pt.y),
-                        8.5 * beacon_pt.z,
-                    );
+                    let beacon_ring =
+                        Path::circle(Point::new(beacon_pt.x, beacon_pt.y), 8.5 * beacon_pt.z);
                     frame.stroke(
                         &beacon_ring,
                         Stroke::default()
@@ -466,6 +570,33 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                             .with_color(Color::from_rgba(0.45, 0.88, 1.0, 0.85))
                             .with_width(1.5),
                     );
+
+                    // Celebratory Reward Burst Particles radiating from active InProgress node
+                    if self.mild_motion_enabled {
+                        for p_idx in 0..8 {
+                            let angle = (p_idx as f32 * std::f32::consts::PI / 4.0)
+                                + (self.ambient_tick as f32 * 0.04);
+                            let burst_dist = pt.r
+                                + 7.0
+                                + ((self.ambient_tick as f32 * 0.75 + p_idx as f32 * 4.5) % 22.0)
+                                    * pt.z;
+                            let px = pt.x + angle.cos() * burst_dist;
+                            let py = pt.y + angle.sin() * burst_dist;
+                            let alpha = ((1.0 - (burst_dist - pt.r - 7.0) / (22.0 * pt.z))
+                                .clamp(0.0, 1.0)
+                                * 0.85)
+                                .max(0.0);
+                            let spark_r = (2.2 * pt.z).max(1.0);
+
+                            let col = match p_idx % 3 {
+                                0 => Color::from_rgba(1.0, 0.84, 0.20, alpha),  // Gold
+                                1 => Color::from_rgba(0.20, 0.95, 0.65, alpha), // Emerald
+                                _ => Color::from_rgba(0.35, 0.80, 1.0, alpha),  // Electric cyan
+                            };
+                            let spark_dot = Path::circle(Point::new(px, py), spark_r);
+                            frame.fill(&spark_dot, col);
+                        }
+                    }
                     break;
                 }
             }
@@ -515,8 +646,8 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
 
                     // Text Content
                     // 1. Topic Title
-                    let title_display = if node.title.len() > 26 {
-                        format!("{}...", &node.title[..24])
+                    let title_display = if node.title.chars().count() > 26 {
+                        format!("{}...", node.title.chars().take(24).collect::<String>())
                     } else {
                         node.title.clone()
                     };
@@ -529,11 +660,8 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                     });
 
                     // 2. Subject & Mastery Percentage
-                    let mastery_text = format!(
-                        "{} • Mastery: {}%",
-                        node.subject,
-                        node.mastery_percentage()
-                    );
+                    let mastery_text =
+                        format!("{} • Mastery: {}%", node.subject, node.mastery_percentage());
                     frame.fill_text(canvas::Text {
                         content: mastery_text,
                         position: Point::new(tip_x + 10.0, tip_y + 26.0),
@@ -543,10 +671,8 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for OdysseyMapProgram<'a>
                     });
 
                     // 3. Estimated Study Time & Click Hint
-                    let time_text = format!(
-                        "Est: {} • Click to embark",
-                        node.estimated_time_display()
-                    );
+                    let time_text =
+                        format!("Est: {} • Click to embark", node.estimated_time_display());
                     frame.fill_text(canvas::Text {
                         content: time_text,
                         position: Point::new(tip_x + 10.0, tip_y + 44.0),
@@ -589,8 +715,16 @@ pub fn render_node_popover<'a>(node: &'a OdysseyNode, neu: &NeuPalette) -> Eleme
         NodeStatus::Locked => neu.text_muted,
     };
 
+    let badge_str = format!(
+        "{} {}",
+        node.node_type.icon(),
+        node.node_type.display_badge()
+    );
+
     let header = row![
         text(&node.subject).size(10).color(status_col),
+        text("•").size(9).color(neu.text_muted),
+        text(badge_str).size(9).color(neu.accent_primary),
         text("•").size(9).color(neu.text_muted),
         text(status_str).size(9).color(status_col),
         h_space(),
@@ -604,18 +738,33 @@ pub fn render_node_popover<'a>(node: &'a OdysseyNode, neu: &NeuPalette) -> Eleme
     ]
     .align_y(Alignment::Center);
 
+    let unit_txt = text(&node.unit_title)
+        .size(9)
+        .color(Color::from_rgb(1.0, 0.85, 0.40));
     let title_txt = text(&node.title).size(12).color(neu.text_primary);
-
     let desc_txt = text(&node.description).size(9).color(neu.text_muted);
 
+    let star_display = node.star_rating_display();
     let marks_txt = text(format!(
-        "Mastery: {}% • Est: {} • {} XP",
+        "{} • Mastery: {}% • Est: {} • {} XP",
+        star_display,
         node.mastery_percentage(),
         node.estimated_time_display(),
         node.xp
     ))
     .size(9)
     .color(neu.accent_primary);
+
+    let crown_row: Option<Element<'a, Message>> = if node.is_crown_mastered {
+        Some(
+            row![text("👑 State Board Crown Mastered (590/600 Tier)")
+                .size(9)
+                .color(Color::from_rgb(1.0, 0.84, 0.0)),]
+            .into(),
+        )
+    } else {
+        None
+    };
 
     let launch_btn = button(
         row![
@@ -645,18 +794,20 @@ pub fn render_node_popover<'a>(node: &'a OdysseyNode, neu: &NeuPalette) -> Eleme
     })
     .padding([5, 12]);
 
-    let popover_box = column![
-        header,
-        title_txt,
-        desc_txt,
-        px_space(0.0, 2.0),
-        row![marks_txt, h_space(), launch_btn].align_y(Alignment::Center),
-    ]
-    .spacing(5)
-    .padding(10);
+    let mut popover_col = column![header, unit_txt, title_txt, desc_txt,].spacing(4);
+
+    if let Some(crown_el) = crown_row {
+        popover_col = popover_col.push(crown_el);
+    }
+
+    popover_col = popover_col.push(px_space(0.0, 2.0));
+    popover_col =
+        popover_col.push(row![marks_txt, h_space(), launch_btn].align_y(Alignment::Center));
+
+    let popover_box = popover_col.padding(10);
 
     container(neu_card(popover_box, neu, 12.0, 1.0))
-        .width(360)
+        .width(380)
         .into()
 }
 
@@ -699,5 +850,56 @@ mod tests {
         assert_eq!(journey.nodes[0].mastery_percentage(), 85);
         assert_eq!(journey.nodes[0].estimated_time_display(), "35 mins");
         assert_eq!(journey.nodes[1].status, NodeStatus::Locked);
+    }
+
+    #[test]
+    fn test_utf8_char_safe_truncation() {
+        // Multi-byte Unicode: Tamil string with 3-byte and 4-byte characters
+        let tamil_unit = "அலகு 1: மின்னோட்டவியல் மற்றும் காந்தவியல்";
+        assert!(tamil_unit.len() > 24); // byte length > 24
+        assert!(tamil_unit.chars().count() > 24);
+
+        let trunc = if tamil_unit.chars().count() > 24 {
+            format!("{}...", tamil_unit.chars().take(22).collect::<String>())
+        } else {
+            tamil_unit.to_string()
+        };
+        assert!(trunc.ends_with("..."));
+        assert_eq!(trunc.chars().count(), 22 + 3);
+
+        // Adversarial string from challenger: "அஆஇஈஉஊஎஏ ஐஒ"
+        let challenger_str = "அஆஇஈஉஊஎஏ ஐஒ";
+        assert!(challenger_str.len() > 24); // 32 bytes
+        assert!(challenger_str.chars().count() <= 24); // 12 chars
+        let trunc2 = if challenger_str.chars().count() > 24 {
+            format!("{}...", challenger_str.chars().take(22).collect::<String>())
+        } else {
+            challenger_str.to_string()
+        };
+        // Should NOT truncate since char count <= 24, avoiding byte-slice panic entirely
+        assert_eq!(trunc2, challenger_str);
+
+        // Adversarial title from challenger: "Uஅஆஇஈஉஊஎஏஐ கூடுதல் தகவல்கள்"
+        let challenger_title = "Uஅஆஇஈஉஊஎஏஐ கூடுதல் தகவல்கள்";
+        assert!(challenger_title.len() > 26);
+        let display = if challenger_title.chars().count() > 26 {
+            format!(
+                "{}...",
+                challenger_title.chars().take(24).collect::<String>()
+            )
+        } else {
+            challenger_title.to_string()
+        };
+        assert!(display.ends_with("..."));
+
+        // Emoji & Symbols
+        let emoji_str = "⚡ Electrostatics & Magnetic Field Mechanics 🔬🪐";
+        let display_emoji = if emoji_str.chars().count() > 26 {
+            format!("{}...", emoji_str.chars().take(24).collect::<String>())
+        } else {
+            emoji_str.to_string()
+        };
+        assert!(display_emoji.ends_with("..."));
+        assert_eq!(display_emoji.chars().count(), 24 + 3);
     }
 }

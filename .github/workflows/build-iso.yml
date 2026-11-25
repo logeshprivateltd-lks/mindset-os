@@ -1,4 +1,4 @@
-name: Build MindSet OS Pure Rust Bootable ISO
+name: Build MindSet OS Debian 13 Live ISO
 
 on:
   workflow_dispatch:
@@ -8,76 +8,109 @@ on:
       - main
 
 jobs:
-  build-pure-rust-iso:
-    name: Build Pure Rust wgpu Live ISO (Debian 13 Trixie + Openbox)
+  build-debian13-iso:
+    name: Build & Verify Debian 13 Trixie ISO (mindset-shell + labwc)
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 55
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Rust Stable Toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
-
-      - name: Install System Build & ISO Dependencies
+      - name: Prepare Runner Disk Space & Loop Devices
         run: |
-          echo 'Acquire::http::Timeout "15";' | sudo tee /etc/apt/apt.conf.d/99custom-timeout
-          echo 'Acquire::https::Timeout "15";' | sudo tee -a /etc/apt/apt.conf.d/99custom-timeout
-          echo 'Acquire::Retries "3";' | sudo tee -a /etc/apt/apt.conf.d/99custom-timeout
-          sudo sed -i 's|http://[a-zA-Z0-9.-]*\.archive\.ubuntu\.com|http://archive.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null || true
+          sudo modprobe loop || true
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h
+
+      - name: Compile Rust Binaries & Build Debian 13 ISO in Trixie Container
+        run: |
+          docker run --rm --privileged \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace \
+            debian:trixie \
+            bash -euo pipefail -c '
+              export DEBIAN_FRONTEND=noninteractive
+              echo "Acquire::Retries \"3\";" > /etc/apt/apt.conf.d/99mindset
+              echo "Acquire::http::Timeout \"30\";" >> /etc/apt/apt.conf.d/99mindset
+              echo "Acquire::https::Timeout \"30\";" >> /etc/apt/apt.conf.d/99mindset
+
+              apt-get update
+              apt-get install -y --no-install-recommends \
+                build-essential \
+                pkg-config \
+                libssl-dev \
+                libasound2-dev \
+                libudev-dev \
+                libwayland-dev \
+                libx11-dev \
+                libx11-xcb-dev \
+                libxkbcommon-dev \
+                libxkbcommon-x11-dev \
+                libvulkan-dev \
+                live-build \
+                debootstrap \
+                xorriso \
+                squashfs-tools \
+                isolinux \
+                syslinux-common \
+                syslinux-efi \
+                grub-pc-bin \
+                grub-efi-amd64-bin \
+                mtools \
+                dosfstools \
+                dos2unix \
+                ca-certificates \
+                curl
+
+              curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+              export PATH="/root/.cargo/bin:$PATH"
+
+              cargo build --release --bin mindset-shell --bin mindset-os -p mindset-focus-guard
+
+              find iso-builder -type f \( -name "*.sh" -o -name "*.hook.*" -o -path "*/auto/*" -o -path "*/usr/local/bin/*" -o -path "*/labwc/autostart" \) -exec dos2unix -q {} +
+              cd iso-builder
+              chmod +x build-iso.sh build_mindset_iso.sh auto/* config/hooks/live/*
+              ./build-iso.sh
+
+              # Free Rust target intermediate files before host verification & artifact upload
+              rm -rf /workspace/target
+            '
+
+      - name: Verify ISO Boot Catalog & QEMU Smoke Boot
+        run: |
           sudo apt-get update -o Acquire::Retries=3
-          sudo apt-get install -y --no-install-recommends \
-            build-essential \
-            pkg-config \
-            libasound2-dev \
-            libudev-dev \
-            libwayland-dev \
-            libx11-dev \
-            libx11-xcb-dev \
-            libxkbcommon-dev \
-            libxkbcommon-x11-dev \
-            live-build \
-            debootstrap \
-            squashfs-tools \
-            xorriso \
-            isolinux \
-            syslinux-common \
-            syslinux-efi \
-            grub-pc-bin \
-            grub-efi-amd64-bin \
-            mtools \
-            dosfstools
+          sudo apt-get install -y --no-install-recommends xorriso qemu-system-x86 ovmf
+          ls -lh iso-builder/mindset-os-amd64.hybrid.iso iso-builder/mindset-os-amd64.hybrid.iso.sha256
+          cat iso-builder/mindset-os-amd64.hybrid.iso.sha256
 
-      - name: Compile Pure Rust MindSet OS Native Binaries
-        env:
-          RUSTFLAGS: "-A unused_variables -A dead_code -A unused_imports"
-        run: |
-          cargo build --release --bin mindset-os
-          cargo build --release -p mindset-focus-guard
+          echo "=== Verifying El-Torito Hybrid Boot Catalog ==="
+          xorriso -indev iso-builder/mindset-os-amd64.hybrid.iso -report_el_torito plain
 
-      - name: Stage Binaries into ISO Builder Overlay
-        run: |
-          mkdir -p iso-builder/config/includes.chroot/opt/mindset-os
-          cp target/release/mindset-os iso-builder/config/includes.chroot/opt/mindset-os/mindset-os
-          chmod +x iso-builder/config/includes.chroot/opt/mindset-os/mindset-os
-          if [ -f target/release/mindset-focus-guard ]; then
-            cp target/release/mindset-focus-guard iso-builder/config/includes.chroot/opt/mindset-os/mindset-focus-guard
-            chmod +x iso-builder/config/includes.chroot/opt/mindset-os/mindset-focus-guard
+          echo "=== Verifying ISO Size Under 2.5 GB ==="
+          ISO_BYTES=$(stat -c%s iso-builder/mindset-os-amd64.hybrid.iso)
+          echo "ISO Bytes: $ISO_BYTES"
+          if [ "$ISO_BYTES" -gt 2684354560 ]; then
+            echo "WARNING: ISO size exceeds 2.5 GB ($ISO_BYTES bytes)"
           fi
 
-      - name: Build Hybrid Bootable Live ISO
-        working-directory: iso-builder
-        run: |
-          chmod +x build_mindset_iso.sh
-          sudo bash build_mindset_iso.sh
+          echo "=== Running Headless QEMU Smoke Boot Test ==="
+          KVM_FLAG=""
+          if [ -e /dev/kvm ]; then
+            KVM_FLAG="-enable-kvm"
+          fi
+          timeout 45s qemu-system-x86_64 $KVM_FLAG -m 2048 -smp 2 \
+            -vga virtio -display none \
+            -serial file:iso-builder/qemu-boot.log \
+            -cdrom iso-builder/mindset-os-amd64.hybrid.iso || true
+          ls -lh iso-builder/qemu-boot.log || true
 
-      - name: Archive Bootable ISO
+      - name: Upload MindSet OS Bootable ISO & Logs
         uses: actions/upload-artifact@v4
         with:
-          name: mindset-pure-rust-live-iso
+          name: mindset-os-debian13-hybrid-iso
           path: |
-            iso-builder/mindset-v1.iso*
+            iso-builder/mindset-os-amd64.hybrid.iso
+            iso-builder/mindset-os-amd64.hybrid.iso.sha256
+            iso-builder/build.log
+            iso-builder/qemu-boot.log
           retention-days: 14

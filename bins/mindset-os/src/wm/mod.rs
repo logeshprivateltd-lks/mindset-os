@@ -3,9 +3,7 @@
 //! Provides window bounds calculation, safe-area clamping (top bar + dock),
 //! drag-to-move, edge resizing, title-bar double click, and edge snapping.
 
-use mindset_core::{
-    DesktopWidgetId, DesktopWidgetPlacement, WindowId, WindowInstance, WindowMode,
-};
+use mindset_core::{DesktopWidgetId, DesktopWidgetPlacement, WindowId, WindowInstance, WindowMode};
 
 pub const TOP_BAR_SAFE_AREA: f32 = 44.0;
 pub const DOCK_SAFE_AREA: f32 = 72.0;
@@ -83,7 +81,9 @@ impl WindowInteractionState {
         widget.width = widget.width.clamp(200.0, self.screen_width);
         widget.height = widget.height.clamp(60.0, self.available_height());
 
-        widget.x = widget.x.clamp(0.0, (self.screen_width - widget.width).max(0.0));
+        widget.x = widget
+            .x
+            .clamp(0.0, (self.screen_width - widget.width).max(0.0));
         widget.y = widget.y.clamp(
             TOP_BAR_SAFE_AREA,
             (self.screen_height - DOCK_SAFE_AREA - widget.height).max(TOP_BAR_SAFE_AREA),

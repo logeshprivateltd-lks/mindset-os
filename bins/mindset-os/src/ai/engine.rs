@@ -20,6 +20,11 @@ pub struct ChatMessagePayload {
 pub enum StreamToken {
     Chunk(String),
     Done,
+    SystemAlert {
+        severity: String,
+        title: String,
+        body: String,
+    },
     Error(String),
 }
 

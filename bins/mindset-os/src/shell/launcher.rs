@@ -218,7 +218,9 @@ pub fn view<'a>(
                         column![
                             row![
                                 text(name).size(TYPE_BODY).color(palette.text_primary),
-                                text(format!(" • {}", tag)).size(TYPE_CAPTION).color(palette.accent),
+                                text(format!(" • {}", tag))
+                                    .size(TYPE_CAPTION)
+                                    .color(palette.accent),
                             ]
                             .spacing(4)
                             .align_y(Alignment::Center),
@@ -315,7 +317,9 @@ pub fn view<'a>(
             row![
                 text("☀️").size(TYPE_METRIC),
                 column![
-                    text(date_str).size(TYPE_CAPTION).color(palette.text_primary),
+                    text(date_str)
+                        .size(TYPE_CAPTION)
+                        .color(palette.text_primary),
                     text("22° Study Mode Active")
                         .size(TYPE_CAPTION)
                         .color(palette.text_secondary),
@@ -331,7 +335,9 @@ pub fn view<'a>(
     .width(Length::Fill);
 
     // 4. Pinned Section: 10-App MindSet OS Academic Suite
-    let pinned_title = text("Pinned Applications").size(TYPE_BODY).color(palette.text_secondary);
+    let pinned_title = text("Pinned Applications")
+        .size(TYPE_BODY)
+        .color(palette.text_secondary);
 
     let row1 = row![
         app_pill(
@@ -423,7 +429,9 @@ pub fn view<'a>(
     let pinned_section = column![pinned_title, row1, row2].spacing(8);
 
     // 5. Recommended Study Materials & Capsules
-    let recommended_title = text("Recommended Study Materials").size(TYPE_BODY).color(palette.text_secondary);
+    let recommended_title = text("Recommended Study Materials")
+        .size(TYPE_BODY)
+        .color(palette.text_secondary);
     let rec1 = recent_item_row(
         "📝",
         "Physics_HighYield_Formulas.txt",
@@ -459,9 +467,12 @@ pub fn view<'a>(
     let footer = container(
         row![
             button(
-                row![text("⊞").size(TYPE_BODY), text("All Apps").size(TYPE_CAPTION)]
-                    .spacing(4)
-                    .align_y(Alignment::Center),
+                row![
+                    text("⊞").size(TYPE_BODY),
+                    text("All Apps").size(TYPE_CAPTION)
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
             )
             .on_press(Message::OpenWindow(WindowId::Today))
             .style(secondary_button(palette))
@@ -475,9 +486,12 @@ pub fn view<'a>(
             .style(secondary_button(palette))
             .padding([4, 8]),
             button(
-                row![text("🎯").size(TYPE_BODY), text("Focus Mode").size(TYPE_CAPTION)]
-                    .spacing(4)
-                    .align_y(Alignment::Center),
+                row![
+                    text("🎯").size(TYPE_BODY),
+                    text("Focus Mode").size(TYPE_CAPTION)
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
             )
             .on_press(Message::ToggleTunnelVision)
             .style(secondary_button(palette))

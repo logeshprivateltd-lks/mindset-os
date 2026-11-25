@@ -11,12 +11,11 @@ members = [
     "crates/whole_inspector_plugin",
     "services/mindset-focus-guard",
     "bins/mindset-os",
+    "tests",
 ]
 default-members = [
     "bins/mindset-os",
-]
-exclude = [
-    "archive",
+    "tests",
 ]
 
 [workspace.package]

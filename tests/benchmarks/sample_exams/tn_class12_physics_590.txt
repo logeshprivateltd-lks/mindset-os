@@ -1,0 +1,121 @@
+TAMIL NADU HIGHER SECONDARY EXAMINATION - CLASS 12 PHYSICS
+STUDENT NAME: Arjun R (Roll No: 1240892)
+TARGET: 590/600 (State Board Merit Rank)
+SUBJECT: Physics (Theory)
+
+========================================================================
+SECTION B & C: DESCRIPTIVE DERIVATIONS & NUMERICALS
+========================================================================
+
+--- Question 1: Gauss's Law & Electric Flux ---
+Statement:
+The total electric flux phi_E through any closed Gaussian surface in free space is equal to 1/epsilon_0 times the net electric charge q_enclosed enclosed by the surface.
+Mathematical Expression:
+  phi_E = oint_S E . dS = q_enclosed / epsilon_0
+
+Diagram:
+[DIAGRAM: Spherical Gaussian surface of radius r surrounding point charge +q at origin.
+ Radial field vector E points outward perpendicular to surface element dS.
+ Angle theta between E and dS is 0 degrees everywhere on sphere. Surface labels complete.]
+
+Derivation:
+  oint_S E . dS = oint_S E * dS * cos(0) = E * oint_S dS
+Since electric field E = (1 / (4 * pi * epsilon_0)) * (q / r^2) is constant over the sphere of radius r:
+  phi_E = E * (4 * pi * r^2)
+  phi_E = [ (1 / (4 * pi * epsilon_0)) * (q / r^2) ] * (4 * pi * r^2)
+  phi_E = q / epsilon_0
+
+Final Result:
+  Total Electric Flux phi_E = q / epsilon_0 = 1.13 * 10^5 N m^2 C^-1
+Units: N m^2 C^-1 (Newton meter squared per Coulomb). Explicitly verified.
+
+
+--- Question 2: Electric Dipole in Uniform Electric Field ---
+Consider an electric dipole of dipole moment p = 2aq placed in a uniform electric field E at angle theta.
+Forces on charges:
+  Force on +q: F_+ = +qE (along E)
+  Force on -q: F_- = -qE (opposite to E)
+Net translational force F_net = F_+ + F_- = 0.
+Since the forces act along different lines of action, they constitute a couple producing torque tau.
+Perpendicular arm of couple d = 2a * sin(theta).
+Torque magnitude:
+  tau = Force * Perpendicular Distance = (qE) * (2a * sin(theta))
+Since dipole moment p = 2qa:
+  tau = p * E * sin(theta)
+In vector form:
+  tau = p x E
+
+Special Cases:
+  Case (i): When theta = 0 deg, tau = p * E * sin(0) = 0. Dipole is in stable equilibrium.
+  Case (ii): When theta = 90 deg, tau_max = p * E * sin(90) = p * E. Maximum torque.
+  Case (iii): When theta = 180 deg, tau = p * E * sin(180) = 0. Dipole is in unstable equilibrium.
+
+
+--- Question 3: Wheatstone's Bridge Balance Condition ---
+Statement of Kirchhoff's Rules:
+1. Current Rule (KCL): Algebraic sum of currents meeting at any junction is zero (sum I = 0).
+2. Voltage Rule (KVL): In any closed mesh, sum of products of current and resistance equals total emf (sum IR = sum E).
+
+Diagram:
+[DIAGRAM: Closed bridge network ABCD with four resistances P, Q, R, S.
+ Branch AB: Resistance P, current I1.
+ Branch BC: Resistance Q, current I3.
+ Branch AD: Resistance R, current I2.
+ Branch DC: Resistance S, current I4.
+ Branch BD: Galvanometer of resistance G, current Ig.
+ Battery of emf E and key K connected between terminals A and C. Polarity (+/-) marked.]
+
+Derivation:
+Applying KCL at Junction B:
+  I1 - Ig - I3 = 0  --- (1)
+Applying KCL at Junction D:
+  I2 + Ig - I4 = 0  --- (2)
+
+Applying KVL to closed loop ABDA:
+  I1*P + Ig*G - I2*R = 0  --- (3)
+Applying KVL to closed loop BCDB:
+  I3*Q - I4*S - Ig*G = 0  --- (4)
+
+Balanced Bridge Condition:
+When galvanometer shows null deflection, Ig = 0.
+From (1): I1 = I3
+From (2): I2 = I4
+
+Substituting Ig = 0 in (3) and (4):
+  I1*P = I2*R  --- (5)
+  I3*Q = I4*S => I1*Q = I2*S  --- (6)
+
+Dividing equation (5) by equation (6):
+  (I1 * P) / (I1 * Q) = (I2 * R) / (I2 * S)
+  P / Q = R / S
+
+Hence, the bridge balance condition P / Q = R / S is rigorously proved.
+
+
+--- Question 4: Biot-Savart Law on Circular Current Loop ---
+Statement of Biot-Savart Law:
+The magnetic field dB at a point due to an infinitesimal current element I dl is:
+  dB = (mu_0 / 4pi) * (I * dl * sin(theta)) / r^2
+In vector form:
+  dB = (mu_0 / 4pi) * (I * dl x r_hat) / r^2
+
+Diagram:
+[DIAGRAM: Circular coil of radius R carrying steady current I in counter-clockwise direction.
+ Point P located along coil axis at distance x from center O.
+ Differential length element dl on coil perimeter. Distance to point P is r = sqrt(R^2 + x^2).
+ Field components dB_parallel cancel by diametrical symmetry; dB_axial components add along axis.]
+
+Derivation for Magnetic Field at Center of Circular Loop (x = 0):
+Angle theta between current element dl and position vector r to center is 90 deg everywhere along the rim.
+  dB = (mu_0 / 4pi) * (I * dl * sin(90)) / R^2
+  dB = (mu_0 / 4pi) * (I * dl) / R^2
+
+Integrating over the complete circumference of loop (integral dl = 2 * pi * R):
+  B = int dB = (mu_0 * I / (4 * pi * R^2)) * oint dl
+  B = (mu_0 * I / (4 * pi * R^2)) * (2 * pi * R)
+  B = (mu_0 * I) / (2 * R)
+
+Final Answer:
+  Magnetic Field at center B = (mu_0 * I) / (2 * R) = 6.28 * 10^-5 Tesla.
+Units: Tesla (T) / Wb m^-2. Direction along normal to the loop by right-hand thumb rule.
+========================================================================

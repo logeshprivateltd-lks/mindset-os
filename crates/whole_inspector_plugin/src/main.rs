@@ -81,7 +81,12 @@ fn main() {
 
     println!("================================================================================");
     println!("🔍 MindSet OS Whole Inspector Plugin: Deep Workspace Verification");
-    println!("Target Root: {}", root.canonicalize().unwrap_or_else(|_| root.clone()).display());
+    println!(
+        "Target Root: {}",
+        root.canonicalize()
+            .unwrap_or_else(|_| root.clone())
+            .display()
+    );
     println!("Mode: Strict Read-Only Deep Diagnostic");
     println!("================================================================================\n");
 
@@ -94,9 +99,18 @@ fn main() {
     println!("Exit Code: {}", report.exit_code);
     println!("Overall Readiness Score: {} / 100", s.overall_score);
     println!("--------------------------------------------------------------------------------");
-    println!("  1. Standard OS Capability:       {:>3} / 100", s.normal_os_score);
-    println!("  2. Bootable Debian 13 ISO:       {:>3} / 100", s.iso_readiness_score);
-    println!("  3. Student OS + Maindy AI:       {:>3} / 100", s.student_os_ai_score);
+    println!(
+        "  1. Standard OS Capability:       {:>3} / 100",
+        s.normal_os_score
+    );
+    println!(
+        "  2. Bootable Debian 13 ISO:       {:>3} / 100",
+        s.iso_readiness_score
+    );
+    println!(
+        "  3. Student OS + Maindy AI:       {:>3} / 100",
+        s.student_os_ai_score
+    );
     println!("--------------------------------------------------------------------------------");
     println!(
         "Features Audited: {} | Pass: {} | Partial: {} | Mock: {} | Missing: {}",

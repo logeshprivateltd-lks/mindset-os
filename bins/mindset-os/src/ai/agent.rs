@@ -8,8 +8,7 @@ use std::fs;
 use std::path::PathBuf;
 
 pub use mindset_intelligence::agent_tools::{
-    action_description, extract_agent_action, requires_permission, AgentAction,
-    SystemControlAction,
+    action_description, extract_agent_action, requires_permission, AgentAction, SystemControlAction,
 };
 
 pub const MAX_DOCUMENT_READ_BYTES: usize = 16 * 1024; // 16 KB safe cap
@@ -68,7 +67,10 @@ pub fn safe_read_document(file_path: &str) -> Result<(String, bool), String> {
     }
 
     if !path.is_file() {
-        return Err(format!("Target is a directory, not a file: {}", path.display()));
+        return Err(format!(
+            "Target is a directory, not a file: {}",
+            path.display()
+        ));
     }
 
     let meta = fs::metadata(&path).map_err(|e| format!("Failed to read file metadata: {}", e))?;
@@ -119,7 +121,10 @@ pub fn safe_list_folder(folder_path: &str) -> Result<Vec<String>, String> {
 }
 
 /// Checks if a given file or folder path has already been granted session permission.
-pub fn is_folder_permitted(path: &str, session_allowed: &std::collections::HashSet<String>) -> bool {
+pub fn is_folder_permitted(
+    path: &str,
+    session_allowed: &std::collections::HashSet<String>,
+) -> bool {
     let clean = path.trim().replace('\\', "/").to_lowercase();
 
     for allowed in session_allowed {
@@ -157,9 +162,15 @@ mod tests {
         let session_allowed = std::collections::HashSet::new();
 
         // All paths must be blocked when session_allowed is empty
-        assert!(!is_folder_permitted("Formula Sheets/Physics_Formula_Sheet.txt", &session_allowed));
+        assert!(!is_folder_permitted(
+            "Formula Sheets/Physics_Formula_Sheet.txt",
+            &session_allowed
+        ));
         assert!(!is_folder_permitted("Study Capsules", &session_allowed));
-        assert!(!is_folder_permitted("Documents/Personal.txt", &session_allowed));
+        assert!(!is_folder_permitted(
+            "Documents/Personal.txt",
+            &session_allowed
+        ));
         assert!(!is_folder_permitted("Downloads", &session_allowed));
     }
 
@@ -172,12 +183,21 @@ mod tests {
         session_allowed.insert(scope);
 
         // Formula Sheets should now be permitted
-        assert!(is_folder_permitted("Formula Sheets/Physics_Formula_Sheet.txt", &session_allowed));
+        assert!(is_folder_permitted(
+            "Formula Sheets/Physics_Formula_Sheet.txt",
+            &session_allowed
+        ));
         assert!(is_folder_permitted("Formula Sheets", &session_allowed));
 
         // Documents and other folders must remain strictly BLOCKED
-        assert!(!is_folder_permitted("Documents/Personal.txt", &session_allowed));
-        assert!(!is_folder_permitted("Study Capsules/Math.json", &session_allowed));
+        assert!(!is_folder_permitted(
+            "Documents/Personal.txt",
+            &session_allowed
+        ));
+        assert!(!is_folder_permitted(
+            "Study Capsules/Math.json",
+            &session_allowed
+        ));
     }
 
     #[test]

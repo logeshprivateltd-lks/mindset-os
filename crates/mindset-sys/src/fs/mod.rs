@@ -1,8 +1,14 @@
 //! MindSet OS — Filesystem & RAG Knowledge IPC Subsystem
 //! Copyright (c) 2026 LKS PVT LTD. All rights reserved.
 
+pub mod document;
 pub mod explorer;
 
+#[allow(unused_imports)]
+pub use document::{
+    detect_format, DocumentContent, DocumentFormat, DocumentHandler, FsError, PdfEngine,
+    PdfMetadata, PdfPage, PptxEngine, PptxMetadata, PptxSlide,
+};
 #[allow(unused_imports)]
 pub use explorer::{
     DirectoryListing, DiskStats, FileContentResponse, FileEntry, RagChunkDto, RagDocumentDto,

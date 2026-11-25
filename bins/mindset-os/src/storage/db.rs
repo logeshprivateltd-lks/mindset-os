@@ -8,7 +8,7 @@ use rusqlite::{params, Connection, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserProfile {
@@ -106,22 +106,17 @@ impl UserProfile {
         };
         let clamped = self.target_score_value.min(max);
         match self.career_track.as_str() {
-            "Class12BoardsTN600" => format!(
-                "TN Class 12 Boards • Target: {}/600",
-                clamped.min(600)
-            ),
-            "Class12BoardsCBSE500" => format!(
-                "CBSE Class 12 Boards • Target: {}/500",
-                clamped.min(500)
-            ),
+            "Class12BoardsTN600" => {
+                format!("TN Class 12 Boards • Target: {}/600", clamped.min(600))
+            }
+            "Class12BoardsCBSE500" => {
+                format!("CBSE Class 12 Boards • Target: {}/500", clamped.min(500))
+            }
             "NEET720" => format!("NEET-UG • Target: {}/720", clamped.min(720)),
             "JEE300" => format!("JEE Main/Adv • Target: {}/300", clamped.min(300)),
             "UPSC_TNPSC" => format!("UPSC / TNPSC • Target: {}/200", clamped.min(200)),
             "CA" => format!("CA Foundation • Target: {}/400", clamped.min(400)),
-            "TechCareer" => format!(
-                "Software Engineering • Target: {}/100",
-                clamped.min(100)
-            ),
+            "TechCareer" => format!("Software Engineering • Target: {}/100", clamped.min(100)),
             _ => format!("Academic Goal • Target: {}/{}", clamped, max),
         }
     }
@@ -178,6 +173,8 @@ pub struct DailyCheckinRecord {
     pub energy_level: String, // "High-Energy Sprint", "Normal", "Busy Day", "Exhausted"
     pub available_hours_today: f32,
     pub situation_note: String,
+    pub recommended_capsule_minutes: u32,
+    pub recommended_break_minutes: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -259,18 +256,29 @@ impl Default for StorageManager {
 
 impl StorageManager {
     pub fn new() -> Self {
-        let base_dir = dirs::data_local_dir()
-            .unwrap_or_else(|| PathBuf::from("."))
-            .join("MindSetOS");
+        let base_dir = crate::ai::maindy_system_bridge::linux_data_root();
         let _ = fs::create_dir_all(&base_dir);
         let db_path = base_dir.join("mindset_os.db");
 
+        Self::with_path(db_path)
+    }
+
+    pub fn with_path(db_path: PathBuf) -> Self {
+        if let Some(parent) = db_path.parent() {
+            if !parent.as_os_str().is_empty() {
+                let _ = fs::create_dir_all(parent);
+            }
+        }
         let manager = Self { db_path };
         let _ = manager.init_schema();
         manager
     }
 
-    fn open_connection(&self) -> Result<Connection> {
+    pub fn db_path(&self) -> &Path {
+        &self.db_path
+    }
+
+    pub fn open_connection(&self) -> Result<Connection> {
         let conn = Connection::open(&self.db_path)?;
         // Enforce WAL mode and strict 2MB RAM cache ceiling
         conn.execute_batch(
@@ -336,7 +344,34 @@ impl StorageManager {
                 date TEXT PRIMARY KEY,
                 energy_level TEXT NOT NULL,
                 available_hours_today REAL NOT NULL,
-                situation_note TEXT NOT NULL
+                situation_note TEXT NOT NULL,
+                recommended_capsule_minutes INTEGER NOT NULL DEFAULT 30,
+                recommended_break_minutes INTEGER NOT NULL DEFAULT 5
+            );
+
+            CREATE TABLE IF NOT EXISTS student_mistake_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                chapter TEXT NOT NULL,
+                question_prompt TEXT NOT NULL,
+                student_wrong_answer TEXT NOT NULL,
+                correct_answer TEXT NOT NULL,
+                misconception_category TEXT NOT NULL,
+                review_count INTEGER NOT NULL DEFAULT 0,
+                is_resolved INTEGER NOT NULL DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS leitner_cards (
+                id TEXT PRIMARY KEY,
+                front_prompt TEXT NOT NULL,
+                back_solution TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                current_box INTEGER NOT NULL DEFAULT 1,
+                last_reviewed_at TEXT NOT NULL,
+                next_review_due TEXT NOT NULL,
+                consecutive_successes INTEGER NOT NULL DEFAULT 0,
+                total_reviews INTEGER NOT NULL DEFAULT 0
             );
 
             CREATE TABLE IF NOT EXISTS scratchpad_notes (
@@ -377,6 +412,17 @@ impl StorageManager {
                 status TEXT NOT NULL,
                 details TEXT NOT NULL,
                 timestamp TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS auth_credentials (
+                user_id TEXT PRIMARY KEY,
+                password_hash TEXT NOT NULL,
+                pin_hash TEXT,
+                face_embedding_blob BLOB,
+                fingerprint_enrolled INTEGER NOT NULL DEFAULT 0,
+                auto_lock_minutes INTEGER NOT NULL DEFAULT 5,
+                failed_attempts INTEGER NOT NULL DEFAULT 0,
+                locked_until TEXT
             );",
         )?;
 
@@ -407,11 +453,17 @@ impl StorageManager {
             "ALTER TABLE user_profile ADD COLUMN language_code TEXT NOT NULL DEFAULT 'en'",
             "ALTER TABLE user_profile ADD COLUMN maindy_style TEXT NOT NULL DEFAULT 'thanglish'",
             "ALTER TABLE scratchpad_notes ADD COLUMN is_pinned INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE daily_checkins ADD COLUMN recommended_capsule_minutes INTEGER NOT NULL DEFAULT 30",
+            "ALTER TABLE daily_checkins ADD COLUMN recommended_break_minutes INTEGER NOT NULL DEFAULT 5",
+            "ALTER TABLE user_memories ADD COLUMN fact_key TEXT NOT NULL DEFAULT ''",
         ];
 
         for mig in migrations {
             let _ = conn.execute(mig, []);
         }
+
+        // Deduplicate singleton / identical student personalization memories on startup
+        self.deduplicate_memories_in_conn(&conn);
 
         // Seed default profile if table is brand new
         let count: i64 =
@@ -497,7 +549,7 @@ impl StorageManager {
                 "INSERT INTO user_memories (memory_text, category, created_at) VALUES (?1, ?2, ?3)",
                 params![
                     "Struggles with Nernst equation concentration quotients when non-standard states are applied.",
-                    "Academic Strength",
+                    "Growth Area",
                     now
                 ],
             );
@@ -510,6 +562,9 @@ impl StorageManager {
                 ],
             );
         }
+
+        // Seed default credentials for "scholar"
+        let _ = mindset_sys::auth::CredentialsManager::ensure_default_credentials(&conn, "scholar");
 
         Ok(())
     }
@@ -829,13 +884,16 @@ impl StorageManager {
     pub fn save_daily_checkin(&self, checkin: &DailyCheckinRecord) {
         if let Ok(conn) = self.open_connection() {
             let _ = conn.execute(
-                "INSERT OR REPLACE INTO daily_checkins (date, energy_level, available_hours_today, situation_note)
-                 VALUES (?1, ?2, ?3, ?4)",
+                "INSERT OR REPLACE INTO daily_checkins
+                 (date, energy_level, available_hours_today, situation_note, recommended_capsule_minutes, recommended_break_minutes)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 params![
                     checkin.date,
                     checkin.energy_level,
                     checkin.available_hours_today,
-                    checkin.situation_note
+                    checkin.situation_note,
+                    checkin.recommended_capsule_minutes,
+                    checkin.recommended_break_minutes,
                 ],
             );
         }
@@ -844,7 +902,9 @@ impl StorageManager {
     pub fn get_daily_checkin(&self, date: &str) -> Option<DailyCheckinRecord> {
         if let Ok(conn) = self.open_connection() {
             let result = conn.query_row(
-                "SELECT date, energy_level, available_hours_today, situation_note FROM daily_checkins WHERE date = ?1",
+                "SELECT date, energy_level, available_hours_today, situation_note,
+                        recommended_capsule_minutes, recommended_break_minutes
+                 FROM daily_checkins WHERE date = ?1",
                 params![date],
                 |row| {
                     Ok(DailyCheckinRecord {
@@ -852,6 +912,8 @@ impl StorageManager {
                         energy_level: row.get(1)?,
                         available_hours_today: row.get(2)?,
                         situation_note: row.get(3)?,
+                        recommended_capsule_minutes: row.get(4).unwrap_or(30),
+                        recommended_break_minutes: row.get(5).unwrap_or(5),
                     })
                 },
             );
@@ -943,6 +1005,8 @@ impl StorageManager {
 
     pub fn list_memories(&self) -> Vec<UserMemory> {
         let mut list = Vec::new();
+        let mut seen_singletons = std::collections::HashSet::new();
+        let mut seen_pairs = std::collections::HashSet::new();
         if let Ok(conn) = self.open_connection() {
             if let Ok(mut stmt) = conn.prepare(
                 "SELECT id, memory_text, category, created_at FROM user_memories ORDER BY id DESC",
@@ -957,6 +1021,18 @@ impl StorageManager {
                 });
                 if let Ok(mapped) = rows {
                     for m in mapped.flatten() {
+                        let cat_key = m.category.trim().to_lowercase();
+                        let is_singleton = matches!(
+                            cat_key.as_str(),
+                            "core mission" | "growth area" | "academic strength"
+                        );
+                        if is_singleton && !seen_singletons.insert(cat_key.clone()) {
+                            continue;
+                        }
+                        let pair_key = (cat_key, m.memory_text.trim().to_lowercase());
+                        if !seen_pairs.insert(pair_key) {
+                            continue;
+                        }
                         list.push(m);
                     }
                 }
@@ -965,13 +1041,52 @@ impl StorageManager {
         list
     }
 
+    fn deduplicate_memories_in_conn(&self, conn: &Connection) {
+        let _ = conn.execute(
+            "DELETE FROM user_memories WHERE id NOT IN (
+                SELECT MAX(id) FROM user_memories GROUP BY LOWER(TRIM(category)), LOWER(TRIM(memory_text))
+            )",
+            [],
+        );
+        let _ = conn.execute(
+            "DELETE FROM user_memories WHERE LOWER(TRIM(category)) IN ('core mission', 'growth area', 'academic strength')
+             AND id NOT IN (
+                SELECT MAX(id) FROM user_memories
+                WHERE LOWER(TRIM(category)) IN ('core mission', 'growth area', 'academic strength')
+                GROUP BY LOWER(TRIM(category))
+             )",
+            [],
+        );
+    }
+
     pub fn add_memory(&self, memory_text: &str, category: &str) {
+        let trimmed_text = memory_text.trim();
+        let trimmed_cat = category.trim();
+        if trimmed_text.is_empty() || trimmed_cat.is_empty() {
+            return;
+        }
         let now = Local::now().to_rfc3339();
+        let cat_lower = trimmed_cat.to_lowercase();
+        let is_singleton = matches!(
+            cat_lower.as_str(),
+            "core mission" | "growth area" | "academic strength"
+        );
         if let Ok(conn) = self.open_connection() {
+            if is_singleton {
+                let _ = conn.execute(
+                    "DELETE FROM user_memories WHERE LOWER(TRIM(category)) = ?1",
+                    params![cat_lower],
+                );
+            } else {
+                let _ = conn.execute(
+                    "DELETE FROM user_memories WHERE LOWER(TRIM(category)) = ?1 AND LOWER(TRIM(memory_text)) = ?2",
+                    params![cat_lower, trimmed_text.to_lowercase()],
+                );
+            }
             let _ = conn.execute(
-                "INSERT INTO user_memories (memory_text, category, created_at)
-                 VALUES (?1, ?2, ?3)",
-                params![memory_text, category, now],
+                "INSERT INTO user_memories (memory_text, category, created_at, fact_key)
+                 VALUES (?1, ?2, ?3, ?4)",
+                params![trimmed_text, trimmed_cat, now, cat_lower],
             );
         }
     }
@@ -982,7 +1097,13 @@ impl StorageManager {
         }
     }
 
-    pub fn log_ai_activity(&self, action_type: &str, target_resource: &str, status: &str, details: &str) {
+    pub fn log_ai_activity(
+        &self,
+        action_type: &str,
+        target_resource: &str,
+        status: &str,
+        details: &str,
+    ) {
         let now = Local::now().to_rfc3339();
         if let Ok(conn) = self.open_connection() {
             let _ = conn.execute(
@@ -1222,7 +1343,9 @@ mod tests {
         assert!(storage.save_widget_layout(&layout).is_ok());
 
         let map = storage.load_widget_layouts();
-        let loaded = map.get("greeting_card").expect("greeting_card layout exists");
+        let loaded = map
+            .get("greeting_card")
+            .expect("greeting_card layout exists");
         assert_eq!(loaded.pos_x, 120.0);
         assert_eq!(loaded.pos_y, 85.0);
         assert!(loaded.is_pinned);
@@ -1252,6 +1375,56 @@ mod tests {
         assert_eq!(reloaded.active_mode, "cloud");
         assert_eq!(reloaded.cloud_api_key, "AIzaSyTest123");
         assert_eq!(reloaded.tts_engine, "sarvam");
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_daily_checkins_migration_and_personalization_coexistence() {
+        let temp_dir = std::env::temp_dir().join(format!("mindset_test_{}", uuid::Uuid::new_v4()));
+        let _ = fs::create_dir_all(&temp_dir);
+        let db_path = temp_dir.join("legacy_coexist.db");
+
+        // Create legacy 4-column daily_checkins table before StorageManager::with_path runs
+        {
+            let conn = Connection::open(&db_path).unwrap();
+            conn.execute_batch(
+                "CREATE TABLE daily_checkins (
+                    date TEXT PRIMARY KEY,
+                    energy_level TEXT NOT NULL,
+                    available_hours_today REAL NOT NULL,
+                    situation_note TEXT NOT NULL
+                );
+                INSERT INTO daily_checkins (date, energy_level, available_hours_today, situation_note)
+                VALUES ('2026-11-24', 'Normal', 3.0, 'Legacy row');",
+            )
+            .unwrap();
+        }
+
+        let storage = StorageManager::with_path(db_path.clone());
+        assert_eq!(storage.db_path(), db_path.as_path());
+
+        let legacy = storage.get_daily_checkin("2026-11-24").unwrap();
+        assert_eq!(legacy.recommended_capsule_minutes, 30);
+        assert_eq!(legacy.recommended_break_minutes, 5);
+
+        let pe = mindset_intelligence::PersonalizationEngine::new(db_path.clone()).unwrap();
+        let fetched = pe.get_fatigue_checkin("2026-11-24").unwrap().unwrap();
+        assert_eq!(fetched.recommended_capsule_minutes, 30);
+        assert_eq!(fetched.recommended_break_minutes, 5);
+
+        let new_rec = DailyCheckinRecord {
+            date: "2026-11-25".to_string(),
+            energy_level: "Fatigued".to_string(),
+            available_hours_today: 2.0,
+            situation_note: "Tired".to_string(),
+            recommended_capsule_minutes: 18,
+            recommended_break_minutes: 8,
+        };
+        storage.save_daily_checkin(&new_rec);
+        let loaded = storage.get_daily_checkin("2026-11-25").unwrap();
+        assert_eq!(loaded.recommended_capsule_minutes, 18);
+        assert_eq!(loaded.recommended_break_minutes, 8);
 
         let _ = fs::remove_dir_all(&temp_dir);
     }

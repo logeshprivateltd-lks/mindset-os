@@ -6,6 +6,6 @@
 pub mod db;
 
 pub use db::{
-    AiActivityRecord, AiProviderConfigRecord, CapsuleRecord, ChatMessageRecord, ChatThread, StorageManager,
-    UserMemory, UserProfile, WidgetLayoutRecord,
+    AiActivityRecord, AiProviderConfigRecord, CapsuleRecord, ChatMessageRecord, ChatThread,
+    StorageManager, UserMemory, UserProfile, WidgetLayoutRecord,
 };

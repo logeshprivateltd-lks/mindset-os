@@ -3,19 +3,31 @@
 **/*.rs.bk
 Cargo.lock
 
-# Node dependencies
+# Node & Legacy Bundle artifacts
 node_modules/
 dist/
-.pnpm-debug.log*
-
-# Tauri bundle artifacts
-/apps/mindset-desktop/src-tauri/target/
+dist-release/
 
 # OS metadata & User runtime data
 .DS_Store
 Thumbs.db
 user-data/
 .mindset_data/
+
+# ISO build outputs & temporary live-build trees
+*.iso
+*.iso.sha256
+iso-builder/chroot/
+iso-builder/binary/
+iso-builder/cache/
+iso-builder/.build/
+iso-builder/build.log
+iso-builder/qemu-boot.log
+iso-builder/config/binary
+iso-builder/config/bootstrap
+iso-builder/config/chroot
+iso-builder/config/common
+iso-builder/config/source
 
 # Environment & secrets
 .env
@@ -31,4 +43,3 @@ signing_key.priv
 *.sqlite-wal
 *.sqlite-shm
 *.backup.sqlite
-

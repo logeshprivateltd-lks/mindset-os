@@ -1,0 +1,26 @@
+[package]
+name = "e2e_suite"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[test]]
+name = "e2e_suite"
+path = "e2e_suite.rs"
+
+[dependencies]
+mindset-core = { path = "../crates/mindset-core" }
+mindset-sys = { path = "../crates/mindset-sys" }
+mindset-intelligence = { path = "../crates/mindset-intelligence" }
+mindset-motion = { path = "../crates/mindset-motion" }
+mindset-net = { path = "../crates/mindset-net" }
+mindset-os = { path = "../bins/mindset-os" }
+iced = { version = "0.14.0", features = ["wgpu", "tokio", "image", "canvas", "advanced"] }
+tokio = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rusqlite = { workspace = true }
+uuid = { workspace = true }
+tempfile = "3"

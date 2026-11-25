@@ -1,0 +1,108 @@
+{
+  "exam_name": "UPSC Civil Services Preliminary",
+  "subject": "General Studies Paper I",
+  "topic": "Modern Indian History & Freedom Struggle",
+  "question_format": "MultiStatementElimination",
+  "marking_scheme": {
+    "correct_marks": 2.0,
+    "incorrect_marks": -0.6666,
+    "unattempted_marks": 0.0
+  },
+  "questions": [
+    {
+      "id": "UPSC-HIST-01",
+      "statement_context": "With reference to the Cabinet Mission Plan of 1946, consider the following statements:",
+      "statements": [
+        "1. It recommended an undivided India and rejected the demand for a separate Pakistan.",
+        "2. It proposed that the provinces should be grouped into three sections: Section A, Section B, and Section C.",
+        "3. It granted full independence to India with immediate effect from May 1946."
+      ],
+      "question_prompt": "Which of the statements given above is/are correct?",
+      "options": [
+        "1 and 2 only",
+        "2 and 3 only",
+        "1 and 3 only",
+        "1, 2 and 3"
+      ],
+      "correct_option_index": 0,
+      "elimination_logic": "Statement 3 is factually incorrect because the Cabinet Mission did not grant immediate independence in May 1946; it proposed an interim government and a Constituent Assembly. Eliminating options with 3 immediately eliminates (B), (C), and (D), leaving (A) as the single valid answer.",
+      "explanation": "The Cabinet Mission (Pethick-Lawrence, Stafford Cripps, A.V. Alexander) rejected Pakistan, proposed a loose federation with provincial grouping (Sections A, B, C), and set up the Constituent Assembly."
+    },
+    {
+      "id": "UPSC-HIST-02",
+      "statement_context": "Consider the following statements regarding the Ilbert Bill Controversy (1883):",
+      "statements": [
+        "1. It sought to grant Indian magistrates the power to try British subjects in criminal cases.",
+        "2. Lord Ripon was the Viceroy of India when the Bill was introduced.",
+        "3. The Bill was passed in its original form without any amendments due to strong Indian protest."
+      ],
+      "question_prompt": "Which of the statements given above is/are correct?",
+      "options": [
+        "1 only",
+        "1 and 2 only",
+        "2 and 3 only",
+        "1, 2 and 3"
+      ],
+      "correct_option_index": 1,
+      "elimination_logic": "Statement 3 is incorrect because severe backlash from the Anglo-Indian defense association forced a compromise allowing British defendants to claim trial by a jury containing at least 50% Europeans. Eliminating 3 rules out (C) and (D). Both 1 and 2 are historically accurate, so (B) is correct.",
+      "explanation": "Introduced in 1883 under Lord Ripon by Law Member Sir C.P. Ilbert to remove judicial disqualification based on race. Heavy European opposition led to a compromise amendment."
+    },
+    {
+      "id": "UPSC-HIST-03",
+      "statement_context": "With reference to the Swadeshi Movement (1905-1908), consider the following statements:",
+      "statements": [
+        "1. The formal proclamation of the Swadeshi Movement was made at the Town Hall in Calcutta.",
+        "2. Rabindranath Tagore composed the song 'Amar Sonar Bangla' during this movement.",
+        "3. The Indian National Congress supported the movement from the 1905 Banaras session presided over by Gopal Krishna Gokhale."
+      ],
+      "question_prompt": "Which of the statements given above are correct?",
+      "options": [
+        "1 and 2 only",
+        "2 and 3 only",
+        "1 and 3 only",
+        "1, 2 and 3"
+      ],
+      "correct_option_index": 3,
+      "elimination_logic": "All three statements are correct: Formal boycott resolution passed on August 7, 1905 at Calcutta Town Hall; Tagore wrote Amar Sonar Bangla; 1905 Banaras INC session under Gokhale supported the Swadeshi and Boycott movement for Bengal.",
+      "explanation": "The anti-partition movement witnessed mass mobilization, national education councils, indigenous industries, and cultural revival."
+    },
+    {
+      "id": "UPSC-HIST-04",
+      "statement_context": "With reference to the Rowlatt Satyagraha, which of the following statements is/are correct?",
+      "statements": [
+        "1. The Rowlatt Act was based on the recommendations of the Sedition Committee chaired by Sir Sidney Rowlatt.",
+        "2. In organizing the Satyagraha, Gandhiji utilized the Home Rule League network and Satyagraha Sabha.",
+        "3. Demonstration against the arrest of Dr. Saifuddin Kitchlew and Dr. Satyapal led to the Jallianwala Bagh gathering."
+      ],
+      "question_prompt": "Select the correct answer using the code given below:",
+      "options": [
+        "1 and 2 only",
+        "2 and 3 only",
+        "1 and 3 only",
+        "1, 2 and 3"
+      ],
+      "correct_option_index": 3,
+      "elimination_logic": "Statements 1, 2, and 3 are all authentic historical facts concerning the Anarchical and Revolutionary Crimes Act of 1919 and the events leading up to April 13, 1919.",
+      "explanation": "The Rowlatt Act allowed detention without trial. Gandhi launched his first nationwide movement via the Satyagraha Sabha. In Amritsar, protest against Kitchlew and Satyapal's arrest led to the tragic Jallianwala Bagh massacre."
+    },
+    {
+      "id": "UPSC-HIST-05",
+      "statement_context": "Consider the following pairs of Freedom Movement Organizations and their Founders:",
+      "statements": [
+        "1. Abhinav Bharat Society : V.D. Savarkar",
+        "2. Ghadar Party : Lala Har Dayal",
+        "3. Indian Independence League : Rash Behari Bose"
+      ],
+      "question_prompt": "Which of the pairs given above is/are correctly matched?",
+      "options": [
+        "1 and 2 only",
+        "2 and 3 only",
+        "1 and 3 only",
+        "1, 2 and 3"
+      ],
+      "correct_option_index": 3,
+      "elimination_logic": "All three revolutionary associations are accurately attributed to their principal founders.",
+      "explanation": "Abhinav Bharat (1904, Savarkar brothers in Nasik); Ghadar Party (1913, San Francisco by Lala Har Dayal, Sohan Singh Bhakna); Indian Independence League (1942, Tokyo by Rash Behari Bose)."
+    }
+  ]
+}

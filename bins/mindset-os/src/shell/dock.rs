@@ -1,38 +1,44 @@
 //! Floating Bottom Dock for MindSet OS
 //!
-//! Official v1.0 8-Item Application Dock:
-//! 1. ⊞ Launcher (Toggles App Launcher Modal)
-//! 2. ☀️ Deep Focus (Today Dashboard & Capsule Gate)
-//! 3. 🧠 Maindy AI (Local Ollama Tutor & Mentor)
-//! 4. 📖 Study Reader (NCERT & Derivation Sessions)
-//! 5. 📋 Focus Arena (Task Quotas & Syllabus Sprints)
-//! 6. 🌐 MindStrict Browser (Distraction-Free Web)
-//! 7. 📁 Study Vault (Notes & Formula Sheets)
-//! 8. ⚙️ Settings (MindSet OS Preferences & Profile)
-//!
-//! Features active dot indicators, high-opacity liquid frosted glass,
-//! and safe-area clamping above screen edge.
+//! Frosted Glass Bottom Dock with concentric rounded corners (outer 22 = inner 12 + padding 10),
+//! spring hover magnification, and active window indicator dots:
+//! 0. ⊞ Launcher (App Launcher Overlay)
+//! 1. ☀️ Deep Focus (Today Dashboard)
+//! 2. 📖 Study Reader (NCERT & Derivation Sessions)
+//! 3. 🧠 Maindy AI (Local Tutor & Mentor)
+//! 4. 🗺️ 3D Odyssey (Syllabus Odyssey Map)
+//! 5. 📝 Scratchpad (Quick Formula & Study Scratchpad)
+//! 6. 📋 Focus Arena (Task Quotas & Syllabus Sprints)
+//! 7. 🌐 MindStrict (Distraction-Free Web)
+//! 8. 📺 YouTube Study (Video Lectures)
+//! 9. 📁 Study Vault (Notes & Formula Sheets)
+//! 10. 💻 Sys Monitor (System Diagnostics)
+//! 11. ⚙️ Settings (Preferences & Profile)
 
 use iced::widget::{button, column, container, mouse_area, row, text};
 use iced::{Alignment, Color, Element};
 use mindset_core::{ActiveOverlay, MindSetCoreState, WindowId, WindowMode};
 
-use crate::theme::neumorphism::{neu_card, NeuPalette};
-use crate::theme::{px_space, ThemePalette};
+use crate::theme::neumorphism::NeuPalette;
+use crate::theme::{frosted_glass_container, px_space, ThemePalette};
 use crate::Message;
+
+const DOCK_OUTER_RADIUS: f32 = 22.0;
+const DOCK_SHELL_PADDING: f32 = 10.0;
+const DOCK_INNER_ICON_RADIUS: f32 = DOCK_OUTER_RADIUS - DOCK_SHELL_PADDING; // Exact concentric 12.0px
 
 pub fn view<'a>(
     core: &'a MindSetCoreState,
     dock_scales: &[f32],
     palette: ThemePalette,
-    neu: &NeuPalette,
+    _neu: &NeuPalette,
 ) -> Element<'a, Message> {
-    let mut dock_items = row![].spacing(8).align_y(Alignment::End);
+    let mut dock_items = row![].spacing(6).align_y(Alignment::End);
 
     // 0. Home / Launcher Button
     let scale_0 = dock_scales.first().copied().unwrap_or(1.0);
     let box_size_0 = (36.0 * scale_0).round();
-    let font_size_0 = (18.0 * scale_0).round();
+    let font_size_0 = (17.0 * scale_0).round();
 
     let is_launcher_active = core.wm.active_overlay == ActiveOverlay::Launcher;
     let home_badge = container(text("⊞").size(font_size_0).color(Color::WHITE))
@@ -43,12 +49,12 @@ pub fn view<'a>(
         .style(move |_t| container::Style {
             background: Some(iced::Background::Color(Color::from_rgb(0.12, 0.48, 0.96))),
             border: iced::Border {
-                radius: iced::border::Radius::from(9.0 * scale_0),
-                color: Color::from_rgba(1.0, 1.0, 1.0, 0.40),
+                radius: iced::border::Radius::from(DOCK_INNER_ICON_RADIUS * scale_0),
+                color: Color::from_rgba(1.0, 1.0, 1.0, 0.42),
                 width: 1.0,
             },
             shadow: iced::Shadow {
-                color: Color::from_rgba(0.0, 0.0, 0.0, 0.20),
+                color: Color::from_rgba(0.0, 0.0, 0.0, 0.22),
                 offset: iced::Vector::new(0.0, 2.0),
                 blur_radius: 6.0,
             },
@@ -70,19 +76,19 @@ pub fn view<'a>(
     .style(move |_t, s| {
         let bg = match s {
             button::Status::Hovered => Color::from_rgba(1.0, 1.0, 1.0, 0.20),
-            button::Status::Pressed => Color::from_rgba(1.0, 1.0, 1.0, 0.35),
+            button::Status::Pressed => Color::from_rgba(1.0, 1.0, 1.0, 0.32),
             _ => Color::TRANSPARENT,
         };
         button::Style {
             background: Some(iced::Background::Color(bg)),
             border: iced::Border {
-                radius: iced::border::Radius::from(10.0),
+                radius: iced::border::Radius::from(DOCK_INNER_ICON_RADIUS),
                 ..Default::default()
             },
             ..Default::default()
         }
     })
-    .padding([2, 4]);
+    .padding(0);
 
     let home_area = mouse_area(home_btn)
         .on_enter(Message::DockHovered(Some(0)))
@@ -90,9 +96,10 @@ pub fn view<'a>(
 
     dock_items = dock_items.push(home_area);
 
-    // Subtle macOS-style shelf divider between launcher and apps
+    // Subtle frosted divider between launcher and workspace apps
+    let divider_color = palette.glass_border;
     let home_divider = container(px_space(1.0, 22.0)).style(move |_t| container::Style {
-        background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.18))),
+        background: Some(iced::Background::Color(divider_color)),
         border: iced::Border {
             radius: iced::border::Radius::from(0.5),
             ..Default::default()
@@ -101,7 +108,7 @@ pub fn view<'a>(
     });
     dock_items = dock_items.push(home_divider);
 
-    // Official 9 Pinned Core Applications (Indices 1..=9)
+    // Pinned Core Applications (Indices 1..=11) — includes OdysseyMap & Scratchpad as floating windows
     let apps = [
         (
             WindowId::Today,
@@ -125,9 +132,23 @@ pub fn view<'a>(
             Message::OpenWindow(WindowId::LayaAiChat),
         ),
         (
+            WindowId::OdysseyMap,
+            "🗺️",
+            Color::from_rgb(0.28, 0.44, 0.88),
+            "3D Odyssey",
+            Message::OpenWindow(WindowId::OdysseyMap),
+        ),
+        (
+            WindowId::Scratchpad,
+            "📝",
+            Color::from_rgb(0.86, 0.56, 0.14),
+            "Scratchpad",
+            Message::OpenWindow(WindowId::Scratchpad),
+        ),
+        (
             WindowId::Tasks,
             "📋",
-            Color::from_rgb(0.12, 0.75, 0.38),
+            Color::from_rgb(0.12, 0.72, 0.38),
             "Focus Arena",
             Message::OpenWindow(WindowId::Tasks),
         ),
@@ -148,7 +169,7 @@ pub fn view<'a>(
         (
             WindowId::FileVault,
             "📁",
-            Color::from_rgb(0.95, 0.72, 0.12),
+            Color::from_rgb(0.90, 0.68, 0.12),
             "Study Vault",
             Message::OpenWindow(WindowId::FileVault),
         ),
@@ -162,17 +183,17 @@ pub fn view<'a>(
         (
             WindowId::Settings,
             "⚙️",
-            Color::from_rgb(0.55, 0.55, 0.60),
+            Color::from_rgb(0.46, 0.50, 0.58),
             "Settings",
             Message::OpenWindow(WindowId::Settings),
         ),
     ];
 
     for (idx_offset, (id, icon, badge_bg, _name, press_msg)) in apps.into_iter().enumerate() {
-        // macOS-style shelf divider before system utilities (Sys Monitor & Settings)
-        if idx_offset == 7 {
+        // Subtle shelf divider before system utilities (Sys Monitor & Settings)
+        if idx_offset == 9 {
             let util_divider = container(px_space(1.0, 22.0)).style(move |_t| container::Style {
-                background: Some(iced::Background::Color(Color::from_rgba(1.0, 1.0, 1.0, 0.18))),
+                background: Some(iced::Background::Color(divider_color)),
                 border: iced::Border {
                     radius: iced::border::Radius::from(0.5),
                     ..Default::default()
@@ -195,9 +216,9 @@ pub fn view<'a>(
         let indicator = if is_active {
             text("●").size(7).color(palette.accent)
         } else if is_open && !is_minimized {
-            text("●").size(6).color(Color::from_rgba(1.0, 1.0, 1.0, 0.70))
+            text("●").size(6).color(palette.text_secondary)
         } else if is_open && is_minimized {
-            text("○").size(6).color(Color::from_rgba(1.0, 1.0, 1.0, 0.35))
+            text("○").size(6).color(palette.text_muted)
         } else {
             text(" ").size(6).color(Color::TRANSPARENT)
         };
@@ -210,8 +231,8 @@ pub fn view<'a>(
             .style(move |_t| container::Style {
                 background: Some(iced::Background::Color(badge_bg)),
                 border: iced::Border {
-                    radius: iced::border::Radius::from(9.0 * scale),
-                    color: Color::from_rgba(1.0, 1.0, 1.0, 0.35),
+                    radius: iced::border::Radius::from(DOCK_INNER_ICON_RADIUS * scale),
+                    color: Color::from_rgba(1.0, 1.0, 1.0, 0.36),
                     width: 1.0,
                 },
                 shadow: iced::Shadow {
@@ -230,20 +251,20 @@ pub fn view<'a>(
             .on_press(press_msg)
             .style(move |_t, s| {
                 let bg = match s {
-                    button::Status::Hovered => Color::from_rgba(1.0, 1.0, 1.0, 0.20),
-                    button::Status::Pressed => Color::from_rgba(1.0, 1.0, 1.0, 0.35),
+                    button::Status::Hovered => Color::from_rgba(1.0, 1.0, 1.0, 0.18),
+                    button::Status::Pressed => Color::from_rgba(1.0, 1.0, 1.0, 0.30),
                     _ => Color::TRANSPARENT,
                 };
                 button::Style {
                     background: Some(iced::Background::Color(bg)),
                     border: iced::Border {
-                        radius: iced::border::Radius::from(10.0),
+                        radius: iced::border::Radius::from(DOCK_INNER_ICON_RADIUS),
                         ..Default::default()
                     },
                     ..Default::default()
                 }
             })
-            .padding([2, 4]);
+            .padding(0);
 
         let area = mouse_area(btn)
             .on_enter(Message::DockHovered(Some(item_idx)))
@@ -252,7 +273,6 @@ pub fn view<'a>(
         dock_items = dock_items.push(area);
     }
 
-    let dock_capsule = container(neu_card(dock_items, neu, 22.0, 1.0)).padding([2, 4]);
-
-    dock_capsule.into()
+    let dock_inner = container(dock_items).padding(DOCK_SHELL_PADDING);
+    frosted_glass_container(palette, DOCK_OUTER_RADIUS, true, dock_inner)
 }

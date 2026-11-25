@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
 use crate::analyzers::WorkspaceContext;
 use crate::models::{
     ActionSeverity, CapabilityMatrixEntry, CapabilityStatus, ModuleAuditResult, PrioritizedAction,
 };
+use std::collections::{HashMap, HashSet};
 
 /// Module 2: Libraries, Dependencies, Build & Cross-Platform Health Analyzer
 pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
@@ -12,11 +12,14 @@ pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
     let mut score: u32 = 100;
 
     let root_cargo = ctx.read_file("Cargo.toml").unwrap_or_default();
-    let mindset_os_cargo = ctx.read_file("bins/mindset-os/Cargo.toml").unwrap_or_default();
+    let mindset_os_cargo = ctx
+        .read_file("bins/mindset-os/Cargo.toml")
+        .unwrap_or_default();
 
     // 1. Audit Iced Version & Enabled Feature Flags
     // Target: iced = { version = "0.14.0", features = ["wgpu", "tokio", "image", "canvas", "advanced"] }
-    let has_iced_014 = mindset_os_cargo.contains("\"0.14") || mindset_os_cargo.contains("version = \"0.14.0\"");
+    let has_iced_014 =
+        mindset_os_cargo.contains("\"0.14") || mindset_os_cargo.contains("version = \"0.14.0\"");
     let has_wgpu = mindset_os_cargo.contains("\"wgpu\"");
     let has_tokio = mindset_os_cargo.contains("\"tokio\"");
     let has_image = mindset_os_cargo.contains("\"image\"");
@@ -39,19 +42,34 @@ pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
     } else {
         score = score.saturating_sub(15);
         let mut missing_flags = Vec::new();
-        if !has_iced_014 { missing_flags.push("version 0.14.0"); }
-        if !has_wgpu { missing_flags.push("wgpu"); }
-        if !has_tokio { missing_flags.push("tokio"); }
-        if !has_image { missing_flags.push("image"); }
-        if !has_canvas { missing_flags.push("canvas"); }
-        if !has_advanced { missing_flags.push("advanced"); }
+        if !has_iced_014 {
+            missing_flags.push("version 0.14.0");
+        }
+        if !has_wgpu {
+            missing_flags.push("wgpu");
+        }
+        if !has_tokio {
+            missing_flags.push("tokio");
+        }
+        if !has_image {
+            missing_flags.push("image");
+        }
+        if !has_canvas {
+            missing_flags.push("canvas");
+        }
+        if !has_advanced {
+            missing_flags.push("advanced");
+        }
 
         entries.push(CapabilityMatrixEntry {
             feature: "Iced 0.14.0 Desktop GUI Engine & GPU Pipeline".into(),
             category: "UI".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("bins/mindset-os/Cargo.toml:{}", iced_line),
-            notes: format!("Iced configuration incomplete. Missing: {}", missing_flags.join(", ")),
+            notes: format!(
+                "Iced configuration incomplete. Missing: {}",
+                missing_flags.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {
@@ -71,7 +89,9 @@ pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
     // codegen-units = 1
     // panic = "abort"
     // strip = true
-    let has_opt_level = root_cargo.contains("opt-level = \"s\"") || root_cargo.contains("opt-level = \"3\"") || root_cargo.contains("opt-level = 3");
+    let has_opt_level = root_cargo.contains("opt-level = \"s\"")
+        || root_cargo.contains("opt-level = \"3\"")
+        || root_cargo.contains("opt-level = 3");
     let has_lto = root_cargo.contains("lto = \"thin\"") || root_cargo.contains("lto = true");
     let has_codegen_units = root_cargo.contains("codegen-units = 1");
     let has_panic_abort = root_cargo.contains("panic = \"abort\"");
@@ -93,18 +113,31 @@ pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
     } else {
         score = score.saturating_sub(15);
         let mut missing_opts = Vec::new();
-        if !has_opt_level { missing_opts.push("opt-level"); }
-        if !has_lto { missing_opts.push("lto"); }
-        if !has_codegen_units { missing_opts.push("codegen-units = 1"); }
-        if !has_panic_abort { missing_opts.push("panic = abort"); }
-        if !has_strip { missing_opts.push("strip = true"); }
+        if !has_opt_level {
+            missing_opts.push("opt-level");
+        }
+        if !has_lto {
+            missing_opts.push("lto");
+        }
+        if !has_codegen_units {
+            missing_opts.push("codegen-units = 1");
+        }
+        if !has_panic_abort {
+            missing_opts.push("panic = abort");
+        }
+        if !has_strip {
+            missing_opts.push("strip = true");
+        }
 
         entries.push(CapabilityMatrixEntry {
             feature: "Optimized Embedded Release Profile".into(),
             category: "Normal OS".into(),
             status: CapabilityStatus::Partial,
             evidence: format!("Cargo.toml:{}", profile_line),
-            notes: format!("Release profile missing optimizations: {}", missing_opts.join(", ")),
+            notes: format!(
+                "Release profile missing optimizations: {}",
+                missing_opts.join(", ")
+            ),
         });
 
         actions.push(PrioritizedAction {
@@ -128,19 +161,18 @@ pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
             None => continue,
         };
 
-        if content.contains("std::os::windows") || content.contains("windows::process::CommandExt") {
+        if content.contains("std::os::windows") || content.contains("windows::process::CommandExt")
+        {
             // Verify there is a #[cfg(target_os = "windows")] or #[cfg(windows)] before it
             let lines: Vec<&str> = content.lines().collect();
             for (idx, line) in lines.iter().enumerate() {
-                if line.contains("std::os::windows") || line.contains("windows::process::CommandExt") {
-                    let mut is_guarded = false;
+                if line.contains("std::os::windows")
+                    || line.contains("windows::process::CommandExt")
+                {
                     let start_check = idx.saturating_sub(5);
-                    for back_i in start_check..idx {
-                        if lines[back_i].contains("target_os = \"windows\"") || lines[back_i].contains("#[cfg(windows)]") {
-                            is_guarded = true;
-                            break;
-                        }
-                    }
+                    let is_guarded = lines[start_check..idx].iter().any(|l| {
+                        l.contains("target_os = \"windows\"") || l.contains("#[cfg(windows)]")
+                    });
                     if !is_guarded {
                         unguarded_windows_apis.push((file.rel_path.clone(), idx + 1));
                     }
@@ -203,20 +235,29 @@ pub fn audit(ctx: &WorkspaceContext, run_cargo: bool) -> ModuleAuditResult {
             }
         }
     }
-    metrics.insert("workspace_crates_audited".into(), declared_crates.len().to_string());
+    metrics.insert(
+        "workspace_crates_audited".into(),
+        declared_crates.len().to_string(),
+    );
 
     entries.push(CapabilityMatrixEntry {
         feature: "Workspace Dependency & Member Crate Sync".into(),
         category: "Normal OS".into(),
         status: CapabilityStatus::Pass,
         evidence: "Cargo.toml:3".into(),
-        notes: format!("Verified {} workspace member crates with shared versioning and clean dependency graph", declared_crates.len()),
+        notes: format!(
+            "Verified {} workspace member crates with shared versioning and clean dependency graph",
+            declared_crates.len()
+        ),
     });
 
     if run_cargo {
         metrics.insert("cargo_build_invoked".into(), "true".into());
     } else {
-        metrics.insert("cargo_build_invoked".into(), "false (static analysis active)".into());
+        metrics.insert(
+            "cargo_build_invoked".into(),
+            "false (static analysis active)".into(),
+        );
     }
 
     let summary = format!(

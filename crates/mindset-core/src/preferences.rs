@@ -164,6 +164,23 @@ impl SystemPreferences {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum NotificationSeverity {
+    #[default]
+    Info,
+    Success,
+    Warning,
+    Error,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum NotificationAction {
+    OpenVaultFolder,
+    RetryOllama,
+    OpenSettings,
+    OpenCapsule(String),
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToastMessage {
     pub id: u64,
@@ -171,7 +188,15 @@ pub struct ToastMessage {
     pub body: String,
     pub icon: String,
     pub remaining_secs: f32,
+    #[serde(default)]
+    pub severity: NotificationSeverity,
+    #[serde(default)]
+    pub action_label: Option<String>,
+    #[serde(default)]
+    pub action: Option<NotificationAction>,
 }
+
+pub type OsNotificationBus = ToastQueue;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ToastQueue {
@@ -193,14 +218,96 @@ impl ToastQueue {
         body: impl Into<String>,
         icon: impl Into<String>,
     ) {
+        self.push_with_action(
+            NotificationSeverity::Info,
+            title,
+            body,
+            icon,
+            None::<String>,
+            None,
+        );
+    }
+
+    pub fn info(&mut self, title: impl Into<String>, body: impl Into<String>) {
+        self.push_with_action(
+            NotificationSeverity::Info,
+            title,
+            body,
+            "ℹ️",
+            None::<String>,
+            None,
+        );
+    }
+
+    pub fn success(&mut self, title: impl Into<String>, body: impl Into<String>) {
+        self.push_with_action(
+            NotificationSeverity::Success,
+            title,
+            body,
+            "✅",
+            None::<String>,
+            None,
+        );
+    }
+
+    pub fn warning(
+        &mut self,
+        title: impl Into<String>,
+        body: impl Into<String>,
+        action_label: Option<&str>,
+        action: Option<NotificationAction>,
+    ) {
+        self.push_with_action(
+            NotificationSeverity::Warning,
+            title,
+            body,
+            "⚠️",
+            action_label.map(|s| s.to_string()),
+            action,
+        );
+    }
+
+    pub fn error(
+        &mut self,
+        title: impl Into<String>,
+        body: impl Into<String>,
+        action_label: Option<&str>,
+        action: Option<NotificationAction>,
+    ) {
+        self.push_with_action(
+            NotificationSeverity::Error,
+            title,
+            body,
+            "⛔",
+            action_label.map(|s| s.to_string()),
+            action,
+        );
+    }
+
+    pub fn push_with_action(
+        &mut self,
+        severity: NotificationSeverity,
+        title: impl Into<String>,
+        body: impl Into<String>,
+        icon: impl Into<String>,
+        action_label: Option<impl Into<String>>,
+        action: Option<NotificationAction>,
+    ) {
         let id = self.next_id;
         self.next_id += 1;
+        let duration = match severity {
+            NotificationSeverity::Warning | NotificationSeverity::Error => 8.0,
+            NotificationSeverity::Info | NotificationSeverity::Success => 4.5,
+        };
         self.toasts.push(ToastMessage {
             id,
             title: title.into(),
             body: body.into(),
             icon: icon.into(),
-            remaining_secs: 4.0,
+            remaining_secs: duration,
+            severity,
+            action_label: action_label.map(Into::into),
+            action,
         });
     }
 

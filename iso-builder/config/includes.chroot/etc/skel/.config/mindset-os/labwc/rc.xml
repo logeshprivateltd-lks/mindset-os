@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<labwc_config>
+  <core>
+    <gap>0</gap>
+    <adaptiveSync>no</adaptiveSync>
+    <decoration>server</decoration>
+  </core>
+
+  <focus>
+    <followMouse>no</followMouse>
+    <raiseOnFocus>yes</raiseOnFocus>
+  </focus>
+
+  <windowRules>
+    <windowRule identifier="mindset-shell" serverDecoration="no">
+      <action name="Maximize" direction="both"/>
+    </windowRule>
+    <windowRule identifier="mindset-os" serverDecoration="no">
+      <action name="Maximize" direction="both"/>
+    </windowRule>
+  </windowRules>
+
+  <keyboard>
+    <default/>
+    <keybind key="W-Return">
+      <action name="Execute" command="/usr/local/bin/mindset-browser https://www.google.com"/>
+    </keybind>
+  </keyboard>
+</labwc_config>

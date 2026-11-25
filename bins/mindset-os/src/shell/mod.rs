@@ -14,4 +14,5 @@ pub mod maindy_orb;
 pub mod odyssey_map;
 pub mod scrim;
 pub mod top_bar;
+pub mod wallpaper;
 pub mod window_switcher;

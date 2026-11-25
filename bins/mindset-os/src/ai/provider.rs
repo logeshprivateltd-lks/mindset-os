@@ -4,11 +4,11 @@
 //! OpenRouter, Custom endpoints), free local Ollama streaming, and instant
 //! offline fallback via OfflineStudyHelper.
 
+use futures_util::StreamExt;
+use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
-use futures_util::StreamExt;
-use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver};
 
 use super::engine::StreamToken;
@@ -54,7 +54,8 @@ impl HybridAiEngine {
                 _ => Ok(ProviderStatus {
                     online: false,
                     latency_ms: None,
-                    message: "Ollama offline. Using built-in Zero-Failure Offline Study Helper.".to_string(),
+                    message: "Ollama offline. Using built-in Zero-Failure Offline Study Helper."
+                        .to_string(),
                 }),
             }
         } else if provider == "gemini" {
@@ -144,7 +145,15 @@ impl HybridAiEngine {
             // 1. Try Cloud AI if API Key is configured
             if !api_key.is_empty() && provider != "ollama" {
                 let success = if provider == "gemini" {
-                    Self::stream_gemini(&tx, &cancel_worker, &api_key, &config.cloud_model, &system_prompt, &history).await
+                    Self::stream_gemini(
+                        &tx,
+                        &cancel_worker,
+                        &api_key,
+                        &config.cloud_model,
+                        &system_prompt,
+                        &history,
+                    )
+                    .await
                 } else {
                     let base_url = if !config.cloud_base_url.trim().is_empty() {
                         config.cloud_base_url.trim().trim_end_matches('/')
@@ -162,7 +171,16 @@ impl HybridAiEngine {
                     } else {
                         "gpt-4o-mini"
                     };
-                    Self::stream_openai_compatible(&tx, &cancel_worker, base_url, &api_key, model_name, &system_prompt, &history).await
+                    Self::stream_openai_compatible(
+                        &tx,
+                        &cancel_worker,
+                        base_url,
+                        &api_key,
+                        model_name,
+                        &system_prompt,
+                        &history,
+                    )
+                    .await
                 };
 
                 if success {
@@ -173,11 +191,29 @@ impl HybridAiEngine {
             }
 
             // 2. Try Local Ollama Streaming
-            let ollama_success = Self::stream_ollama(&tx, &cancel_worker, &active_model, &system_prompt, &history, num_ctx).await;
+            let ollama_success = Self::stream_ollama(
+                &tx,
+                &cancel_worker,
+                &active_model,
+                &system_prompt,
+                &history,
+                num_ctx,
+            )
+            .await;
             if ollama_success {
                 let _ = tx.send(StreamToken::Done);
                 return;
             }
+
+            // Route Ollama unavailability strictly to OS Notification Bus (NEVER chat stream)
+            let _ = tx.send(StreamToken::SystemAlert {
+                severity: "error".to_string(),
+                title: "Maindy Engine Paused".to_string(),
+                body: format!(
+                    "Local model '{}' is unavailable. Using built-in offline study notes; click Retry to reconnect Ollama.",
+                    if active_model.is_empty() { "gemma2:2b" } else { active_model.as_str() }
+                ),
+            });
 
             // 3. Zero-Failure Offline Study Helper Fallback
             let fallback_result = OfflineStudyHelper::respond(
@@ -252,7 +288,11 @@ impl HybridAiEngine {
                         continue;
                     }
                     if let Ok(val) = serde_json::from_str::<serde_json::Value>(&line) {
-                        if let Some(token) = val.get("message").and_then(|m| m.get("content")).and_then(|c| c.as_str()) {
+                        if let Some(token) = val
+                            .get("message")
+                            .and_then(|m| m.get("content"))
+                            .and_then(|c| c.as_str())
+                        {
                             if !token.is_empty() {
                                 let _ = tx.send(StreamToken::Chunk(token.to_string()));
                             }
@@ -349,7 +389,11 @@ impl HybridAiEngine {
         system_prompt: &str,
         history: &[(String, String)],
     ) -> bool {
-        let model_name = if model.trim().is_empty() { "gemini-2.5-flash" } else { model.trim() };
+        let model_name = if model.trim().is_empty() {
+            "gemini-2.5-flash"
+        } else {
+            model.trim()
+        };
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:streamGenerateContent?key={}&alt=sse",
             model_name, api_key
