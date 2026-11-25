@@ -49,9 +49,6 @@ command = "/usr/local/bin/mindset-session"
 user = "live"
 EOF
 
-# Remove conflicting X display managers if pulled indirectly
-if systemctl list-unit-files | grep -q "^greetd.service"; then
-    systemctl enable greetd.service || true
-fi
+systemctl enable greetd.service 2>/dev/null || true
 
 echo "==> [MindSet Hook] 'live' Wayland autologin configured."

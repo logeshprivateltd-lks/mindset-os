@@ -21,10 +21,9 @@ managed=true
 wifi.scan-rand-mac-address=no
 EOF
 
+# Create systemd multi-user / graphical wants symlinks cleanly inside offline chroot
 for svc in NetworkManager.service seatd.service bluetooth.service greetd.service; do
-    if systemctl list-unit-files | grep -q "^${svc}"; then
-        systemctl enable "${svc}" || true
-    fi
+    systemctl enable "${svc}" 2>/dev/null || true
 done
 
 # 2. Brand OS Identification (/etc/os-release + /etc/issue)

@@ -20,12 +20,23 @@ jobs:
         run: |
           sudo modprobe loop || true
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          mkdir -p "${{ runner.temp }}/cargo-registry" "${{ runner.temp }}/cargo-git"
           df -h
+
+      - name: Cache Cargo Registry for Debian 13 Container
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ runner.temp }}/cargo-registry
+            ${{ runner.temp }}/cargo-git
+          key: trixie-cargo-reg-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Compile Rust Binaries & Build Debian 13 ISO in Trixie Container
         run: |
           docker run --rm --privileged \
             -v "${{ github.workspace }}:/workspace" \
+            -v "${{ runner.temp }}/cargo-registry:/root/.cargo/registry" \
+            -v "${{ runner.temp }}/cargo-git:/root/.cargo/git" \
             -w /workspace \
             debian:trixie \
             bash -euo pipefail -c '
@@ -65,15 +76,22 @@ jobs:
               curl --proto "=https" --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
               export PATH="/root/.cargo/bin:$PATH"
 
-              cargo build --release --bin mindset-shell --bin mindset-os -p mindset-focus-guard
+              cargo build --release -p mindset-os --bin mindset-shell --bin mindset-os
+              cargo build --release -p mindset-focus-guard
 
-              find iso-builder -type f \( -name "*.sh" -o -name "*.hook.*" -o -path "*/auto/*" -o -path "*/usr/local/bin/*" -o -path "*/labwc/autostart" \) -exec dos2unix -q {} +
+              mkdir -p iso-builder/config/includes.chroot/usr/local/bin
+              cp -f target/release/mindset-shell iso-builder/config/includes.chroot/usr/local/bin/mindset-shell
+              cp -f target/release/mindset-os iso-builder/config/includes.chroot/usr/local/bin/mindset-os
+              cp -f target/release/mindset-focus-guard iso-builder/config/includes.chroot/usr/local/bin/mindset-focus-guard
+              chmod +x iso-builder/config/includes.chroot/usr/local/bin/mindset-*
+
+              # Reclaim ~4 GB of target/ intermediate objects before live-build chroot & squashfs
+              rm -rf /workspace/target
+
+              find iso-builder -type f \( -name "*.sh" -o -name "*.hook.*" -o -path "*/auto/*" -o -name "mindset-session" -o -name "mindset-os-launch" -o -name "mindset-browser" -o -name "mindset-setup-ollama" -o -name "autostart" \) -exec dos2unix -q {} +
               cd iso-builder
               chmod +x build-iso.sh build_mindset_iso.sh auto/* config/hooks/live/*
               ./build-iso.sh
-
-              # Free Rust target intermediate files before host verification & artifact upload
-              rm -rf /workspace/target
             '
 
       - name: Verify ISO Boot Catalog & QEMU Smoke Boot

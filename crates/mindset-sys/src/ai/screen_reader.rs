@@ -4,6 +4,7 @@
 
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+#[cfg(target_os = "windows")]
 use std::process::Command;
 use std::time::Instant;
 use tracing::info;

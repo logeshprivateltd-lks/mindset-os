@@ -1,11 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 # ==============================================================================
 # MindSet OS — Reproducible Debian 13 ("Trixie") Live ISO Builder
 # Output: mindset-os-amd64.hybrid.iso + mindset-os-amd64.hybrid.iso.sha256
 # ==============================================================================
-set -e
+set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
@@ -84,7 +84,8 @@ for candidate in \
     "$WORKSPACE_ROOT/target/release/mindset-shell" \
     "$WORKSPACE_ROOT/target/release/mindset-os" \
     "$WORKSPACE_ROOT/target/x86_64-unknown-linux-gnu/release/mindset-shell" \
-    "$WORKSPACE_ROOT/target/x86_64-unknown-linux-gnu/release/mindset-os"; do
+    "$WORKSPACE_ROOT/target/x86_64-unknown-linux-gnu/release/mindset-os" \
+    "config/includes.chroot/usr/local/bin/mindset-shell"; do
     if [ -x "$candidate" ]; then
         SHELL_BIN="$candidate"
         break
@@ -93,16 +94,18 @@ done
 
 if [ -n "$SHELL_BIN" ]; then
     echo "[Binary] Staging release shell: $SHELL_BIN"
-    cp -f "$SHELL_BIN" config/includes.chroot/usr/local/bin/mindset-shell
-    cp -f "$SHELL_BIN" config/includes.chroot/usr/local/bin/mindset-os
-    cp -f "$SHELL_BIN" config/includes.chroot/opt/mindset-os/bin/mindset-os
+    if [ "$SHELL_BIN" != "config/includes.chroot/usr/local/bin/mindset-shell" ]; then
+        cp -f "$SHELL_BIN" config/includes.chroot/usr/local/bin/mindset-shell
+    fi
+    cp -f config/includes.chroot/usr/local/bin/mindset-shell config/includes.chroot/usr/local/bin/mindset-os
+    cp -f config/includes.chroot/usr/local/bin/mindset-shell config/includes.chroot/opt/mindset-os/bin/mindset-os
     chmod +x \
         config/includes.chroot/usr/local/bin/mindset-shell \
         config/includes.chroot/usr/local/bin/mindset-os \
         config/includes.chroot/opt/mindset-os/bin/mindset-os
 else
     echo "ERROR: Compiled Linux release binary not found under $WORKSPACE_ROOT/target/release/."
-    echo "Compile inside Debian 13 first: cargo build --release --bin mindset-shell --bin mindset-os"
+    echo "Compile inside Debian 13 first: cargo build --release -p mindset-os --bin mindset-shell --bin mindset-os"
     exit 1
 fi
 
@@ -115,7 +118,6 @@ fi
 echo "[Phase E] Running lb clean && lb config && lb build..."
 lb clean --purge
 lb config
-set -o pipefail 2>/dev/null || true
 lb build 2>&1 | tee build.log
 
 # 6. Standardize Filename & Compute SHA-256 Checksum
