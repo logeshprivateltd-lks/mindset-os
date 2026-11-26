@@ -10,18 +10,23 @@ echo "==> [MindSet Hook] Applying MindSet OS GRUB & SYSLINUX boot branding..."
 for cfg in binary/boot/grub/grub.cfg binary/EFI/BOOT/grub.cfg binary/boot/grub/loopback.cfg; do
     if [ -f "$cfg" ]; then
         echo "--> Branding $cfg"
-        sed -i 's/Debian GNU\/Linux/MindSet OS (Debian 13 Trixie)/g' "$cfg"
-        sed -i 's/Live system (amd64)/MindSet OS — Boot Deep Focus Live (amd64)/g' "$cfg"
-        sed -i 's/Live system/MindSet OS — Boot Deep Focus Live/g' "$cfg"
-        sed -i 's/Debian/MindSet OS/g' "$cfg"
+        sed -i 's/Debian GNU\/Linux/MindSet OS 1.1 (By L.K.S)/g' "$cfg"
+        sed -i 's/Live system (amd64)/MindSet OS 1.1 — Boot Deep Focus (amd64)/g' "$cfg"
+        sed -i 's/Live system/MindSet OS 1.1 — Boot Deep Focus/g' "$cfg"
+        sed -i 's/Debian/MindSet OS 1.1/g' "$cfg"
     fi
 done
 
 for cfg in binary/isolinux/*.cfg binary/syslinux/*.cfg; do
     if [ -f "$cfg" ]; then
         echo "--> Branding $cfg"
-        sed -i 's/Live system/MindSet OS — Boot Deep Focus Live/g' "$cfg"
-        sed -i 's/Debian/MindSet OS/g' "$cfg"
+        sed -i 's/Debian GNU\/Linux/MindSet OS 1.1 (By L.K.S)/g' "$cfg"
+        sed -i 's/Live system/MindSet OS 1.1 — Boot Deep Focus/g' "$cfg"
+        sed -i 's/Debian/MindSet OS 1.1/g' "$cfg"
+        sed -i 's/^menu title.*/menu title MindSet OS 1.1 — Made by L.K.S Company/' "$cfg"
+        sed -i 's/^menu color sel.*/menu color sel 7;37;40 #ffffffff #ff1e40af all/' "$cfg"
+        sed -i 's/^menu color unsel.*/menu color unsel 37;44 #ffcbd5e1 #ff0b1120 all/' "$cfg"
+        sed -i 's/^menu color title.*/menu color title 1;36;44 #ff38bdf8 #ff0b1120 all/' "$cfg"
     fi
 done
 

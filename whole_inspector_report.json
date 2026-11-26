@@ -1,19 +1,19 @@
 {
-  "timestamp": "2026-11-26 09:04:17 UTC+0530",
+  "timestamp": "2026-11-26 12:03:21 UTC+0530",
   "workspace_root": ".",
   "executive_summary": {
     "normal_os_score": 75,
-    "iso_readiness_score": 100,
+    "iso_readiness_score": 85,
     "student_os_ai_score": 97,
-    "overall_score": 91,
+    "overall_score": 86,
     "verdict_status": "NON-CRITICAL WARNINGS (System Usable, Polish Recommended)",
     "critical_count": 0,
-    "high_count": 3,
+    "high_count": 4,
     "medium_count": 1,
     "low_count": 0,
     "total_features_checked": 30,
-    "pass_count": 26,
-    "partial_count": 3,
+    "pass_count": 25,
+    "partial_count": 4,
     "mock_count": 1,
     "missing_count": 0
   },
@@ -22,7 +22,7 @@
       "module_id": "files_hygiene",
       "module_name": "Module 1: Filesystem, Assets & Codebase Hygiene",
       "score": 100,
-      "summary": "Audited 293 files (5070 KB, 76800 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.",
+      "summary": "Audited 295 files (5135 KB, 78560 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.",
       "entries": [
         {
           "feature": "Pure-Rust Clean Slate (Zero Web/Tauri Clutter)",
@@ -62,11 +62,11 @@
       ],
       "actions": [],
       "metrics": {
-        "total_bytes": "5070 KB",
-        "rust_files": "195",
+        "rust_lines": "78560",
         "crates_count": "8",
-        "total_files": "293",
-        "rust_lines": "76800"
+        "total_bytes": "5135 KB",
+        "rust_files": "200",
+        "total_files": "295"
       }
     },
     {
@@ -106,8 +106,8 @@
       ],
       "actions": [],
       "metrics": {
-        "workspace_crates_audited": "13",
-        "cargo_build_invoked": "false (static analysis active)"
+        "cargo_build_invoked": "false (static analysis active)",
+        "workspace_crates_audited": "13"
       }
     },
     {
@@ -148,7 +148,7 @@
           "feature": "Hardware Monitoring & Low-RAM Hygiene",
           "category": "Normal OS",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/storage/db.rs:285 | crates/mindset-motion/src/lib.rs:71",
+          "evidence": "bins/mindset-os/src/storage/db.rs:310 | crates/mindset-motion/src/lib.rs:71",
           "notes": "Live CPU/RAM sysinfo, volume controls, SQLite WAL mode + 2MB cache cap, and zero-idle 60 FPS spring rest guards"
         }
       ],
@@ -182,8 +182,8 @@
     {
       "module_id": "iso_readiness",
       "module_name": "Module 4: Bootable Debian 13 ISO Creation Readiness Audit",
-      "score": 100,
-      "summary": "Audited live-build auto/config, hardware firmware list, YouTube/FreeTube hooks, and script line endings. ISO score: 100/100.",
+      "score": 85,
+      "summary": "Audited live-build auto/config, hardware firmware list, YouTube/FreeTube hooks, and script line endings. ISO score: 85/100.",
       "entries": [
         {
           "feature": "Debian 13 (Trixie) Live-Build Hybrid ISO Config",
@@ -202,9 +202,9 @@
         {
           "feature": "Pre-installed YouTube & FreeTube Integration",
           "category": "ISO",
-          "status": "PASS",
-          "evidence": "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:36",
-          "notes": "youtube.desktop present and FreeTube chroot hook includes essential chmod 4755 chrome-sandbox permission fix"
+          "status": "PARTIAL",
+          "evidence": "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:25",
+          "notes": "FreeTube installation hook missing or missing Electron chrome-sandbox setuid 4755 fix"
         },
         {
           "feature": "Auto-Login Session & VM GPU Fallback Wrapper",
@@ -221,9 +221,17 @@
           "notes": "All build and live chroot scripts use standard Linux LF line endings and proper #!/bin/sh shebangs"
         }
       ],
-      "actions": [],
+      "actions": [
+        {
+          "severity": "HIGH",
+          "title": "Fix Electron chrome-sandbox setuid permission in FreeTube hook",
+          "location": "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:25",
+          "finding": "Electron desktop apps crash on Linux if chrome-sandbox lacks 4755 permissions.",
+          "remediation": "Ensure 0500-install-freetube.hook.chroot runs chmod 4755 on chrome-sandbox."
+        }
+      ],
       "metrics": {
-        "iso_readiness_score": "100"
+        "iso_readiness_score": "85"
       }
     },
     {
@@ -236,7 +244,7 @@
           "feature": "Neumorphic & Claymorphic Spatial Theme Tokens",
           "category": "UI",
           "status": "PASS",
-          "evidence": "bins/mindset-os/src/theme/mod.rs:288",
+          "evidence": "bins/mindset-os/src/theme/mod.rs:289",
           "notes": "Centralized Neumorphism & Claymorphism tokens for soft specular highlights, dual-layer shadows, and frosted glass cards"
         },
         {
@@ -271,10 +279,10 @@
         }
       ],
       "metrics": {
+        "i18n_en_keys": "43",
         "i18n_ta_keys": "43",
         "i18n_ml_keys": "43",
-        "ui_theme_i18n_score": "90",
-        "i18n_en_keys": "43"
+        "ui_theme_i18n_score": "90"
       }
     },
     {
@@ -447,7 +455,7 @@
       "feature": "Hardware Monitoring & Low-RAM Hygiene",
       "category": "Normal OS",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/storage/db.rs:285 | crates/mindset-motion/src/lib.rs:71",
+      "evidence": "bins/mindset-os/src/storage/db.rs:310 | crates/mindset-motion/src/lib.rs:71",
       "notes": "Live CPU/RAM sysinfo, volume controls, SQLite WAL mode + 2MB cache cap, and zero-idle 60 FPS spring rest guards"
     },
     {
@@ -467,9 +475,9 @@
     {
       "feature": "Pre-installed YouTube & FreeTube Integration",
       "category": "ISO",
-      "status": "PASS",
-      "evidence": "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:36",
-      "notes": "youtube.desktop present and FreeTube chroot hook includes essential chmod 4755 chrome-sandbox permission fix"
+      "status": "PARTIAL",
+      "evidence": "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:25",
+      "notes": "FreeTube installation hook missing or missing Electron chrome-sandbox setuid 4755 fix"
     },
     {
       "feature": "Auto-Login Session & VM GPU Fallback Wrapper",
@@ -489,7 +497,7 @@
       "feature": "Neumorphic & Claymorphic Spatial Theme Tokens",
       "category": "UI",
       "status": "PASS",
-      "evidence": "bins/mindset-os/src/theme/mod.rs:288",
+      "evidence": "bins/mindset-os/src/theme/mod.rs:289",
       "notes": "Centralized Neumorphism & Claymorphism tokens for soft specular highlights, dual-layer shadows, and frosted glass cards"
     },
     {
@@ -584,6 +592,13 @@
       "location": "bins/mindset-os/src/shell/launcher.rs:1",
       "finding": "Incomplete real desktop app launch integration: student OS must focus exclusively on academic tools.",
       "remediation": "Ensure launcher provides direct commands for Chromium, YouTube, and FreeTube, with no commercial entertainment apps."
+    },
+    {
+      "severity": "HIGH",
+      "title": "Fix Electron chrome-sandbox setuid permission in FreeTube hook",
+      "location": "iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:25",
+      "finding": "Electron desktop apps crash on Linux if chrome-sandbox lacks 4755 permissions.",
+      "remediation": "Ensure 0500-install-freetube.hook.chroot runs chmod 4755 on chrome-sandbox."
     },
     {
       "severity": "MEDIUM",

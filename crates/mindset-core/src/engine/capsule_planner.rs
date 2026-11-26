@@ -45,6 +45,14 @@ pub struct CapsuleSegment {
 pub struct DailyCapsule {
     pub capsule_id: String,
     pub day_index: u32,
+    #[serde(default)]
+    pub scheduled_date: String,
+    #[serde(default)]
+    pub is_weekend: bool,
+    #[serde(default)]
+    pub time_slot_label: String,
+    #[serde(default)]
+    pub budget_mode: String,
     pub phase: PreparationPhase,
     pub subject: String,
     pub title: String,
@@ -106,6 +114,10 @@ impl DailyCapsule {
         Self {
             capsule_id: capsule_id.to_string(),
             day_index,
+            scheduled_date: String::new(),
+            is_weekend: false,
+            time_slot_label: "Morning Sprint".to_string(),
+            budget_mode: "Standard".to_string(),
             phase,
             subject: subject.to_string(),
             title: title.to_string(),
@@ -127,6 +139,10 @@ impl DailyCapsule {
         Self {
             capsule_id: format!("buffer_day_{}", day_index),
             day_index,
+            scheduled_date: String::new(),
+            is_weekend: false,
+            time_slot_label: "Flexible Catch-Up".to_string(),
+            budget_mode: "Buffer".to_string(),
             phase,
             subject: "Buffer & Consolidation".to_string(),
             title: "Zero-Guilt Catch-Up & Spaced Revision Buffer".to_string(),
@@ -164,6 +180,10 @@ pub struct TargetCapsulePlan {
     pub current_capsule_index: usize,
     pub buffer_days_remaining: u32,
     pub missed_days_healed: u32,
+    #[serde(default)]
+    pub start_date: String,
+    #[serde(default)]
+    pub last_active_date: String,
 }
 
 pub struct CapsulePlanner;
@@ -259,6 +279,19 @@ impl CapsulePlanner {
             }
         }
 
+        let start_date_naive = chrono::Local::now().date_naive();
+        let start_date = start_date_naive.format("%Y-%m-%d").to_string();
+        for (idx, cap) in capsules.iter_mut().enumerate() {
+            use chrono::Datelike;
+            let day_date = start_date_naive + chrono::Duration::days(idx as i64);
+            cap.scheduled_date = day_date.format("%Y-%m-%d").to_string();
+            let wd = day_date.weekday();
+            cap.is_weekend = matches!(wd, chrono::Weekday::Sat | chrono::Weekday::Sun);
+            if cap.is_weekend && !cap.is_buffer_day {
+                cap.budget_mode = "Weekend Sprint".to_string();
+            }
+        }
+
         TargetCapsulePlan {
             exam_id: profile.id.clone(),
             exam_name: profile.name.clone(),
@@ -273,6 +306,8 @@ impl CapsulePlanner {
             current_capsule_index: 0,
             buffer_days_remaining: total_buffer_days,
             missed_days_healed: 0,
+            start_date: start_date.clone(),
+            last_active_date: start_date,
         }
     }
 
@@ -323,6 +358,63 @@ impl CapsulePlanner {
 
         // Adjust remaining study days
         plan.remaining_study_days = plan.remaining_study_days.saturating_sub(missed_days_count);
+    }
+
+    /// Dynamically adapts today's active capsule duration & 4-segment breakdown
+    /// from the student's daily energy check-in and available hours.
+    pub fn recalibrate_for_checkin(
+        plan: &mut TargetCapsulePlan,
+        energy_level: &str,
+        available_hours_today: f32,
+    ) {
+        let base_mins = (available_hours_today.max(0.4) * 60.0).round() as u32;
+        let scaled_mins = match energy_level {
+            "High-Energy Sprint" => ((base_mins as f32) * 1.15).round() as u32,
+            "Busy Day" => ((base_mins as f32) * 0.70).round() as u32,
+            "Exhausted" => 25,
+            _ => base_mins,
+        }
+        .clamp(25, 360);
+
+        if let Some(cap) = plan.capsules.get_mut(plan.current_capsule_index) {
+            cap.total_minutes = scaled_mins;
+            cap.budget_mode = energy_level.to_string();
+            if cap.segments.len() == 4 {
+                let s1 = (scaled_mins as f32 * 0.45).round() as u32;
+                let s2 = (scaled_mins as f32 * 0.25).round() as u32;
+                let s3 = (scaled_mins as f32 * 0.15).round() as u32;
+                let s4 = scaled_mins.saturating_sub(s1 + s2 + s3);
+                cap.segments[0].estimated_minutes = s1;
+                cap.segments[1].estimated_minutes = s2;
+                cap.segments[2].estimated_minutes = s3;
+                cap.segments[3].estimated_minutes = s4;
+            }
+        }
+    }
+
+    /// Reconciles elapsed missed days between `last_active_date` and `today_date` (`YYYY-MM-DD`).
+    /// Returns the number of missed days that were healed cleanly.
+    pub fn reconcile_elapsed_days(plan: &mut TargetCapsulePlan, today_date: &str) -> u32 {
+        if plan.last_active_date.is_empty() || plan.last_active_date == today_date {
+            plan.last_active_date = today_date.to_string();
+            return 0;
+        }
+        let Ok(prev) = chrono::NaiveDate::parse_from_str(&plan.last_active_date, "%Y-%m-%d") else {
+            plan.last_active_date = today_date.to_string();
+            return 0;
+        };
+        let Ok(curr) = chrono::NaiveDate::parse_from_str(today_date, "%Y-%m-%d") else {
+            return 0;
+        };
+        let delta = (curr - prev).num_days();
+        plan.last_active_date = today_date.to_string();
+        if delta > 1 {
+            let missed = (delta - 1) as u32;
+            Self::auto_heal_missed_day(plan, missed);
+            missed
+        } else {
+            0
+        }
     }
 }
 

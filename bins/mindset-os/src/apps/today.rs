@@ -258,7 +258,7 @@ pub fn view<'a>(
             text(format!("{} XP", core.exam_plan.mindset_xp))
                 .size(18)
                 .color(palette.accent),
-            text(format!("Coaching: {}", profile.coaching_style))
+            text(format!("Coaching: {}", profile.coaching_tone_display()))
                 .size(10)
                 .color(palette.text_secondary),
         ]
@@ -339,6 +339,116 @@ pub fn view<'a>(
     .width(Length::Fill)
     .style(move |_t| glass_card(palette));
 
+    // 4b. Smart Study Calendar & Adaptive Time Budget Strip
+    let mut cal_row = row![].spacing(8);
+    let start_idx = core.exam_plan.current_capsule_index;
+    for cap in core.exam_plan.capsules.iter().skip(start_idx).take(5) {
+        let is_done = matches!(cap.state, CapsuleState::Completed { .. });
+        let tag = if cap.is_buffer_day {
+            "Buffer"
+        } else if is_done {
+            "Done"
+        } else if cap.is_weekend {
+            "Weekend"
+        } else {
+            "Study"
+        };
+        let badge_col = if is_done {
+            palette.success
+        } else if cap.is_buffer_day {
+            palette.warning
+        } else {
+            palette.accent
+        };
+        let date_label = if cap.scheduled_date.is_empty() {
+            format!("Day {}", cap.day_index)
+        } else {
+            cap.scheduled_date
+                .get(5..)
+                .unwrap_or(&cap.scheduled_date)
+                .to_string()
+        };
+        cal_row = cal_row.push(
+            container(
+                column![
+                    row![
+                        text(date_label).size(10).color(palette.text_primary),
+                        h_space(),
+                        text(tag).size(9).color(badge_col),
+                    ]
+                    .align_y(Alignment::Center),
+                    text(&cap.subject).size(10).color(palette.text_secondary),
+                    text(format!("{}m • {}", cap.total_minutes, cap.budget_mode))
+                        .size(9)
+                        .color(palette.text_muted),
+                ]
+                .spacing(3),
+            )
+            .width(Length::FillPortion(1))
+            .padding(8)
+            .style(move |_t| glass_card(palette)),
+        );
+    }
+
+    let adapt_row = row![
+        text("Adapt Today:").size(10).color(palette.text_muted),
+        button(text("⚡ High-Energy").size(10))
+            .on_press(Message::AdaptTodaySchedule(
+                "High-Energy Sprint".to_string(),
+                profile.weekend_study_hours.max(4) as f32,
+            ))
+            .style(secondary_button(palette))
+            .padding([4, 8]),
+        button(text("🌿 Normal").size(10))
+            .on_press(Message::AdaptTodaySchedule(
+                "Normal".to_string(),
+                profile.weekday_study_hours.max(2) as f32,
+            ))
+            .style(secondary_button(palette))
+            .padding([4, 8]),
+        button(text("🔋 Busy / 45m").size(10))
+            .on_press(Message::AdaptTodaySchedule("Busy Day".to_string(), 1.0))
+            .style(secondary_button(palette))
+            .padding([4, 8]),
+        h_space(),
+        button(
+            text(format!(
+                "🛡️ Auto-Heal ({} Buffers)",
+                core.exam_plan.buffer_days_remaining
+            ))
+            .size(10),
+        )
+        .on_press(Message::AutoHealMissedDay)
+        .style(secondary_button(palette))
+        .padding([4, 10]),
+    ]
+    .spacing(6)
+    .align_y(Alignment::Center);
+
+    let calendar_card = container(
+        column![
+            row![
+                text("SMART STUDY CALENDAR & ADAPTIVE BUDGET")
+                    .size(11)
+                    .color(palette.accent),
+                h_space(),
+                text(format!(
+                    "{}d Left • {} Healed",
+                    core.exam_plan.remaining_study_days, core.exam_plan.missed_days_healed
+                ))
+                .size(10)
+                .color(palette.text_muted),
+            ]
+            .align_y(Alignment::Center),
+            cal_row,
+            adapt_row,
+        ]
+        .spacing(10)
+        .padding(14),
+    )
+    .width(Length::Fill)
+    .style(move |_t| glass_card(palette));
+
     // 5. Quick Actions Row
     let quick_actions = row![
         button(text("🗕 Show Desktop").size(11))
@@ -370,6 +480,7 @@ pub fn view<'a>(
         header_pill,
         daily_capsule_card,
         metrics_row,
+        calendar_card,
         queue_card,
         quick_actions,
     ]

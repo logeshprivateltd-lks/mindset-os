@@ -75,7 +75,7 @@ impl Default for MindSetCoreState {
 impl MindSetCoreState {
     pub fn new() -> Self {
         let default_profile = ExamProfile::tn_class_12_board();
-        let exam_plan = CapsulePlanner::generate_plan(&default_profile, 590, 430, 100, 90);
+        let exam_plan = CapsulePlanner::generate_plan(&default_profile, 590, 0, 100, 90);
 
         Self {
             pomodoro: PomodoroEngine::new(25),

@@ -4,6 +4,7 @@
 //! high-contrast button styling, hardware-accelerated border glows, and zero window bleed-through.
 
 pub mod claymorphism;
+pub mod icons;
 pub mod liquidmorphism;
 pub mod neumorphism;
 

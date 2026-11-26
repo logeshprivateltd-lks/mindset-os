@@ -7,11 +7,13 @@ pub mod ai_tutor;
 pub mod browser;
 pub mod design_system;
 pub mod file_explorer;
+pub mod mindstore;
 pub mod preferences;
 pub mod study_reader;
 pub mod system_monitor;
 pub mod tasks;
 pub mod today;
+pub mod youtube_study;
 
 use std::collections::HashMap;
 
@@ -90,6 +92,8 @@ pub fn render_window<'a>(
     active_capsule_phase: usize,
     capsule_hint_open: bool,
     pending_destructive_action: Option<&'a MaindyOsAction>,
+    youtube_study: &'a youtube_study::YouTubeStudyState,
+    mindstore: &'a mindstore::MindStoreState,
 ) -> Element<'a, Message> {
     let id = instance.id;
     let is_focused = core.wm.active_window() == Some(id);
@@ -273,6 +277,8 @@ pub fn render_window<'a>(
         WindowId::FileVault => file_explorer::view(palette),
         WindowId::SearchBrowser => browser::view(palette, browser_status_note, network_status),
         WindowId::DesignSystem => design_system::view(palette),
+        WindowId::YouTubeStudy => youtube_study::view(youtube_study, palette),
+        WindowId::MindStore => mindstore::view(mindstore, palette),
         _ => render_generic(instance, palette),
     };
 

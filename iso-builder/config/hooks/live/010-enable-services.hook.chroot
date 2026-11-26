@@ -26,23 +26,34 @@ for svc in NetworkManager.service seatd.service bluetooth.service greetd.service
     systemctl enable "${svc}" 2>/dev/null || true
 done
 
-# 2. Brand OS Identification (/etc/os-release + /etc/issue)
+# 2. Brand OS Identification (/etc/os-release + /etc/issue + hostname + IST timezone + clear Debian MOTD)
 cat << 'EOF' > /etc/os-release
-PRETTY_NAME="MindSet OS (Debian 13 Derivative)"
+PRETTY_NAME="MindSet OS 1.1 (by L.K.S)"
 NAME="MindSet OS"
-VERSION_ID="1.0"
-VERSION="1.0 (Trixie Student Edition)"
-VERSION_CODENAME=trixie
+VERSION_ID="1.1"
+VERSION="1.1 (L.K.S Student Edition)"
 ID=mindsetos
-ID_LIKE=debian
 HOME_URL="https://github.com/logeshprivateltd-lks/mindset-os"
 SUPPORT_URL="https://github.com/logeshprivateltd-lks/mindset-os"
 EOF
 
 cat << 'EOF' > /etc/issue
-MindSet OS 1.0 (Debian 13 "Trixie" Derivative) \n \l
+MindSet OS 1.1 — Made by L.K.S Company \n \l
 
 EOF
+
+echo "mindset-os" > /etc/hostname
+cat << 'EOF' > /etc/hosts
+127.0.0.1       localhost
+127.0.1.1       mindset-os
+::1             localhost ip6-localhost ip6-loopback
+EOF
+
+echo "Asia/Kolkata" > /etc/timezone
+ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+
+: > /etc/motd
+rm -f /etc/update-motd.d/* 2>/dev/null || true
 
 # 3. Refresh system font caches (Inter, Noto Sans, Tamil, Malayalam, Color Emoji)
 if command -v fc-cache >/dev/null 2>&1; then

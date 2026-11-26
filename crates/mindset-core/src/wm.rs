@@ -19,6 +19,8 @@ pub enum WindowId {
     FileVault,
     SearchBrowser,
     DesignSystem,
+    YouTubeStudy,
+    MindStore,
 }
 
 impl WindowId {
@@ -36,6 +38,8 @@ impl WindowId {
             WindowId::FileVault => "Student File Vault",
             WindowId::SearchBrowser => "MindStrict Safe Browser",
             WindowId::DesignSystem => "Liquidmorphism Design System",
+            WindowId::YouTubeStudy => "YouTube Study",
+            WindowId::MindStore => "MindStore — .ms App Hub",
         }
     }
 
@@ -53,6 +57,8 @@ impl WindowId {
             WindowId::FileVault => "📁",
             WindowId::SearchBrowser => "🌐",
             WindowId::DesignSystem => "🎨",
+            WindowId::YouTubeStudy => "📺",
+            WindowId::MindStore => "🛍️",
         }
     }
 
@@ -70,6 +76,8 @@ impl WindowId {
             WindowId::FileVault => (740.0, 480.0),
             WindowId::SearchBrowser => (960.0, 600.0),
             WindowId::DesignSystem => (800.0, 540.0),
+            WindowId::YouTubeStudy => (960.0, 620.0),
+            WindowId::MindStore => (920.0, 600.0),
         }
     }
 }

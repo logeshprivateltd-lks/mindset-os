@@ -88,21 +88,21 @@ pub fn view<'a>(
             let txt_col = neu.text_primary;
             let bg_norm = neu.surface_elevated;
             let border_col = Color {
-                a: 0.25,
+                a: 0.45,
                 ..neu.shadow_dark
             };
             button(text(label).size(9).color(txt_col))
                 .on_press(Message::RunQuickOrbCommand(cmd.to_string()))
                 .style(move |_t, s| button::Style {
                     background: Some(iced::Background::Color(if s == button::Status::Hovered {
-                        Color { a: 0.95, ..bg_norm }
+                        Color { a: 1.0, ..bg_norm }
                     } else {
-                        bg_norm
+                        Color { a: 0.96, ..bg_norm }
                     })),
                     border: iced::Border {
                         radius: iced::border::Radius::from(8.0),
                         color: border_col,
-                        width: 1.0,
+                        width: 1.2,
                     },
                     ..Default::default()
                 })

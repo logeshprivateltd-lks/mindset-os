@@ -90,8 +90,10 @@ impl OnboardingData {
             daily_study_hours: profile.weekday_study_hours.max(2),
             strongest_subject: strongest,
             toughest_subject: toughest,
-            coaching_tone: if profile.coaching_style.is_empty() {
-                "Friendly Thanglish Bro".to_string()
+            coaching_tone: if profile.coaching_style.is_empty()
+                || profile.coaching_style == "BalancedMentor"
+            {
+                "Calm Mentor".to_string()
             } else {
                 profile.coaching_style.clone()
             },

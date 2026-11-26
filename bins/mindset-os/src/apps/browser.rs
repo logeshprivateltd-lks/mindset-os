@@ -96,21 +96,11 @@ pub fn view<'a>(
     // ------------------------------------------------------------------------
     let youtube_card = app_launch_card(
         "📺",
-        "Official YouTube App",
-        "Standalone desktop lecture viewer with zero URL bar & minimal distraction.",
-        "Launch YouTube ↗",
-        Message::LaunchYouTubeApp,
+        "YouTube Study (MS OS)",
+        "Native Shorts-free lecture library, rotating search mirrors, and inline notes.",
+        "Open YouTube Study",
+        Message::OpenWindow(mindset_core::WindowId::YouTubeStudy),
         Color::from_rgb(0.92, 0.20, 0.20),
-        palette,
-    );
-
-    let freetube_card = app_launch_card(
-        "🛡️",
-        "FreeTube (Ad-Free)",
-        "Pre-installed private YouTube player with ads, shorts, and comments stripped.",
-        "Launch FreeTube ↗",
-        Message::LaunchFreeTubeApp,
-        Color::from_rgb(0.85, 0.35, 0.12),
         palette,
     );
 
@@ -124,7 +114,7 @@ pub fn view<'a>(
         palette,
     );
 
-    let primary_launchers = row![youtube_card, freetube_card, browser_card]
+    let primary_launchers = row![youtube_card, browser_card]
         .spacing(12)
         .width(Length::Fill);
 

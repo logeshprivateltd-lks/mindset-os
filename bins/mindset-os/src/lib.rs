@@ -339,6 +339,25 @@ pub enum Message {
     // Widget Management & Overlay Docking
     ToggleWidgetVisibility(mindset_core::DesktopWidgetId),
     DockOverlayAsWidget(mindset_core::ActiveOverlay),
+    // Capsule Engine Scheduling
+    AdaptTodaySchedule(String, f32),
+    AutoHealMissedDay,
+    // Native MS OS YouTube Study
+    YouTubeSearchChanged(String),
+    YouTubeSearchSubmit,
+    YouTubeSearchResults(Vec<apps::youtube_study::StudyVideoItem>, String),
+    YouTubeSelectVideo(usize),
+    YouTubeNotesChanged(String),
+    // MindStore (.ms Package Manager)
+    MindStoreSearchChanged(String),
+    MindStoreSelectCategory(String),
+    MindStoreInstallCatalogApp(String),
+    MindStoreLaunchApp(String),
+    MindStoreUninstallApp(String),
+    MindStorePickLocalPackage,
+    MindStoreLocalPackageSelected(Option<std::path::PathBuf>),
+    // System Installer
+    InstallMindSetToDisk,
     // RAG Vault (Zone 3)
     PickVaultPdfToIngest,
     IngestPdfPath(Option<std::path::PathBuf>),
@@ -404,6 +423,8 @@ pub struct MindSetApp {
     pub memories: Vec<storage::db::UserMemory>,
     pub new_memory_input: String,
     pub onboarding_data: onboarding::OnboardingData,
+    pub youtube_study: apps::youtube_study::YouTubeStudyState,
+    pub mindstore_state: apps::mindstore::MindStoreState,
     pub dock_springs: [mindset_motion::Spring1D; 14],
     pub hovered_dock_index: Option<usize>,
     pub hud_visible: bool,
@@ -541,6 +562,20 @@ impl MindSetApp {
         let onboarding_data = onboarding::OnboardingData::new_with_profile(profile.clone());
 
         let mut core = MindSetCoreState::new();
+        if let Some(mut saved_plan) = storage.load_capsule_plan() {
+            let healed =
+                mindset_core::CapsulePlanner::reconcile_elapsed_days(&mut saved_plan, &today_str);
+            if healed > 0 {
+                let _ = storage.save_capsule_plan(&saved_plan);
+            }
+            core.exam_plan = saved_plan;
+        }
+        if profile.onboarding_completed {
+            core.today = mindset_core::TodayState::fresh_for_student(
+                profile.weekday_study_hours,
+                &profile.target_label,
+            );
+        }
         let saved_layouts = storage.load_widget_layouts();
         let i18n = i18n::I18n::new(i18n::AppLanguage::from_code(&profile.language_code));
         let ai_activity_log = storage.list_ai_activities(50);
@@ -590,12 +625,24 @@ impl MindSetApp {
             }
         }
 
+        let installed_ms_ids: Vec<String> = storage
+            .list_installed_ms_apps()
+            .into_iter()
+            .map(|(id, _, _, _, _, _)| id)
+            .collect();
+        let mindstore_state = apps::mindstore::MindStoreState {
+            installed_ids: installed_ms_ids,
+            ..Default::default()
+        };
+
         Self {
             core,
             system,
             storage,
             sysinfo: system::SysinfoCollector::new(),
             wm_interaction: wm::WindowInteractionState::new(),
+            youtube_study: apps::youtube_study::YouTubeStudyState::default(),
+            mindstore_state,
             search_query: String::new(),
             chat_input: String::new(),
             active_thread_id,
@@ -2510,6 +2557,20 @@ impl MindSetApp {
                 self.profile = self.onboarding_data.profile.clone();
                 self.profile.onboarding_completed = true;
                 let _ = self.storage.save_profile(&self.profile);
+                self.storage.seed_localized_greeting(
+                    &self.active_thread_id,
+                    &self.profile.name,
+                    &self.profile.maindy_style,
+                    &self.profile.coaching_style,
+                );
+                self.active_messages = self
+                    .storage
+                    .load_recent_messages(&self.active_thread_id, 30);
+                self.core.today = mindset_core::TodayState::fresh_for_student(
+                    self.profile.weekday_study_hours,
+                    &self.profile.target_label,
+                );
+                let _ = self.storage.save_capsule_plan(&self.core.exam_plan);
 
                 // Persist 3 tailored memories into SQLite user_memories
                 self.storage.add_memory(
@@ -3556,6 +3617,222 @@ impl MindSetApp {
                     Message::BrowserLaunched,
                 );
             }
+            Message::AdaptTodaySchedule(energy_level, hours) => {
+                mindset_core::CapsulePlanner::recalibrate_for_checkin(
+                    &mut self.core.exam_plan,
+                    &energy_level,
+                    hours,
+                );
+                let _ = self.storage.save_capsule_plan(&self.core.exam_plan);
+                self.core.toast_queue.push(
+                    "Schedule Adapted",
+                    format!("Today's capsule budget tuned for {energy_level} ({hours:.1}h)."),
+                    "📅",
+                );
+            }
+            Message::AutoHealMissedDay => {
+                mindset_core::CapsulePlanner::auto_heal_missed_day(&mut self.core.exam_plan, 1);
+                let _ = self.storage.save_capsule_plan(&self.core.exam_plan);
+                self.core.toast_queue.push(
+                    "Zero-Guilt Auto-Heal",
+                    format!(
+                        "Missed day absorbed cleanly. {} buffer days remaining.",
+                        self.core.exam_plan.buffer_days_remaining
+                    ),
+                    "🛡️",
+                );
+            }
+            Message::YouTubeSearchChanged(q) => {
+                self.youtube_study.search_query = q;
+            }
+            Message::YouTubeSearchSubmit => {
+                let q = self.youtube_study.search_query.clone();
+                self.youtube_study.is_searching = true;
+                return Task::perform(
+                    apps::youtube_study::search_educational_videos(q),
+                    |(items, mirror)| Message::YouTubeSearchResults(items, mirror),
+                );
+            }
+            Message::YouTubeSearchResults(items, mirror) => {
+                self.youtube_study.is_searching = false;
+                self.youtube_study.active_mirror = mirror;
+                self.youtube_study.selected_video = items.first().cloned();
+                self.youtube_study.results = items;
+            }
+            Message::YouTubeSelectVideo(idx) => {
+                self.youtube_study.selected_video = self.youtube_study.results.get(idx).cloned();
+            }
+            Message::YouTubeNotesChanged(notes) => {
+                self.youtube_study.lecture_notes = notes;
+            }
+            Message::MindStoreSearchChanged(q) => {
+                self.mindstore_state.search_query = q;
+            }
+            Message::MindStoreSelectCategory(cat) => {
+                self.mindstore_state.selected_category = cat;
+            }
+            Message::MindStoreInstallCatalogApp(app_id) => {
+                if let Some(entry) = self
+                    .mindstore_state
+                    .catalog
+                    .iter()
+                    .find(|e| e.manifest.id == app_id)
+                    .cloned()
+                {
+                    let apps_root = mindset_sys::store::MsPackageManager::default_apps_root();
+                    let tmp_ms = std::env::temp_dir().join(format!("{app_id}.ms"));
+                    let payload = serde_json::to_vec_pretty(&entry.manifest).unwrap_or_default();
+                    if let Ok(digest) = mindset_sys::store::MsPackageManager::build_ms_archive(
+                        &tmp_ms,
+                        &entry.manifest,
+                        &entry.manifest.entrypoint,
+                        &payload,
+                    ) {
+                        match mindset_sys::store::MsPackageManager::install_ms_archive(
+                            &tmp_ms,
+                            &apps_root,
+                            Some(&digest),
+                        ) {
+                            Ok(inst) => {
+                                let manifest_json =
+                                    serde_json::to_string(&inst.manifest).unwrap_or_default();
+                                let _ = self.storage.save_installed_ms_app(
+                                    &inst.manifest.id,
+                                    &inst.manifest.name,
+                                    &inst.manifest.version,
+                                    inst.manifest.kind.label(),
+                                    &manifest_json,
+                                    &inst.install_dir.to_string_lossy(),
+                                );
+                                if !self.mindstore_state.installed_ids.contains(&app_id) {
+                                    self.mindstore_state.installed_ids.push(app_id.clone());
+                                }
+                                self.mindstore_state.status_message = Some(format!(
+                                    "Installed {} (.ms verified SHA-256)",
+                                    inst.manifest.name
+                                ));
+                                self.core.toast_queue.push(
+                                    "MindStore App Installed",
+                                    format!("{} is ready to launch.", inst.manifest.name),
+                                    "🛍️",
+                                );
+                            }
+                            Err(e) => {
+                                self.mindstore_state.status_message = Some(e);
+                            }
+                        }
+                        let _ = std::fs::remove_file(&tmp_ms);
+                    }
+                }
+            }
+            Message::MindStoreLaunchApp(app_id) => {
+                if let Some(entry) = self
+                    .mindstore_state
+                    .catalog
+                    .iter()
+                    .find(|e| e.manifest.id == app_id)
+                {
+                    if let Some(url) = &entry.manifest.default_url {
+                        return self.update(Message::LaunchMindSetBrowser(Some(url.clone())));
+                    }
+                    self.core.toast_queue.push(
+                        format!("Launching {}", entry.manifest.name),
+                        "Opened native .ms study module.".to_string(),
+                        "🛍️",
+                    );
+                }
+            }
+            Message::MindStoreUninstallApp(app_id) => {
+                let apps_root = mindset_sys::store::MsPackageManager::default_apps_root();
+                let _ = mindset_sys::store::MsPackageManager::uninstall_app(&app_id, &apps_root);
+                let _ = self.storage.remove_installed_ms_app(&app_id);
+                self.mindstore_state
+                    .installed_ids
+                    .retain(|id| id != &app_id);
+                self.mindstore_state.status_message = Some(format!("Uninstalled {app_id}."));
+            }
+            Message::MindStorePickLocalPackage => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .add_filter("MindSet App Package", &["ms"])
+                            .pick_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    Message::MindStoreLocalPackageSelected,
+                );
+            }
+            Message::MindStoreLocalPackageSelected(maybe_path) => {
+                if let Some(path) = maybe_path {
+                    let apps_root = mindset_sys::store::MsPackageManager::default_apps_root();
+                    match mindset_sys::store::MsPackageManager::install_ms_archive(
+                        &path, &apps_root, None,
+                    ) {
+                        Ok(inst) => {
+                            let manifest_json =
+                                serde_json::to_string(&inst.manifest).unwrap_or_default();
+                            let _ = self.storage.save_installed_ms_app(
+                                &inst.manifest.id,
+                                &inst.manifest.name,
+                                &inst.manifest.version,
+                                inst.manifest.kind.label(),
+                                &manifest_json,
+                                &inst.install_dir.to_string_lossy(),
+                            );
+                            if !self
+                                .mindstore_state
+                                .installed_ids
+                                .contains(&inst.manifest.id)
+                            {
+                                self.mindstore_state
+                                    .installed_ids
+                                    .push(inst.manifest.id.clone());
+                            }
+                            self.mindstore_state.status_message = Some(format!(
+                                "Installed local .ms package: {}",
+                                inst.manifest.name
+                            ));
+                        }
+                        Err(e) => {
+                            self.mindstore_state.status_message = Some(e);
+                        }
+                    }
+                }
+            }
+            Message::InstallMindSetToDisk => {
+                self.core.wm.close_overlays();
+                #[cfg(target_os = "linux")]
+                {
+                    let res = std::process::Command::new("sh")
+                        .arg("-c")
+                        .arg("command -v calamares >/dev/null && sudo -E calamares &")
+                        .spawn();
+                    match res {
+                        Ok(_) => self.core.toast_queue.push(
+                            "MindSet OS 1.1 Installer",
+                            "Launching disk installer so your data persists across reboots."
+                                .to_string(),
+                            "💿",
+                        ),
+                        Err(e) => self.core.toast_queue.warning(
+                            "Installer Unavailable",
+                            format!("Could not start Calamares: {e}"),
+                            None,
+                            None,
+                        ),
+                    }
+                }
+                #[cfg(not(target_os = "linux"))]
+                {
+                    self.core.toast_queue.push(
+                        "Disk Installer (Linux Live Only)",
+                        "Boot the MindSet OS 1.1 .iso on a VM or PC to install to disk."
+                            .to_string(),
+                        "💿",
+                    );
+                }
+            }
             Message::LaunchFreeTubeApp => {
                 self.browser_status_note = Some("Spawning FreeTube ad-free player...".to_string());
                 return Task::perform(
@@ -4303,6 +4580,8 @@ impl MindSetApp {
                             self.active_capsule_phase,
                             self.capsule_hint_open,
                             self.pending_destructive_action.as_ref(),
+                            &self.youtube_study,
+                            &self.mindstore_state,
                         );
 
                         let positioned_win: Element<'_, Message> =
@@ -4340,7 +4619,13 @@ impl MindSetApp {
                 container(
                     row![
                         h_space(),
-                        shell::dock::view(&self.core, &dock_scales, palette, &neu),
+                        shell::dock::view(
+                            &self.core,
+                            &dock_scales,
+                            self.hovered_dock_index,
+                            palette,
+                            &neu,
+                        ),
                         h_space(),
                     ]
                     .align_y(Alignment::Center),

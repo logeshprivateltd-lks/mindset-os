@@ -63,7 +63,7 @@ pub fn view<'a>(
     let is_focused = core.pomodoro.is_running;
 
     let inner_content: Element<'a, Message> = match mode {
-        IslandMode::Compact => render_compact(core, profile, is_audio_playing),
+        IslandMode::Compact => render_compact(core, profile, is_audio_playing, palette),
         IslandMode::ActiveFocus => render_active_focus(core),
         IslandMode::Search => render_search(search_query, capsules),
         IslandMode::ControlCenter => render_control_center(profile, is_audio_playing),
@@ -92,6 +92,7 @@ fn render_compact<'a>(
     core: &'a MindSetCoreState,
     _profile: &'a UserProfile,
     is_audio_playing: bool,
+    palette: ThemePalette,
 ) -> Element<'a, Message> {
     // Left Activity Pill: Live Pomodoro timer or Audio wave or Search trigger
     let left_activity: Element<'a, Message> = if is_audio_playing {
@@ -154,9 +155,9 @@ fn render_compact<'a>(
     } else {
         button(
             row![
-                text("🔍").size(11).color(NOTCH_TEXT_SUB),
-                text("Search").size(11).color(Color::WHITE),
-                text("Ctrl+K").size(9).color(NOTCH_TEXT_MUTED),
+                text("🔍").size(11).color(palette.text_secondary),
+                text("Search").size(11).color(palette.text_primary),
+                text("Ctrl+K").size(9).color(palette.text_muted),
             ]
             .spacing(4)
             .align_y(Alignment::Center),

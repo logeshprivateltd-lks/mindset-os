@@ -18,7 +18,7 @@ if [ ! -d "$LABWC_CFG" ] && [ -d "/etc/skel/.config/mindset-os/labwc" ]; then
     chmod +x "$LABWC_CFG/autostart" 2>/dev/null || true
 fi
 
-# Inside QEMU/KVM or virtualized GPUs without Vulkan, prevent hardware cursor / DRM stalls
+# Inside VirtualBox/QEMU/VMware, force Pixman software rendering immediately so vmwgfx/EGL never stalls
 VIRT_ENV="none"
 if command -v systemd-detect-virt >/dev/null 2>&1; then
     VIRT_ENV="$(systemd-detect-virt || echo none)"
@@ -26,11 +26,10 @@ fi
 
 if [ "$VIRT_ENV" != "none" ]; then
     export WLR_NO_HARDWARE_CURSORS=1
-    if ! command -v vulkaninfo >/dev/null 2>&1 || ! vulkaninfo --summary >/dev/null 2>&1; then
-        export WLR_RENDERER=pixman
-        export WGPU_BACKEND=gl
-        export LIBGL_ALWAYS_SOFTWARE=1
-    fi
+    export WLR_RENDERER=pixman
+    export WLR_RENDERER_ALLOW_SOFTWARE=1
+    export WGPU_BACKEND=gl
+    export LIBGL_ALWAYS_SOFTWARE=1
 fi
 
 # Ensure XDG user dirs & writable MindSet data directories exist

@@ -75,7 +75,7 @@ impl Default for UserProfile {
             weekend_study_hours: 7,
             peak_energy_window: "Morning (06:00 - 08:30)".to_string(),
             obstacles: vec!["Digital Distractions".into(), "Post-School Fatigue".into()],
-            coaching_style: "BalancedMentor".to_string(),
+            coaching_style: "Calm Mentor".to_string(),
             language_pref: "English (US)".to_string(),
             ram_profile: "LowRam4GB".to_string(),
             wallpaper_path: "assets/wallpaper.jpg".to_string(),
@@ -118,6 +118,31 @@ impl UserProfile {
             "CA" => format!("CA Foundation • Target: {}/400", clamped.min(400)),
             "TechCareer" => format!("Software Engineering • Target: {}/100", clamped.min(100)),
             _ => format!("Academic Goal • Target: {}/{}", clamped, max),
+        }
+    }
+
+    /// Formats stored coaching style keys into clean human-readable labels.
+    pub fn coaching_tone_display(&self) -> String {
+        match self.coaching_style.trim() {
+            "BalancedMentor" | "" => "Calm Mentor".to_string(),
+            "FriendlyThanglishBro" => "Friendly Thanglish Bro".to_string(),
+            "StrictExamCoach" => "Strict Exam Coach".to_string(),
+            other => {
+                let mut out = String::with_capacity(other.len() + 4);
+                for (i, ch) in other.chars().enumerate() {
+                    if i > 0
+                        && ch.is_uppercase()
+                        && other
+                            .chars()
+                            .nth(i - 1)
+                            .is_some_and(|prev| prev.is_lowercase())
+                    {
+                        out.push(' ');
+                    }
+                    out.push(ch);
+                }
+                out
+            }
         }
     }
 
@@ -347,6 +372,22 @@ impl StorageManager {
                 situation_note TEXT NOT NULL,
                 recommended_capsule_minutes INTEGER NOT NULL DEFAULT 30,
                 recommended_break_minutes INTEGER NOT NULL DEFAULT 5
+            );
+
+            CREATE TABLE IF NOT EXISTS capsule_plans (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                plan_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS installed_ms_apps (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                version TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                manifest_json TEXT NOT NULL,
+                install_dir TEXT NOT NULL,
+                installed_at TEXT NOT NULL
             );
 
             CREATE TABLE IF NOT EXISTS student_mistake_log (
@@ -763,6 +804,147 @@ impl StorageManager {
                 p.maindy_style,
             ],
         )?;
+        let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
+        Ok(())
+    }
+
+    pub fn save_capsule_plan(&self, plan: &mindset_core::TargetCapsulePlan) -> Result<()> {
+        let conn = self.open_connection()?;
+        let json = serde_json::to_string(plan).unwrap_or_default();
+        let now = Local::now().to_rfc3339();
+        conn.execute(
+            "INSERT INTO capsule_plans (id, plan_json, updated_at)
+             VALUES (1, ?1, ?2)
+             ON CONFLICT(id) DO UPDATE SET plan_json = excluded.plan_json, updated_at = excluded.updated_at",
+            params![json, now],
+        )?;
+        let _ = conn.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);");
+        Ok(())
+    }
+
+    pub fn load_capsule_plan(&self) -> Option<mindset_core::TargetCapsulePlan> {
+        let conn = self.open_connection().ok()?;
+        let json: String = conn
+            .query_row(
+                "SELECT plan_json FROM capsule_plans WHERE id = 1",
+                [],
+                |r| r.get(0),
+            )
+            .ok()?;
+        serde_json::from_str(&json).ok()
+    }
+
+    pub fn seed_localized_greeting(
+        &self,
+        thread_id: &str,
+        student_name: &str,
+        lang_style: &str,
+        tone: &str,
+    ) {
+        let name = if student_name.trim().is_empty() {
+            "Scholar"
+        } else {
+            student_name.trim()
+        };
+        let greeting = match lang_style {
+            "thanglish" => match tone {
+                "Strict Exam Coach" => format!(
+                    "Vanakkam {name}! Naan Maindy AI. Time waste pannaama high-yield capsules mudippom — first goal ready, start pannalama?"
+                ),
+                _ => format!(
+                    "Hey {name} bro! Naan unga Maindy AI. Innaiku semma-ya padichitu target-a crack pannalam! Edhavadhu doubt na kelu."
+                ),
+            },
+            "ta" => format!(
+                "வணக்கம் {name}! நான் உங்கள் Maindy AI. இன்றைய உயர்-மதிப்பெண் பாடங்களைத் தெளிவாகப் படித்து முடிக்கலாம்!"
+            ),
+            "ml" => format!(
+                "നമസ്കാരം {name}! ഞാൻ നിങ്ങളുടെ Maindy AI ആണ്. ഇന്നത്തെ പഠന ലക്ഷ്യങ്ങൾ നമുക്ക് ഒരുമിച്ച് പൂർത്തിയാക്കാം!"
+            ),
+            _ => match tone {
+                "Strict Exam Coach" => format!(
+                    "Welcome {name}. I am Maindy AI. Your daily capsules are scheduled — let's lock in high-yield focus and hit your target score."
+                ),
+                _ => format!(
+                    "Welcome {name}! I am Maindy AI, your personal study mentor. Let's tackle today's capsules step-by-step with zero stress."
+                ),
+            },
+        };
+        if let Ok(conn) = self.open_connection() {
+            let now = Local::now().to_rfc3339();
+            let count: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM chat_messages WHERE thread_id = ?1",
+                    params![thread_id],
+                    |r| r.get(0),
+                )
+                .unwrap_or(0);
+            if count <= 1 {
+                let _ = conn.execute(
+                    "DELETE FROM chat_messages WHERE thread_id = ?1",
+                    params![thread_id],
+                );
+                let _ = conn.execute(
+                    "INSERT INTO chat_messages (thread_id, role, content, created_at) VALUES (?1, 'assistant', ?2, ?3)",
+                    params![thread_id, greeting, now],
+                );
+            }
+        }
+    }
+
+    pub fn save_installed_ms_app(
+        &self,
+        id: &str,
+        name: &str,
+        version: &str,
+        kind: &str,
+        manifest_json: &str,
+        install_dir: &str,
+    ) -> Result<()> {
+        let conn = self.open_connection()?;
+        let now = Local::now().to_rfc3339();
+        conn.execute(
+            "INSERT INTO installed_ms_apps (id, name, version, kind, manifest_json, install_dir, installed_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+             ON CONFLICT(id) DO UPDATE SET
+               name = excluded.name,
+               version = excluded.version,
+               kind = excluded.kind,
+               manifest_json = excluded.manifest_json,
+               install_dir = excluded.install_dir,
+               installed_at = excluded.installed_at",
+            params![id, name, version, kind, manifest_json, install_dir, now],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_installed_ms_apps(&self) -> Vec<(String, String, String, String, String, String)> {
+        let Ok(conn) = self.open_connection() else {
+            return Vec::new();
+        };
+        let Ok(mut stmt) = conn.prepare(
+            "SELECT id, name, version, kind, manifest_json, install_dir FROM installed_ms_apps ORDER BY installed_at DESC",
+        ) else {
+            return Vec::new();
+        };
+        let Ok(rows) = stmt.query_map([], |r| {
+            Ok((
+                r.get(0)?,
+                r.get(1)?,
+                r.get(2)?,
+                r.get(3)?,
+                r.get(4)?,
+                r.get(5)?,
+            ))
+        }) else {
+            return Vec::new();
+        };
+        rows.flatten().collect()
+    }
+
+    pub fn remove_installed_ms_app(&self, id: &str) -> Result<()> {
+        let conn = self.open_connection()?;
+        conn.execute("DELETE FROM installed_ms_apps WHERE id = ?1", params![id])?;
         Ok(())
     }
 

@@ -16,6 +16,7 @@ pub mod network;
 pub mod personalization;
 pub mod recovery;
 pub mod storage;
+pub mod store;
 pub mod updater;
 
 pub use personalization::*;

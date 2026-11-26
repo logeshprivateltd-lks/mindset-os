@@ -54,7 +54,54 @@ impl Default for TodayState {
 }
 
 impl TodayState {
+    /// Clean initial baseline for a newly onboarded student (zero demo inflation).
     pub fn new() -> Self {
+        Self::fresh_for_student(4, "Set your exam target in Preferences")
+    }
+
+    /// Clean initial state tailored to the student's configured daily study hours.
+    pub fn fresh_for_student(daily_hours: u32, target_label: &str) -> Self {
+        let target_h = daily_hours.max(1) as f32;
+        let ring_today = RingProgress {
+            label: "Today".to_string(),
+            value_text: format!("0.0h / {:.0}h", target_h),
+            current_hours: 0.0,
+            target_hours: target_h,
+            fraction: 0.0,
+        };
+        let ring_week = RingProgress {
+            label: "Week".to_string(),
+            value_text: format!("0.0h / {:.0}h", target_h * 5.0),
+            current_hours: 0.0,
+            target_hours: target_h * 5.0,
+            fraction: 0.0,
+        };
+        let ring_syllabus = RingProgress {
+            label: "Syllabus".to_string(),
+            value_text: "0%".to_string(),
+            current_hours: 0.0,
+            target_hours: 100.0,
+            fraction: 0.0,
+        };
+
+        Self {
+            one_thing: None,
+            rings: [ring_today, ring_week, ring_syllabus],
+            future_self: FutureSelfSnapshot {
+                target_identity_label: target_label.to_string(),
+                quote: "Every focused capsule builds real exam mastery.".to_string(),
+            },
+            streak: StreakSnapshot {
+                count: 0,
+                freezes_remaining: 2,
+                freeze_used: false,
+            },
+            tomorrow_preview: Vec::new(),
+        }
+    }
+
+    /// Populated preview dataset for explicit `--demo` mode or UI showcase tests.
+    pub fn demo_preview() -> Self {
         let ring_today = RingProgress {
             label: "Today".to_string(),
             value_text: "2h / 4h".to_string(),
@@ -152,11 +199,15 @@ mod tests {
     #[test]
     fn test_today_initial_state() {
         let today = TodayState::new();
-        assert!(today.one_thing.is_some());
+        assert!(today.one_thing.is_none());
         assert_eq!(today.rings.len(), 3);
-        assert_eq!(today.streak.count, 14);
+        assert_eq!(today.streak.count, 0);
+
+        let demo = TodayState::demo_preview();
+        assert!(demo.one_thing.is_some());
+        assert_eq!(demo.streak.count, 14);
         assert_eq!(
-            today.future_self.target_identity_label,
+            demo.future_self.target_identity_label,
             "Dr. Logesh Karthik, MBBS 2027"
         );
     }

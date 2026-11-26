@@ -147,8 +147,8 @@ impl LiquidPalette {
             accent_active: Color::from_rgb(0.12, 0.48, 0.96),
             status_focus: Color::from_rgb(0.94, 0.55, 0.10),
             status_audio: Color::from_rgb(0.10, 0.72, 0.42),
-            text_primary: Color::from_rgb(0.06, 0.10, 0.20),
-            text_muted: Color::from_rgb(0.40, 0.48, 0.62),
+            text_primary: Color::from_rgb(0.04, 0.07, 0.14),
+            text_muted: Color::from_rgb(0.18, 0.25, 0.36),
         }
     }
 

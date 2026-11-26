@@ -38,6 +38,14 @@ static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(|| {
 pub struct OllamaEngine;
 
 impl OllamaEngine {
+    /// Checks if total system RAM is >= 3584 MB (~3.5 GB) before loading local models.
+    pub fn check_low_ram_guard() -> (bool, u64) {
+        let mut sys = sysinfo::System::new();
+        sys.refresh_memory();
+        let total_mb = sys.total_memory() / (1024 * 1024);
+        (total_mb >= 3584, total_mb)
+    }
+
     /// Queries GET http://{host_port}/api/tags to list installed models
     pub async fn list_models(host_port: &str) -> Result<Vec<String>, String> {
         let url = if host_port.starts_with("http://") || host_port.starts_with("https://") {

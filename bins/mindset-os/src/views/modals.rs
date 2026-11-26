@@ -194,7 +194,7 @@ fn render_system_menu<'a>(
             text(if core.preferences.focus_dnd {
                 "Focus DND"
             } else {
-                "Debian Edition"
+                "MindSet OS 1.1 • L.K.S"
             })
             .size(10)
             .color(palette.text_muted),
@@ -216,6 +216,10 @@ fn render_system_menu<'a>(
         menu_btn(
             "⚙️  System Preferences",
             Message::OpenWindow(WindowId::Settings)
+        ),
+        menu_btn(
+            "💿  Install MindSet OS 1.1 to Disk",
+            Message::InstallMindSetToDisk
         ),
         px_space(0.0, 2.0),
         menu_btn(

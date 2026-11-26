@@ -123,8 +123,8 @@ pub fn view<'a>(
     let logo_btn = button(
         row![
             logo_canvas,
-            px_space(6.0, 0.0),
-            text("MS OS")
+            px_space(8.0, 0.0),
+            text("MindSet OS")
                 .size(13)
                 .font(iced::font::Font {
                     weight: iced::font::Weight::Bold,

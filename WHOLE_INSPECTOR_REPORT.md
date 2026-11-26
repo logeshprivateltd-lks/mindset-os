@@ -1,8 +1,8 @@
 # 🔍 MindSet OS: Whole System Diagnostic & Architectural Verification Report
 
-**Inspection Timestamp:** `2026-11-26 09:04:17 UTC+0530`  
+**Inspection Timestamp:** `2026-11-26 12:03:21 UTC+0530`  
 **Workspace Root:** `.`  
-**Overall Readiness Score:** `91 / 100`  
+**Overall Readiness Score:** `86 / 100`  
 **Executive Verdict:** **`NON-CRITICAL WARNINGS (System Usable, Polish Recommended)`** (Exit Code `1`)
 
 ---
@@ -12,12 +12,12 @@
 | Capability Dimension | Score | Status | Description |
 | :--- | :---: | :---: | :--- |
 | **1. Standard OS Capability** | `75 / 100` | ⚠️ WARN | Shell, Window Dragging, Real File Vault, Audio, Wi-Fi, sysinfo |
-| **2. Bootable Debian 13 ISO Readiness** | `100 / 100` | ✅ PASS | live-build Trixie, Bare-Metal Firmware, FreeTube Hook, LF Scripts |
+| **2. Bootable Debian 13 ISO Readiness** | `85 / 100` | ✅ PASS | live-build Trixie, Bare-Metal Firmware, FreeTube Hook, LF Scripts |
 | **3. Student OS + Agentic AI Vision** | `97 / 100` | ✅ PASS | Proof-of-Study Boss (>=70), Permission Gate, Thanglish TTS, 3D Odyssey |
-| **Overall System Composite** | `91 / 100` | **`WARNINGS`** | Aggregated System Verification Score |
+| **Overall System Composite** | `86 / 100` | **`WARNINGS`** | Aggregated System Verification Score |
 
-**Feature Audit Counters:** Total Checked: `30` | Pass: `26` | Partial: `3` | Mock: `1` | Missing: `0`
-**Action Items in Queue:** Critical: `0` | High: `3` | Medium: `1` | Low: `0`
+**Feature Audit Counters:** Total Checked: `30` | Pass: `25` | Partial: `4` | Mock: `1` | Missing: `0`
+**Action Items in Queue:** Critical: `0` | High: `4` | Medium: `1` | Low: `0`
 
 ---
 
@@ -25,14 +25,14 @@
 
 ### Module 1: Filesystem, Assets & Codebase Hygiene
 
-**Module Score:** `100 / 100` — Audited 293 files (5070 KB, 76800 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.
+**Module Score:** `100 / 100` — Audited 295 files (5135 KB, 78560 Rust lines across 8 crates). Pure-Rust hygiene score: 100/100.
 
 **Key Metrics:**
 - **`crates_count`**: 8
-- **`rust_files`**: 195
-- **`rust_lines`**: 76800
-- **`total_bytes`**: 5070 KB
-- **`total_files`**: 293
+- **`rust_files`**: 200
+- **`rust_lines`**: 78560
+- **`total_bytes`**: 5135 KB
+- **`total_files`**: 295
 
 ### Module 2: Libraries, Dependencies, Build & Cross-Platform Health
 
@@ -51,10 +51,10 @@
 
 ### Module 4: Bootable Debian 13 ISO Creation Readiness Audit
 
-**Module Score:** `100 / 100` — Audited live-build auto/config, hardware firmware list, YouTube/FreeTube hooks, and script line endings. ISO score: 100/100.
+**Module Score:** `85 / 100` — Audited live-build auto/config, hardware firmware list, YouTube/FreeTube hooks, and script line endings. ISO score: 85/100.
 
 **Key Metrics:**
-- **`iso_readiness_score`**: 100
+- **`iso_readiness_score`**: 85
 
 ### Module 5: UI, Visual Design System & Multi-Language Audit
 
@@ -99,13 +99,13 @@
 | 11 | **Floating Window Manager & Shell Geometry** | `Normal OS` | ⚠️ PARTIAL | `bins/mindset-os/src/main.rs:832` | Window manager lacks full interactive dragging, resizing, or 3-zone top bar integration |
 | 12 | **Real Filesystem Navigation & File Vault** | `Normal OS` | 🎭 MOCK | `bins/mindset-os/src/apps/file_explorer.rs:303` | File Explorer appears to rely on static mock items rather than real std::fs directory reading |
 | 13 | **Academic Web & Video App Launchers** | `Normal OS` | ⚠️ PARTIAL | `bins/mindset-os/src/apps/browser.rs:63` | Incomplete real desktop app launch integration |
-| 14 | **Hardware Monitoring & Low-RAM Hygiene** | `Normal OS` | ✅ PASS | `bins/mindset-os/src/storage/db.rs:285 | crates/mindset-motion/src/lib.rs:71` | Live CPU/RAM sysinfo, volume controls, SQLite WAL mode + 2MB cache cap, and zero-idle 60 FPS spring rest guards |
+| 14 | **Hardware Monitoring & Low-RAM Hygiene** | `Normal OS` | ✅ PASS | `bins/mindset-os/src/storage/db.rs:310 | crates/mindset-motion/src/lib.rs:71` | Live CPU/RAM sysinfo, volume controls, SQLite WAL mode + 2MB cache cap, and zero-idle 60 FPS spring rest guards |
 | 15 | **Debian 13 (Trixie) Live-Build Hybrid ISO Config** | `ISO` | ✅ PASS | `iso-builder/auto/config:10` | Configured for Debian 13 Trixie amd64 with hybrid UEFI (grub-efi) + BIOS (syslinux) bootloaders |
 | 16 | **Bare-Metal PC Hardware Firmware & Package Manifest** | `ISO` | ✅ PASS | `iso-builder/config/package-lists/mindset.list.chroot:62` | Verified complete hardware stack: Intel/Realtek/Atheros Wi-Fi firmware, PipeWire audio, espeak-ng/piper TTS, Mesa/Vulkan, and Chromium |
-| 17 | **Pre-installed YouTube & FreeTube Integration** | `ISO` | ✅ PASS | `iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:36` | youtube.desktop present and FreeTube chroot hook includes essential chmod 4755 chrome-sandbox permission fix |
+| 17 | **Pre-installed YouTube & FreeTube Integration** | `ISO` | ⚠️ PARTIAL | `iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:25` | FreeTube installation hook missing or missing Electron chrome-sandbox setuid 4755 fix |
 | 18 | **Auto-Login Session & VM GPU Fallback Wrapper** | `ISO` | ✅ PASS | `iso-builder/config/includes.chroot/usr/local/bin/mindset-os-launch:85` | Fullscreen auto-login on tty1 into Openbox, with WGPU_BACKEND=gl & software rasterizer fallback for VirtualBox/VMware |
 | 19 | **Cross-OS Script Hygiene (Zero CRLF & Valid Shebangs)** | `ISO` | ✅ PASS | `iso-builder/build_mindset_iso.sh:1` | All build and live chroot scripts use standard Linux LF line endings and proper #!/bin/sh shebangs |
-| 20 | **Neumorphic & Claymorphic Spatial Theme Tokens** | `UI` | ✅ PASS | `bins/mindset-os/src/theme/mod.rs:288` | Centralized Neumorphism & Claymorphism tokens for soft specular highlights, dual-layer shadows, and frosted glass cards |
+| 20 | **Neumorphic & Claymorphic Spatial Theme Tokens** | `UI` | ✅ PASS | `bins/mindset-os/src/theme/mod.rs:289` | Centralized Neumorphism & Claymorphism tokens for soft specular highlights, dual-layer shadows, and frosted glass cards |
 | 21 | **Mock String Purge (Zero Placeholder Clutter)** | `UI` | ✅ PASS | `bins/mindset-os/src/shell/launcher.rs:420` | Zero static placeholder strings ('Bratislava', 'NASDAQ', 'Holiday Trip.jpg') found across active UI |
 | 22 | **Tunnel Vision Focus & Clean Side-Rail Restoration** | `UI` | ⚠️ PARTIAL | `bins/mindset-os/src/main.rs:150` | Tunnel vision toggle does not cleanly restore shell panels |
 | 23 | **Multi-Language (i18n) Dictionary Parity** | `UI` | ✅ PASS | `bins/mindset-os/src/i18n/en.json:1` | 100% parity across English, Tamil, and Malayalam (all 43 translation keys mapped) |
@@ -137,6 +137,11 @@
 - **Location:** `bins/mindset-os/src/shell/launcher.rs:1`
 - **Finding:** Incomplete real desktop app launch integration: student OS must focus exclusively on academic tools.
 - **Remediation:** Ensure launcher provides direct commands for Chromium, YouTube, and FreeTube, with no commercial entertainment apps.
+
+#### 4. Fix Electron chrome-sandbox setuid permission in FreeTube hook
+- **Location:** `iso-builder/config/hooks/live/0500-install-freetube.hook.chroot:25`
+- **Finding:** Electron desktop apps crash on Linux if chrome-sandbox lacks 4755 permissions.
+- **Remediation:** Ensure 0500-install-freetube.hook.chroot runs chmod 4755 on chrome-sandbox.
 
 ### ℹ️ MEDIUM (Architectural Hygiene & UX)
 

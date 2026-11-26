@@ -30,6 +30,7 @@ const DOCK_INNER_ICON_RADIUS: f32 = DOCK_OUTER_RADIUS - DOCK_SHELL_PADDING; // E
 pub fn view<'a>(
     core: &'a MindSetCoreState,
     dock_scales: &[f32],
+    hovered_index: Option<usize>,
     palette: ThemePalette,
     _neu: &NeuPalette,
 ) -> Element<'a, Message> {
@@ -160,11 +161,18 @@ pub fn view<'a>(
             Message::LaunchMindSetBrowser(None),
         ),
         (
-            WindowId::SearchBrowser,
+            WindowId::YouTubeStudy,
             "📺",
             Color::from_rgb(0.88, 0.20, 0.20),
             "YouTube Study",
-            Message::LaunchYouTubeApp,
+            Message::OpenWindow(WindowId::YouTubeStudy),
+        ),
+        (
+            WindowId::MindStore,
+            "🛍️",
+            Color::from_rgb(0.16, 0.62, 0.88),
+            "MindStore",
+            Message::OpenWindow(WindowId::MindStore),
         ),
         (
             WindowId::FileVault,
@@ -189,7 +197,7 @@ pub fn view<'a>(
         ),
     ];
 
-    for (idx_offset, (id, icon, badge_bg, _name, press_msg)) in apps.into_iter().enumerate() {
+    for (idx_offset, (id, icon, badge_bg, name, press_msg)) in apps.into_iter().enumerate() {
         // Subtle shelf divider before system utilities (Sys Monitor & Settings)
         if idx_offset == 9 {
             let util_divider = container(px_space(1.0, 22.0)).style(move |_t| container::Style {
@@ -243,7 +251,16 @@ pub fn view<'a>(
                 ..Default::default()
             });
 
-        let item_content = column![badge, indicator]
+        let tooltip: Element<'a, Message> = if hovered_index == Some(item_idx) {
+            container(text(name).size(10).color(palette.text_primary))
+                .padding([2, 8])
+                .style(move |_t| crate::theme::frosted_glass_style(palette, 8.0, true))
+                .into()
+        } else {
+            px_space(0.0, 0.0).into()
+        };
+
+        let item_content = column![tooltip, badge, indicator]
             .spacing(2)
             .align_x(Alignment::Center);
 
