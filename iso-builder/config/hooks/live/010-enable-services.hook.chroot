@@ -52,6 +52,16 @@ EOF
 echo "Asia/Kolkata" > /etc/timezone
 ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 
+# Generate en_US.UTF-8 locale cleanly so labwc, winit, and iced never hit missing-locale errors
+if [ -f /etc/locale.gen ]; then
+    sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+    locale-gen || true
+fi
+cat << 'EOF' > /etc/default/locale
+LANG=en_US.UTF-8
+LC_ALL=en_US.UTF-8
+EOF
+
 : > /etc/motd
 rm -f /etc/update-motd.d/* 2>/dev/null || true
 

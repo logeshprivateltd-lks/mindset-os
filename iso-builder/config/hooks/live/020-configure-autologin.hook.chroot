@@ -50,5 +50,6 @@ user = "live"
 EOF
 
 systemctl enable greetd.service 2>/dev/null || true
+systemctl mask getty@tty1.service 2>/dev/null || true
 
 echo "==> [MindSet Hook] 'live' Wayland autologin configured."

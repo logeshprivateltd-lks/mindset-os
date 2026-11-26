@@ -4,9 +4,20 @@
 # ==============================================================================
 set -e
 
+exec >> /tmp/mindset-session.log 2>&1
+echo "=== MindSet OS Session Start: $(date) ==="
+
+export USER="${USER:-$(id -un)}"
+export HOME="${HOME:-/home/$USER}"
+export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+mkdir -p "$XDG_RUNTIME_DIR"
+chmod 0700 "$XDG_RUNTIME_DIR"
+
 export XDG_SESSION_TYPE=wayland
-export XDG_CURRENT_DESKTOP=MindSetOS
+export XDG_CURRENT_DESKTOP=labwc
 export DESKTOP_SESSION=mindset-os
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 export MOZ_ENABLE_WAYLAND=1
 export QT_QPA_PLATFORM=wayland
 

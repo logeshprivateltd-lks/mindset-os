@@ -5,6 +5,7 @@
 
 # --- 1. Linux Kernel, Init & Live Boot ---
 linux-image-amd64
+locales
 live-boot
 live-config
 live-config-systemd
