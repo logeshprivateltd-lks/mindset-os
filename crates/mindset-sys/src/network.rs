@@ -297,6 +297,12 @@ impl NetworkManager {
             }
         }
 
+        // If online via Ethernet / LAN / Virtual NIC but Wi-Fi SSID wasn't detected
+        if is_online && connected_ssid.is_none() {
+            connected_ssid = Some("Ethernet / Wired Link".to_string());
+            signal_percent = 100;
+        }
+
         NetworkStatus {
             is_wifi_enabled,
             is_online,

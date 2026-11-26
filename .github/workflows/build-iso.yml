@@ -125,12 +125,15 @@ jobs:
           fi
 
           echo "=== Running Headless QEMU Smoke Boot Test ==="
-          KVM_FLAG=""
-          if [ -e /dev/kvm ]; then
-            KVM_FLAG="-enable-kvm"
+          ACCEL_FLAG="-machine accel=tcg"
+          if [ -e /dev/kvm ] && [ ! -w /dev/kvm ]; then
+            sudo chmod 666 /dev/kvm 2>/dev/null || true
+          fi
+          if [ -r /dev/kvm ] && [ -w /dev/kvm ]; then
+            ACCEL_FLAG="-machine accel=kvm:tcg"
           fi
           QEMU_RC=0
-          timeout 45s qemu-system-x86_64 $KVM_FLAG -m 2048 -smp 2 \
+          timeout 45s qemu-system-x86_64 $ACCEL_FLAG -m 2048 -smp 2 \
             -vga virtio -display none \
             -serial file:iso-builder/qemu-boot.log \
             -cdrom iso-builder/mindset-os-amd64.hybrid.iso || QEMU_RC=$?

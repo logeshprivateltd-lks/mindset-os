@@ -22,7 +22,8 @@ pub enum AgentPermissionDecision {
 
 /// Resolves an authorized student vault folder path safely.
 pub fn resolve_vault_path(relative_or_folder: &str) -> PathBuf {
-    let clean = relative_or_folder.trim().trim_start_matches('/');
+    let raw = relative_or_folder.trim();
+    let clean = raw.trim_start_matches(['/', '\\']);
     let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
     let vault_root = home.join("Study Capsules");
 
@@ -40,6 +41,12 @@ pub fn resolve_vault_path(relative_or_folder: &str) -> PathBuf {
 
     if clean == "Downloads" {
         return dirs::download_dir().unwrap_or_else(|| home.join("Downloads"));
+    }
+
+    // Preserve explicit absolute filesystem paths on Unix and Windows instead of stripping '/'
+    let raw_path = std::path::Path::new(raw);
+    if raw_path.is_absolute() {
+        return raw_path.to_path_buf();
     }
 
     // Check if relative to Study Capsules
@@ -203,13 +210,14 @@ mod tests {
     #[test]
     fn test_safe_read_document_file_size_cap() {
         let temp_dir = std::env::temp_dir();
-        let test_file = temp_dir.join("mindset_test_oversized.txt");
+        let test_file = temp_dir.join(format!("mindset_test_oversized_{}.txt", std::process::id()));
 
         // Write 25 KB of sample data (exceeding 16 KB / MAX_DOCUMENT_READ_BYTES)
         let sample_data = "A".repeat(25 * 1024);
-        let _ = fs::write(&test_file, &sample_data);
+        fs::write(&test_file, &sample_data).expect("write oversized test file");
 
-        let (content, is_truncated) = safe_read_document(test_file.to_str().unwrap()).unwrap();
+        let (content, is_truncated) =
+            safe_read_document(&test_file.to_string_lossy()).expect("safe_read_document");
         assert_eq!(content.len(), MAX_DOCUMENT_READ_BYTES);
         assert!(is_truncated);
 
@@ -221,5 +229,19 @@ mod tests {
         let resolved = resolve_vault_path("Formula Sheets");
         let path_str = resolved.to_string_lossy();
         assert!(path_str.contains("Formula Sheets"));
+
+        let leading_slash_vault = resolve_vault_path("/Formula Sheets");
+        assert_eq!(leading_slash_vault, resolved);
+
+        #[cfg(unix)]
+        {
+            let abs = resolve_vault_path("/tmp/mindset_abs_probe.txt");
+            assert_eq!(abs, PathBuf::from("/tmp/mindset_abs_probe.txt"));
+        }
+        #[cfg(windows)]
+        {
+            let abs = resolve_vault_path(r"C:\Temp\mindset_abs_probe.txt");
+            assert_eq!(abs, PathBuf::from(r"C:\Temp\mindset_abs_probe.txt"));
+        }
     }
 }
