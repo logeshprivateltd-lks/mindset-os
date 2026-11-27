@@ -2,8 +2,8 @@
 vt = 1
 
 [default_session]
-command = "agreety --cmd /usr/local/bin/mindset-session"
-user = "_greetd"
+command = "/usr/local/bin/mindset-session"
+user = "live"
 
 [initial_session]
 command = "/usr/local/bin/mindset-session"

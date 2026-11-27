@@ -1,36 +1,29 @@
 #!/bin/sh
 # ==============================================================================
 # MindSet OS Live Hook: 030-branding-grub.hook.binary
-# Brands GRUB UEFI/BIOS and ISOLINUX/SYSLINUX boot entries as MindSet OS.
+# Brands all GRUB UEFI/BIOS and ISOLINUX/SYSLINUX boot entries as MindSet OS
+# and enforces fast 2-second boot timeout.
 # ==============================================================================
 set -e
 
 echo "==> [MindSet Hook] Applying MindSet OS GRUB & SYSLINUX boot branding..."
 
-for cfg in binary/boot/grub/grub.cfg binary/EFI/BOOT/grub.cfg binary/boot/grub/loopback.cfg; do
-    if [ -f "$cfg" ]; then
+if [ -d binary ]; then
+    find binary -type f \( -name "*.cfg" -o -name "*.txt" \) | while IFS= read -r cfg; do
         echo "--> Branding $cfg"
-        sed -i 's/Debian GNU\/Linux/MindSet OS 1.1 (By L.K.S)/g' "$cfg"
-        sed -i 's/Live system (amd64)/MindSet OS 1.1 — Boot Deep Focus (amd64)/g' "$cfg"
-        sed -i 's/Live system/MindSet OS 1.1 — Boot Deep Focus/g' "$cfg"
-        sed -i 's/Debian/MindSet OS 1.1/g' "$cfg"
-    fi
-done
+        sed -i 's/Debian GNU\/Linux/MindSet OS 1.1 (By L.K.S)/g' "$cfg" || true
+        sed -i 's/Live system (amd64)/MindSet OS 1.1 — Boot Deep Focus (amd64)/g' "$cfg" || true
+        sed -i 's/Live system/MindSet OS 1.1 — Boot Deep Focus/g' "$cfg" || true
+        sed -i 's/Debian/MindSet OS 1.1/g' "$cfg" || true
+        sed -i 's/^set timeout=.*/set timeout=2/' "$cfg" || true
+        sed -i 's/^timeout .*/timeout 20/' "$cfg" || true
+        sed -i 's/^menu title.*/menu title MindSet OS 1.1 — Made by L.K.S Company/' "$cfg" || true
+        sed -i 's/^menu color sel.*/menu color sel 7;37;40 #ffffffff #ff1e40af all/' "$cfg" || true
+        sed -i 's/^menu color unsel.*/menu color unsel 37;44 #ffcbd5e1 #ff0b1120 all/' "$cfg" || true
+        sed -i 's/^menu color title.*/menu color title 1;36;44 #ff38bdf8 #ff0b1120 all/' "$cfg" || true
+    done
+fi
 
-for cfg in binary/isolinux/*.cfg binary/syslinux/*.cfg; do
-    if [ -f "$cfg" ]; then
-        echo "--> Branding $cfg"
-        sed -i 's/Debian GNU\/Linux/MindSet OS 1.1 (By L.K.S)/g' "$cfg"
-        sed -i 's/Live system/MindSet OS 1.1 — Boot Deep Focus/g' "$cfg"
-        sed -i 's/Debian/MindSet OS 1.1/g' "$cfg"
-        sed -i 's/^menu title.*/menu title MindSet OS 1.1 — Made by L.K.S Company/' "$cfg"
-        sed -i 's/^menu color sel.*/menu color sel 7;37;40 #ffffffff #ff1e40af all/' "$cfg"
-        sed -i 's/^menu color unsel.*/menu color unsel 37;44 #ffcbd5e1 #ff0b1120 all/' "$cfg"
-        sed -i 's/^menu color title.*/menu color title 1;36;44 #ff38bdf8 #ff0b1120 all/' "$cfg"
-    fi
-done
-
-# Provide splash image if present in chroot assets
 if [ -f chroot/usr/share/mindset-os/wallpaper.jpg ]; then
     mkdir -p binary/boot/grub
     cp -f chroot/usr/share/mindset-os/wallpaper.jpg binary/boot/grub/splash.jpg 2>/dev/null || true

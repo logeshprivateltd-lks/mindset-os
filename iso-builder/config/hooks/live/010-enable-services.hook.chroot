@@ -1,14 +1,13 @@
 #!/bin/sh
 # ==============================================================================
 # MindSet OS Live Hook: 010-enable-services.hook.chroot
-# Enables NetworkManager, seatd, bluetooth, greetd; sets managed=true;
-# brands /etc/os-release as MindSet OS (Debian 13 Derivative).
+# Enables NetworkManager, seatd, bluetooth, greetd, mindset-persist-init;
+# configures locale, timezone, fonts, and session binary permissions.
 # ==============================================================================
 set -e
 
 echo "==> [MindSet Hook] Enabling core Linux desktop services..."
 
-# 1. Configure NetworkManager managed interfaces
 mkdir -p /etc/NetworkManager
 cat << 'EOF' > /etc/NetworkManager/NetworkManager.conf
 [main]
@@ -21,12 +20,10 @@ managed=true
 wifi.scan-rand-mac-address=no
 EOF
 
-# Create systemd multi-user / graphical wants symlinks cleanly inside offline chroot
-for svc in NetworkManager.service seatd.service bluetooth.service greetd.service; do
+for svc in NetworkManager.service seatd.service bluetooth.service greetd.service mindset-persist-init.service qemu-guest-agent.service; do
     systemctl enable "${svc}" 2>/dev/null || true
 done
 
-# 2. Brand OS Identification (/etc/os-release + /etc/issue + hostname + IST timezone + clear Debian MOTD)
 cat << 'EOF' > /etc/os-release
 PRETTY_NAME="MindSet OS 1.1 (by L.K.S)"
 NAME="MindSet OS"
@@ -52,7 +49,6 @@ EOF
 echo "Asia/Kolkata" > /etc/timezone
 ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
 
-# Generate en_US.UTF-8 locale cleanly so labwc, winit, and iced never hit missing-locale errors
 if [ -f /etc/locale.gen ]; then
     sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
     locale-gen || true
@@ -65,17 +61,18 @@ EOF
 : > /etc/motd
 rm -f /etc/update-motd.d/* 2>/dev/null || true
 
-# 3. Refresh system font caches (Inter, Noto Sans, Tamil, Malayalam, Color Emoji)
 if command -v fc-cache >/dev/null 2>&1; then
     fc-cache -f || true
 fi
 
-# 4. Ensure executable permissions on session binaries and hooks
 chmod +x /usr/local/bin/mindset-shell 2>/dev/null || true
 chmod +x /usr/local/bin/mindset-os 2>/dev/null || true
 chmod +x /usr/local/bin/mindset-session 2>/dev/null || true
+chmod +x /usr/local/bin/mindset-x11-session 2>/dev/null || true
 chmod +x /usr/local/bin/mindset-os-launch 2>/dev/null || true
+chmod +x /usr/local/bin/mindset-persist-init 2>/dev/null || true
 chmod +x /usr/local/bin/mindset-browser 2>/dev/null || true
+chmod +x /usr/local/bin/mindset-setup-ollama 2>/dev/null || true
 chmod +x /opt/mindset-os/bin/mindset-os 2>/dev/null || true
 
 echo "==> [MindSet Hook] Services and OS branding enabled cleanly."

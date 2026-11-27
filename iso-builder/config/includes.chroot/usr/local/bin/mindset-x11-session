@@ -1,0 +1,25 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS — X11 Safe Mode Fallback Session (for nomodeset / restricted VMs)
+# ==============================================================================
+export XDG_SESSION_TYPE=x11
+export WINIT_UNIX_BACKEND=x11
+export WGPU_BACKEND=gl
+export LIBGL_ALWAYS_SOFTWARE=1
+export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+export LP_NUM_THREADS=2
+export MINDSET_LOW_OVERHEAD=1
+
+if command -v pipewire >/dev/null 2>&1 && ! pgrep -x pipewire >/dev/null 2>&1; then
+    pipewire >/tmp/pipewire.log 2>&1 &
+    sleep 0.2
+    command -v wireplumber >/dev/null 2>&1 && wireplumber >/tmp/wireplumber.log 2>&1 &
+    command -v pipewire-pulse >/dev/null 2>&1 && pipewire-pulse >/tmp/pipewire-pulse.log 2>&1 &
+fi
+
+if command -v openbox >/dev/null 2>&1; then
+    openbox >/tmp/openbox.log 2>&1 &
+    sleep 0.3
+fi
+
+exec /usr/local/bin/mindset-os-launch

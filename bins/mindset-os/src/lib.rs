@@ -2469,7 +2469,12 @@ impl MindSetApp {
                 }
             }
             Message::BootSplashTick => {
-                let finished = self.boot_splash.update(0.033);
+                let dt = if std::env::var("MINDSET_LOW_OVERHEAD").ok().as_deref() == Some("1") {
+                    0.045
+                } else {
+                    0.033
+                };
+                let finished = self.boot_splash.update(dt);
                 if finished && self.profile.onboarding_completed {
                     self.core.toast_queue.push(
                         format!("Welcome back, {}!", self.profile.name),
@@ -4803,18 +4808,25 @@ impl MindSetApp {
             event::listen().map(Message::EventOccurred),
         ];
 
-        // 30 FPS (~33 ms) Liquidmorphic boot animation timer (only while boot splash is active)
+        let low_overhead = std::env::var("MINDSET_LOW_OVERHEAD").ok().as_deref() == Some("1");
+
+        // Liquidmorphic boot animation timer (only while boot splash is active)
         if self.boot_splash.is_active {
+            let boot_ms = if low_overhead { 45 } else { 33 };
             subs.push(
-                iced::time::every(Duration::from_millis(33)).map(|_| Message::BootSplashTick),
+                iced::time::every(Duration::from_millis(boot_ms)).map(|_| Message::BootSplashTick),
             );
         }
 
-        // 18 FPS (~55 ms) mild ambient motion for 3D Odyssey path (fireflies & breathing ring)
-        // Completely paused when Eco Static mode is selected or during Tunnel Vision
-        if self.profile.mild_motion_enabled && !self.tunnel_vision_active {
+        // 18 FPS (~55 ms) mild ambient motion for 3D Odyssey path ONLY when the Odyssey map
+        // is actually visible on screen, preventing background CPU burn in VMs at idle.
+        let odyssey_visible = self.core.wm.widget_layout.free_placement
+            || self.core.wm.is_open(WindowId::OdysseyMap)
+            || self.core.wm.active_overlay == ActiveOverlay::OdysseyMap;
+        if self.profile.mild_motion_enabled && !self.tunnel_vision_active && odyssey_visible {
+            let map_ms = if low_overhead { 75 } else { 55 };
             subs.push(
-                iced::time::every(Duration::from_millis(55)).map(|_| Message::MapAmbientTick),
+                iced::time::every(Duration::from_millis(map_ms)).map(|_| Message::MapAmbientTick),
             );
         }
 

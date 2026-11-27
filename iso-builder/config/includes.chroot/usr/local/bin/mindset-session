@@ -1,14 +1,22 @@
 #!/bin/sh
 # ==============================================================================
-# MindSet OS — Wayland Session Entrypoint (labwc + mindset-shell)
+# MindSet OS — Wayland Session Entrypoint (labwc + automatic X11/TTY fallback)
 # ==============================================================================
-set -e
+# Designed to never drop silently to a black screen:
+# - Preserves original TTY FD (3/4) so boot/compositor errors display automatically
+# - Cleans stale sockets/locks after unclean power-off
+# - Uses WLR_DRM_NO_ATOMIC=1 + pixman in VMs to prevent VirtualBox black screens
+# - Automatically falls back to X11 (xinit + openbox) if Wayland/DRM is unavailable
+# - Renders a clear interactive diagnostic recovery screen on TTY1 on failure
+# ==============================================================================
 
+exec 3>&1 4>&2
 exec >> /tmp/mindset-session.log 2>&1
 echo "=== MindSet OS Session Start: $(date) ==="
 
 export USER="${USER:-$(id -un)}"
 export HOME="${HOME:-/home/$USER}"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 export XDG_RUNTIME_DIR="/run/user/$(id -u)"
 mkdir -p "$XDG_RUNTIME_DIR"
 chmod 0700 "$XDG_RUNTIME_DIR"
@@ -21,6 +29,10 @@ export LC_ALL=en_US.UTF-8
 export MOZ_ENABLE_WAYLAND=1
 export QT_QPA_PLATFORM=wayland
 
+# Clean stale runtime locks/sockets from previous abrupt power-off
+rm -f "$XDG_RUNTIME_DIR"/wayland-* "$XDG_RUNTIME_DIR"/*.lock \
+    /tmp/.X0-lock /tmp/.X11-unix/X0 2>/dev/null || true
+
 # Seed user labwc configuration cleanly on first session boot
 LABWC_CFG="$HOME/.config/mindset-os/labwc"
 if [ ! -d "$LABWC_CFG" ] && [ -d "/etc/skel/.config/mindset-os/labwc" ]; then
@@ -29,7 +41,7 @@ if [ ! -d "$LABWC_CFG" ] && [ -d "/etc/skel/.config/mindset-os/labwc" ]; then
     chmod +x "$LABWC_CFG/autostart" 2>/dev/null || true
 fi
 
-# Inside VirtualBox/QEMU/VMware, force Pixman software rendering immediately so vmwgfx/EGL never stalls
+# Detect virtualization and apply crash-proof VM graphics flags
 VIRT_ENV="none"
 if command -v systemd-detect-virt >/dev/null 2>&1; then
     VIRT_ENV="$(systemd-detect-virt || echo none)"
@@ -37,22 +49,127 @@ fi
 
 if [ "$VIRT_ENV" != "none" ]; then
     export WLR_NO_HARDWARE_CURSORS=1
+    export WLR_DRM_NO_ATOMIC=1
     export WLR_RENDERER=pixman
     export WLR_RENDERER_ALLOW_SOFTWARE=1
     export WGPU_BACKEND=gl
     export LIBGL_ALWAYS_SOFTWARE=1
+    export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+    export LP_NUM_THREADS=2
+    export MINDSET_LOW_OVERHEAD=1
 fi
 
 # Ensure XDG user dirs & writable MindSet data directories exist
-mkdir -p "$HOME/.local/share/mindset-os/vault" "$HOME/.local/share/mindset-os/capsules"
+mkdir -p "$HOME/.local/share/mindset-os/vault" "$HOME/.local/share/mindset-os/capsules" "$HOME/.mindset_data"
 if command -v xdg-user-dirs-update >/dev/null 2>&1; then
     xdg-user-dirs-update || true
 fi
 
-if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
-    exec labwc -C "$LABWC_CFG"
-elif command -v dbus-run-session >/dev/null 2>&1; then
-    exec dbus-run-session -- labwc -C "$LABWC_CFG"
-else
-    exec labwc -C "$LABWC_CFG"
+# Wait briefly for seatd & DRM framebuffer readiness after early boot
+i=0
+while [ "$i" -lt 20 ]; do
+    if [ -S /run/seatd.sock ] || [ -e /dev/dri/card0 ]; then
+        break
+    fi
+    sleep 0.2
+    i=$((i + 1))
+done
+
+# Release Plymouth boot splash cleanly so DRM master is handed over to the compositor
+if command -v plymouth >/dev/null 2>&1; then
+    plymouth quit >/dev/null 2>&1 || true
 fi
+
+show_diagnostic_screen() {
+    REASON="$1"
+    if command -v plymouth >/dev/null 2>&1; then
+        plymouth quit >/dev/null 2>&1 || true
+    fi
+    {
+        printf '\033[2J\033[H'
+        echo "========================================================================"
+        echo "  MindSet OS 1.1 — Automatic Boot & Graphics Recovery Console"
+        echo "========================================================================"
+        echo "  Reason         : $REASON"
+        echo "  Virtualization : $VIRT_ENV"
+        echo "  DRM Devices    : $(ls /dev/dri/ 2>/dev/null | tr '\n' ' ' || echo 'none')"
+        echo "  Kernel Args    : $(cat /proc/cmdline 2>/dev/null || echo 'unknown')"
+        echo "------------------------------------------------------------------------"
+        echo "  Last Session Log (/tmp/mindset-session.log):"
+        tail -n 12 /tmp/mindset-session.log 2>/dev/null || true
+        echo "------------------------------------------------------------------------"
+        echo "  Last Shell Log (/tmp/mindset-shell.log):"
+        tail -n 12 /tmp/mindset-shell.log 2>/dev/null || true
+        echo "========================================================================"
+        echo "  [Enter] Retry Desktop   |   [X] X11 Safe Mode   |   [S] Recovery Shell"
+        echo "  Auto-retrying in 8 seconds..."
+        echo "========================================================================"
+    } >&3 2>/dev/null || true
+
+    CHOICE=""
+    read -r -t 8 CHOICE <&0 2>/dev/null || true
+    case "$CHOICE" in
+        x|X)
+            return 2
+            ;;
+        s|S)
+            echo "[Recovery] Opening interactive bash shell..." >&3 2>/dev/null || true
+            exec /bin/bash -l <&0 >&3 2>&4
+            ;;
+        *)
+            return 0
+            ;;
+    esac
+}
+
+run_wayland() {
+    if [ -n "${DBUS_SESSION_BUS_ADDRESS:-}" ]; then
+        labwc -C "$LABWC_CFG"
+    elif command -v dbus-run-session >/dev/null 2>&1; then
+        dbus-run-session -- labwc -C "$LABWC_CFG"
+    else
+        labwc -C "$LABWC_CFG"
+    fi
+}
+
+run_x11_fallback() {
+    echo "[Fallback] Launching X11 Safe Graphics Mode..."
+    export XDG_SESSION_TYPE=x11
+    export WINIT_UNIX_BACKEND=x11
+    export WGPU_BACKEND=gl
+    export LIBGL_ALWAYS_SOFTWARE=1
+    export MESA_LOADER_DRIVER_OVERRIDE=llvmpipe
+    export MINDSET_LOW_OVERHEAD=1
+    VT_NUM="${XDG_VTNR:-1}"
+    if command -v xinit >/dev/null 2>&1 && [ -x /usr/local/bin/mindset-x11-session ]; then
+        xinit /usr/local/bin/mindset-x11-session -- :0 "vt${VT_NUM}" -nolisten tcp
+        return $?
+    fi
+    return 1
+}
+
+while true; do
+    SESSION_RC=0
+    if [ -e /dev/dri/card0 ] && ! grep -qw "nomodeset" /proc/cmdline 2>/dev/null; then
+        echo "[Session] Starting labwc Wayland session..."
+        run_wayland || SESSION_RC=$?
+        if [ "$SESSION_RC" -eq 0 ]; then
+            exit 0
+        fi
+        echo "[Session WARNING] labwc exited with status $SESSION_RC, attempting X11 fallback..."
+    else
+        echo "[Session] No DRM KMS card or nomodeset active -> starting X11 Safe Mode..."
+    fi
+
+    X11_RC=0
+    run_x11_fallback || X11_RC=$?
+    if [ "$X11_RC" -eq 0 ]; then
+        exit 0
+    fi
+
+    show_diagnostic_screen "Wayland ($SESSION_RC) and X11 fallback ($X11_RC) failed to start"
+    ACTION_RC=$?
+    if [ "$ACTION_RC" -eq 2 ]; then
+        run_x11_fallback || true
+    fi
+done

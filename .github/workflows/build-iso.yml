@@ -101,7 +101,7 @@ jobs:
               # Reclaim ~4 GB of target/ intermediate objects before live-build chroot & squashfs
               rm -rf /workspace/target
 
-              find iso-builder -type f \( -name "*.sh" -o -name "*.hook.*" -o -path "*/auto/*" -o -name "mindset-session" -o -name "mindset-os-launch" -o -name "mindset-browser" -o -name "mindset-setup-ollama" -o -name "autostart" \) -exec dos2unix -q {} +
+              find iso-builder -type f \( -name "*.sh" -o -name "*.hook.*" -o -path "*/auto/*" -o -name "mindset-session" -o -name "mindset-x11-session" -o -name "mindset-os-launch" -o -name "mindset-persist-init" -o -name "mindset-browser" -o -name "mindset-setup-ollama" -o -name "autostart" -o -name "*.script" -o -name "*.plymouth" -o -name "*.service" -o -name "*.conf" \) -exec dos2unix -q {} +
               cd iso-builder
               chmod +x build-iso.sh build_mindset_iso.sh auto/* config/hooks/live/*
               ./build-iso.sh

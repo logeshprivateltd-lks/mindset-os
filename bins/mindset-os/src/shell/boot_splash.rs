@@ -1,9 +1,9 @@
-//! Liquidmorphism "HELLO ACHIEVER" Boot Sequence for MindSet OS
+//! Windows-Style Animated Emblem + Liquidmorphism "HELLO ACHIEVER" Boot Sequence
 //!
-//! Renders an ultra-smooth, full-screen Liquidmorphic intro canvas featuring
-//! morphing translucent glass blobs and auroras driven by spring physics and
-//! sine phase waves. Runs for ~2.8 seconds, then transitions cleanly to first-boot
-//! onboarding or the desktop, with strictly 0% idle CPU once completed.
+//! Continues seamlessly from the early Plymouth boot splash into the Pure-Rust
+//! desktop shell: renders the glowing MindSet OS 'MS' emblem, a smooth orbital
+//! loading ring, and a sleek progress bar before transitioning to onboarding or
+//! the active workspace with 0% idle CPU once finished.
 
 use iced::mouse;
 use iced::widget::canvas::{self, Action, Cache, Geometry, Path, Program, Stroke, Text};
@@ -38,7 +38,7 @@ impl BootSplashState {
             is_finished: false,
             elapsed: 0.0,
             duration_secs: BOOT_DURATION_SECS,
-            scale_spring: Spring1D::with_preset(0.85, SpringPreset::FluidPanel),
+            scale_spring: Spring1D::with_preset(0.88, SpringPreset::FluidPanel),
             opacity_spring: Spring1D::with_preset(0.0, SpringPreset::SnappyMicro),
             cache: Cache::new(),
         }
@@ -54,7 +54,6 @@ impl BootSplashState {
         self.elapsed += dt;
         self.cache.clear();
 
-        // Target springs: scale to 1.0, opacity to 1.0
         self.scale_spring.set_target(1.0);
         self.scale_spring.update(dt);
 
@@ -121,6 +120,8 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
         bounds: Rectangle,
         _cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
+        let low_overhead = std::env::var("MINDSET_LOW_OVERHEAD").ok().as_deref() == Some("1");
+
         let geom = self.state.cache.draw(renderer, bounds.size(), |frame| {
             let w = bounds.width;
             let h = bounds.height;
@@ -131,183 +132,195 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
             let alpha = self.state.opacity_spring.position.clamp(0.0, 1.0);
             let scale = self.state.scale_spring.position.clamp(0.5, 1.25);
 
-            // 1. Deep Futuristic Liquid Canvas Background (#0B0D14)
+            // 1. Deep Obsidian Canvas Background matching Plymouth early boot splash
             let bg_rect = Path::rectangle(Point::ORIGIN, Size::new(w, h));
-            frame.fill(&bg_rect, Color::from_rgb(0.043, 0.051, 0.078));
+            frame.fill(&bg_rect, Color::from_rgb(0.035, 0.043, 0.068));
 
-            // 2. Liquidmorphism Morphing Glass Auroras (Sine Phase Waves)
-            // 5 organic fluid blobs drifting and breathing
+            // 2. Ambient radial aurora halos (lightweight in VM low-overhead mode)
+            let halo_layers = if low_overhead { 1 } else { 2 };
             let auroras = [
-                // (base_x, base_y, radius, speed_x, speed_y, phase_x, phase_y, r, g, b, base_alpha)
-                (
-                    0.32, 0.38, 190.0, 1.1, 0.85, 0.0, 1.2, 0.20, 0.75, 0.95, 0.22,
-                ), // Cyan Aqua
-                (
-                    0.68, 0.42, 220.0, 0.9, 1.25, 1.8, 0.5, 0.56, 0.48, 1.00, 0.26,
-                ), // Lavender Indigo
-                (
-                    0.50, 0.68, 180.0, 1.3, 0.75, 3.1, 2.4, 1.00, 0.42, 0.60, 0.18,
-                ), // Coral Rose
-                (
-                    0.22, 0.65, 160.0, 0.8, 1.10, 2.2, 3.8, 0.18, 0.88, 0.68, 0.16,
-                ), // Emerald Mint
-                (
-                    0.76, 0.26, 170.0, 1.0, 0.90, 4.0, 1.7, 0.42, 0.36, 0.96, 0.20,
-                ), // Electric Violet
+                (0.35, 0.38, 220.0, 0.16, 0.65, 0.96, 0.10),
+                (0.66, 0.56, 240.0, 0.44, 0.36, 0.96, 0.11),
             ];
-
-            for (bx, by, rad, sx, sy, px, py, red, green, blue, base_a) in auroras {
-                let wave_x = (t * sx + px).sin() * 75.0 + (t * 0.5 * sx).cos() * 30.0;
-                let wave_y = (t * sy + py).cos() * 65.0 + (t * 0.4 * sy).sin() * 25.0;
-                let wave_r = rad + (t * 2.2 + px).sin() * 32.0;
-
-                let blob_cx = w * bx + wave_x;
-                let blob_cy = h * by + wave_y;
-
-                // Layered radial diffusion paths
-                for layer in 0..3 {
-                    let layer_factor = 1.0 + (layer as f32) * 0.45;
-                    let layer_alpha = base_a / ((layer + 1) as f32 * 1.35) * alpha;
-                    let circle = Path::circle(
-                        Point::new(blob_cx, blob_cy),
-                        (wave_r * layer_factor).max(10.0),
-                    );
+            for (bx, by, rad, red, green, blue, base_a) in auroras {
+                let bx_px = w * bx + (t * 0.9).sin() * 24.0;
+                let by_px = h * by + (t * 0.7).cos() * 18.0;
+                for layer in 0..halo_layers {
+                    let factor = 1.0 + (layer as f32) * 0.5;
+                    let la = (base_a / ((layer + 1) as f32)) * alpha;
                     frame.fill(
-                        &circle,
-                        Color::from_rgba(red, green, blue, layer_alpha.clamp(0.0, 1.0)),
+                        &Path::circle(Point::new(bx_px, by_px), rad * factor),
+                        Color::from_rgba(red, green, blue, la.clamp(0.0, 1.0)),
                     );
                 }
             }
 
-            // 3. Central Liquidmorphic Frosted Glass Plate
-            let card_w = 600.0 * scale;
-            let card_h = 340.0 * scale;
-            let card_x = cx - card_w * 0.5;
-            let card_y = cy - card_h * 0.5;
+            // 3. Central Windows-Style MindSet OS Squircle Emblem
+            let emblem_size = 104.0 * scale;
+            let emblem_x = cx - emblem_size * 0.5;
+            let emblem_y = cy - 118.0 * scale;
 
-            // Outer soft atmospheric glow
-            let glow_rect = Path::rounded_rectangle(
-                Point::new(card_x - 16.0, card_y - 16.0),
-                Size::new(card_w + 32.0, card_h + 32.0),
-                Radius::from(36.0 * scale),
+            // Soft outer halo behind emblem
+            frame.fill(
+                &Path::rounded_rectangle(
+                    Point::new(emblem_x - 10.0, emblem_y - 10.0),
+                    Size::new(emblem_size + 20.0, emblem_size + 20.0),
+                    Radius::from(32.0 * scale),
+                ),
+                Color::from_rgba(0.22, 0.54, 0.98, 0.16 * alpha),
+            );
+
+            let emblem_rect = Path::rounded_rectangle(
+                Point::new(emblem_x, emblem_y),
+                Size::new(emblem_size, emblem_size),
+                Radius::from(26.0 * scale),
             );
             frame.fill(
-                &glow_rect,
-                Color::from_rgba(0.357, 0.322, 0.941, 0.12 * alpha),
-            );
-
-            // Frosted translucent plate
-            let plate_rect = Path::rounded_rectangle(
-                Point::new(card_x, card_y),
-                Size::new(card_w, card_h),
-                Radius::from(28.0 * scale),
-            );
-            frame.fill(
-                &plate_rect,
-                Color::from_rgba(0.082, 0.098, 0.137, 0.88 * alpha),
-            );
-
-            // Specular perimeter highlight rim
-            frame.stroke(
-                &plate_rect,
-                Stroke::default()
-                    .with_color(Color::from_rgba(1.0, 1.0, 1.0, 0.22 * alpha))
-                    .with_width(1.5),
-            );
-
-            // 4. Sleek "MS" Monogram Orb
-            let orb_radius = 38.0 * scale;
-            let orb_cy = card_y + 70.0 * scale;
-            let orb_center = Point::new(cx, orb_cy);
-
-            // Monogram outer pulse ring
-            let pulse_r = orb_radius + 6.0 + (t * 4.0).sin() * 3.5;
-            let pulse_ring = Path::circle(orb_center, pulse_r);
-            frame.stroke(
-                &pulse_ring,
-                Stroke::default()
-                    .with_color(Color::from_rgba(0.56, 0.48, 1.0, 0.45 * alpha))
-                    .with_width(1.5),
-            );
-
-            // Monogram core orb
-            let orb_path = Path::circle(orb_center, orb_radius);
-            frame.fill(
-                &orb_path,
-                Color::from_rgba(0.357, 0.322, 0.941, 0.85 * alpha),
+                &emblem_rect,
+                Color::from_rgba(0.075, 0.095, 0.165, 0.96 * alpha),
             );
             frame.stroke(
-                &orb_path,
+                &emblem_rect,
                 Stroke::default()
-                    .with_color(Color::from_rgba(1.0, 1.0, 1.0, 0.65 * alpha))
-                    .with_width(2.0),
+                    .with_color(Color::from_rgba(0.55, 0.82, 1.0, 0.45 * alpha))
+                    .with_width(1.8),
             );
 
-            // "MS" Text in Monogram
-            frame.fill_text(Text {
-                content: "MS".to_string(),
-                position: Point::new(cx, orb_cy),
-                color: Color::from_rgba(1.0, 1.0, 1.0, alpha),
-                size: iced::Pixels(24.0 * scale),
-                align_x: alignment::Horizontal::Center.into(),
-                align_y: alignment::Vertical::Center,
-                ..Default::default()
+            // Crisp Geometric 'MS' Monogram inside the Emblem
+            let m_left = cx - 28.0 * scale;
+            let m_mid = cx - 15.0 * scale;
+            let m_right = cx - 2.0 * scale;
+            let mono_top = emblem_y + 34.0 * scale;
+            let mono_bot = emblem_y + 70.0 * scale;
+            let m_dip = emblem_y + 56.0 * scale;
+
+            let m_path = Path::new(|b| {
+                b.move_to(Point::new(m_left, mono_bot));
+                b.line_to(Point::new(m_left, mono_top));
+                b.line_to(Point::new(m_mid, m_dip));
+                b.line_to(Point::new(m_right, mono_top));
+                b.line_to(Point::new(m_right, mono_bot));
             });
+            frame.stroke(
+                &m_path,
+                Stroke::default()
+                    .with_color(Color::from_rgba(0.96, 0.98, 1.0, alpha))
+                    .with_width(4.2 * scale),
+            );
 
-            // 5. Hero Typography: "HELLO ACHIEVER"
-            let hero_y = card_y + 155.0 * scale;
+            let s_left = cx + 8.0 * scale;
+            let s_right = cx + 28.0 * scale;
+            let s_mid = emblem_y + 52.0 * scale;
+            let s_path = Path::new(|b| {
+                b.move_to(Point::new(s_right, mono_top + 4.0 * scale));
+                b.line_to(Point::new(s_right, mono_top));
+                b.line_to(Point::new(s_left, mono_top));
+                b.line_to(Point::new(s_left, s_mid - 2.0 * scale));
+                b.line_to(Point::new(s_right, s_mid + 2.0 * scale));
+                b.line_to(Point::new(s_right, mono_bot));
+                b.line_to(Point::new(s_left, mono_bot));
+                b.line_to(Point::new(s_left, mono_bot - 4.0 * scale));
+            });
+            frame.stroke(
+                &s_path,
+                Stroke::default()
+                    .with_color(Color::from_rgba(0.12, 0.86, 0.72, alpha))
+                    .with_width(4.2 * scale),
+            );
+            frame.fill(
+                &Path::circle(Point::new((s_left + s_right) * 0.5, mono_top), 3.2 * scale),
+                Color::from_rgba(0.25, 0.94, 1.0, alpha),
+            );
+
+            // 4. Windows-Style Rotating Orbital Loading Ring below Emblem
+            let spin_cy = emblem_y + emblem_size + 42.0 * scale;
+            let spin_center = Point::new(cx, spin_cy);
+            let spin_r = 16.0 * scale;
+
+            // Subtle circular track
+            frame.stroke(
+                &Path::circle(spin_center, spin_r),
+                Stroke::default()
+                    .with_color(Color::from_rgba(1.0, 1.0, 1.0, 0.08 * alpha))
+                    .with_width(2.5),
+            );
+
+            // Smooth trailing orbital dots/arc rotating at ~4.4 rad/s
+            let base_angle = t * 4.4;
+            let seg_count = 10usize;
+            for idx in 0..seg_count {
+                let frac = idx as f32 / seg_count as f32;
+                let a0 = base_angle - frac * 3.6;
+                let a1 = a0 + 0.34;
+                let fade = (1.0 - frac).powf(1.5) * alpha;
+                let p0 = Point::new(
+                    spin_center.x + spin_r * a0.cos(),
+                    spin_center.y + spin_r * a0.sin(),
+                );
+                let p1 = Point::new(
+                    spin_center.x + spin_r * a1.cos(),
+                    spin_center.y + spin_r * a1.sin(),
+                );
+                let seg_path = Path::line(p0, p1);
+                frame.stroke(
+                    &seg_path,
+                    Stroke::default()
+                        .with_color(Color::from_rgba(0.28, 0.82, 1.0, fade.clamp(0.0, 1.0)))
+                        .with_width(2.8 * scale),
+                );
+            }
+
+            // 5. Hero Typography & Subtitle
+            let hero_y = spin_cy + 46.0 * scale;
             frame.fill_text(Text {
                 content: "HELLO ACHIEVER".to_string(),
                 position: Point::new(cx, hero_y),
-                color: Color::from_rgba(1.0, 1.0, 1.0, 0.98 * alpha),
-                size: iced::Pixels(30.0 * scale),
+                color: Color::from_rgba(0.97, 0.98, 1.0, 0.96 * alpha),
+                size: iced::Pixels(26.0 * scale),
                 align_x: alignment::Horizontal::Center.into(),
                 align_y: alignment::Vertical::Center,
                 ..Default::default()
             });
 
-            // 6. Subtitle Typography: "Initializing MindSet OS • Your Focus World"
-            let sub_y = card_y + 195.0 * scale;
+            let sub_y = hero_y + 30.0 * scale;
             frame.fill_text(Text {
-                content: "Initializing MindSet OS  •  Your Focus World".to_string(),
+                content: "MindSet OS 1.1  •  Preparing Your Deep Focus Workspace".to_string(),
                 position: Point::new(cx, sub_y),
-                color: Color::from_rgba(0.72, 0.78, 0.92, 0.85 * alpha),
-                size: iced::Pixels(14.0 * scale),
+                color: Color::from_rgba(0.70, 0.77, 0.90, 0.85 * alpha),
+                size: iced::Pixels(13.0 * scale),
                 align_x: alignment::Horizontal::Center.into(),
                 align_y: alignment::Vertical::Center,
                 ..Default::default()
             });
 
-            // 7. Sleek Liquid Progress Bar
-            let bar_w = 260.0 * scale;
-            let bar_h = 5.0 * scale;
+            // 6. Sleek Thin Progress Bar
+            let bar_w = 240.0 * scale;
+            let bar_h = 4.0 * scale;
             let bar_x = cx - bar_w * 0.5;
-            let bar_y = card_y + 245.0 * scale;
+            let bar_y = sub_y + 28.0 * scale;
 
-            // Track background
-            let track_rect = Path::rounded_rectangle(
-                Point::new(bar_x, bar_y),
-                Size::new(bar_w, bar_h),
-                Radius::from(2.5 * scale),
+            frame.fill(
+                &Path::rounded_rectangle(
+                    Point::new(bar_x, bar_y),
+                    Size::new(bar_w, bar_h),
+                    Radius::from(2.0 * scale),
+                ),
+                Color::from_rgba(1.0, 1.0, 1.0, 0.10 * alpha),
             );
-            frame.fill(&track_rect, Color::from_rgba(1.0, 1.0, 1.0, 0.10 * alpha));
-
-            // Active progress fill
-            let fill_w = (bar_w * progress).max(4.0);
-            let fill_rect = Path::rounded_rectangle(
-                Point::new(bar_x, bar_y),
-                Size::new(fill_w, bar_h),
-                Radius::from(2.5 * scale),
+            frame.fill(
+                &Path::rounded_rectangle(
+                    Point::new(bar_x, bar_y),
+                    Size::new((bar_w * progress).max(6.0), bar_h),
+                    Radius::from(2.0 * scale),
+                ),
+                Color::from_rgba(0.18, 0.82, 0.88, 0.95 * alpha),
             );
-            frame.fill(&fill_rect, Color::from_rgba(0.56, 0.48, 1.0, 0.95 * alpha));
 
-            // 8. Skip / Continue Hint (gentle pulse)
-            let hint_alpha = (0.35 + 0.25 * (t * 5.0).sin()) * alpha;
-            let hint_y = card_y + 285.0 * scale;
+            let hint_alpha = (0.35 + 0.20 * (t * 4.0).sin()) * alpha;
             frame.fill_text(Text {
-                content: "Click anywhere or press Enter to launch".to_string(),
-                position: Point::new(cx, hint_y),
-                color: Color::from_rgba(1.0, 1.0, 1.0, hint_alpha.clamp(0.0, 1.0)),
+                content: "Click anywhere or press Enter to continue".to_string(),
+                position: Point::new(cx, bar_y + 28.0 * scale),
+                color: Color::from_rgba(0.85, 0.90, 0.98, hint_alpha.clamp(0.0, 1.0)),
                 size: iced::Pixels(11.0 * scale),
                 align_x: alignment::Horizontal::Center.into(),
                 align_y: alignment::Vertical::Center,

@@ -2,13 +2,12 @@
 # ==============================================================================
 # MindSet OS — Smart GPU Probe & Pure-Rust Shell Supervision Launcher
 # ==============================================================================
-set -e
 
 LOG_FILE="/tmp/mindset-shell.log"
 exec >> "$LOG_FILE" 2>&1
 
 echo "=========================================================="
-echo " Starting MindSet OS Shell (Debian 13 Wayland)"
+echo " Starting MindSet OS Shell (Debian 13)"
 echo " Launch Timestamp: $(date)"
 echo "=========================================================="
 
@@ -32,11 +31,13 @@ if command -v vulkaninfo >/dev/null 2>&1 && vulkaninfo --summary >/dev/null 2>&1
 fi
 
 if [ "$VIRT_ENV" != "none" ] && [ "$HAS_VULKAN" = false ]; then
-    echo "[GPU Probe] Virtual machine without Vulkan ($VIRT_ENV) -> engaging GL software fallback"
+    echo "[GPU Probe] VM without Vulkan ($VIRT_ENV) -> engaging tuned llvmpipe low-overhead mode"
     export WGPU_BACKEND="gl"
     export LIBGL_ALWAYS_SOFTWARE=1
     export MESA_LOADER_DRIVER_OVERRIDE="llvmpipe"
     export WGPU_POWER_PREF="low"
+    export LP_NUM_THREADS="${LP_NUM_THREADS:-2}"
+    export MINDSET_LOW_OVERHEAD=1
 elif [ "$HAS_VULKAN" = true ]; then
     echo "[GPU Probe] Native Vulkan active -> engaging Vulkan hardware acceleration"
     export WGPU_BACKEND="vulkan"
@@ -45,11 +46,10 @@ else
     export WGPU_BACKEND="gl"
 fi
 
-# Prefer Wayland backend on Iced/winit when WAYLAND_DISPLAY is active
-if [ -n "${WAYLAND_DISPLAY:-}" ]; then
-    export WINIT_UNIX_BACKEND="wayland"
-else
+if [ "${XDG_SESSION_TYPE:-}" = "x11" ] || [ -z "${WAYLAND_DISPLAY:-}" ]; then
     export WINIT_UNIX_BACKEND="x11"
+else
+    export WINIT_UNIX_BACKEND="wayland"
 fi
 
 BINARY_PATH=""
@@ -66,26 +66,37 @@ if [ -z "$BINARY_PATH" ]; then
 fi
 
 RESTART_COUNT=0
-MAX_RESTARTS=5
+MAX_RESTARTS=3
 
 while [ "$RESTART_COUNT" -lt "$MAX_RESTARTS" ]; do
-    echo "[Launch] Starting $BINARY_PATH (attempt $((RESTART_COUNT + 1)))..."
+    echo "[Launch] Starting $BINARY_PATH (backend=$WINIT_UNIX_BACKEND, attempt $((RESTART_COUNT + 1)))..."
     EXIT_CODE=0
     "$BINARY_PATH" || EXIT_CODE=$?
 
     if [ "$EXIT_CODE" -eq 0 ]; then
         echo "[Launch] mindset-shell exited cleanly."
-        break
+        exit 0
     fi
 
     echo "[Launch WARNING] exited with status $EXIT_CODE"
     RESTART_COUNT=$((RESTART_COUNT + 1))
 
     if [ "$RESTART_COUNT" -eq 1 ]; then
-        echo "[GPU Recovery] Switching to WGPU_BACKEND=gl + LIBGL_ALWAYS_SOFTWARE=1"
+        echo "[GPU Recovery] Switching to WGPU_BACKEND=gl + llvmpipe + low overhead"
         export WGPU_BACKEND="gl"
         export LIBGL_ALWAYS_SOFTWARE=1
         export MESA_LOADER_DRIVER_OVERRIDE="llvmpipe"
+        export LP_NUM_THREADS=2
+        export MINDSET_LOW_OVERHEAD=1
+    elif [ "$RESTART_COUNT" -eq 2 ] && [ "$WINIT_UNIX_BACKEND" = "wayland" ] && [ -n "${DISPLAY:-}" ]; then
+        echo "[Backend Recovery] Switching winit backend from wayland -> x11"
+        export WINIT_UNIX_BACKEND="x11"
     fi
     sleep 1
 done
+
+echo "[Launch ERROR] mindset-shell failed $MAX_RESTARTS times (last exit=$EXIT_CODE)."
+if [ "${XDG_CURRENT_DESKTOP:-}" = "labwc" ]; then
+    pkill -TERM -x labwc 2>/dev/null || true
+fi
+exit "$EXIT_CODE"

@@ -103,6 +103,15 @@ pub fn view<'a>(
         return Some(render_anchored_notifications(core, palette));
     }
 
+    // 4. Full-Viewport Flagship Auth Lock Screen (security-gated: never dismisses on outside click)
+    if overlay == ActiveOverlay::LockScreen {
+        return Some(crate::shell::lock_screen::view(
+            lock_screen,
+            profile,
+            palette,
+        ));
+    }
+
     // Lock screen is security-gated: never dismiss on outside click
     let allow_outside_dismiss = matches!(
         overlay,

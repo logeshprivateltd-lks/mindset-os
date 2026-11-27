@@ -1,0 +1,142 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS — Automatic VM Persistence & Dirty-Poweroff Recovery Initializer
+# ==============================================================================
+# 1. Repairs dirty ext4 journals after abrupt VM power-offs (e2fsck -p).
+# 2. On first boot in a VM with a completely blank virtual hard disk (>= 4 GiB,
+#    zero existing partitions or signatures), provisions MINDSET_DATA + Debian
+#    live 'persistence' partitions so student onboarding, SQLite DBs, and study
+#    progress persist immediately on Boot #1 and across every future VM restart.
+# 3. Never modifies disks that already contain any partitions or filesystems.
+# ==============================================================================
+
+LOG_FILE="/tmp/mindset-persist-init.log"
+exec >> "$LOG_FILE" 2>&1
+
+echo "=== MindSet Persistence Init: $(date) ==="
+
+LIVE_HOME="/home/live"
+PERSIST_MNT="/var/lib/mindset-data"
+OS_DATA_DIR="$LIVE_HOME/.local/share/mindset-os"
+VAULT_DATA_DIR="$LIVE_HOME/.mindset_data"
+
+mkdir -p "$OS_DATA_DIR/vault" "$OS_DATA_DIR/capsules" "$VAULT_DATA_DIR" "$PERSIST_MNT"
+
+# Clean stale lock / socket artifacts left by sudden VM power-off
+rm -f "$OS_DATA_DIR"/*.lock /tmp/.X*-lock /tmp/.X11-unix/X* 2>/dev/null || true
+
+VIRT_ENV="none"
+if command -v systemd-detect-virt >/dev/null 2>&1; then
+    VIRT_ENV="$(systemd-detect-virt || echo none)"
+fi
+echo "[Info] Virtualization: $VIRT_ENV"
+
+DATA_DEV="$(blkid -L MINDSET_DATA 2>/dev/null || true)"
+
+# Auto-provision blank virtual hard drive inside VMs on live boot
+if [ -z "$DATA_DEV" ] && [ "$VIRT_ENV" != "none" ] && grep -q "boot=live" /proc/cmdline 2>/dev/null; then
+    echo "[Probe] Scanning for blank unformatted VM disk (>= 4 GiB)..."
+    for dev_name in $(lsblk -dn -o NAME,TYPE,RM,RO 2>/dev/null | awk '$2=="disk" && $3=="0" && $4=="0" {print $1}'); do
+        DEV="/dev/$dev_name"
+        [ -b "$DEV" ] || continue
+
+        SIZE_BYTES="$(blockdev --getsize64 "$DEV" 2>/dev/null || echo 0)"
+        if [ "$SIZE_BYTES" -lt 4294967296 ] 2>/dev/null; then
+            echo "[Skip] $DEV smaller than 4 GiB ($SIZE_BYTES bytes)"
+            continue
+        fi
+
+        PART_COUNT="$(lsblk -ln -o TYPE "$DEV" 2>/dev/null | grep -c '^part$' || true)"
+        if [ "$PART_COUNT" -ne 0 ]; then
+            echo "[Skip] $DEV already has $PART_COUNT partition(s)"
+            continue
+        fi
+
+        SIG_CHECK="$(blkid -p "$DEV" 2>/dev/null || true)"
+        if [ -n "$SIG_CHECK" ]; then
+            echo "[Skip] $DEV already has filesystem/table signature"
+            continue
+        fi
+
+        if command -v parted >/dev/null 2>&1 && parted -s "$DEV" print 2>/dev/null | grep -q '^ [0-9]'; then
+            echo "[Skip] $DEV already has parted partition table"
+            continue
+        fi
+
+        echo "[Provision] Formatting blank VM disk $DEV for MindSet OS persistence..."
+        DATA_END="2049MiB"
+        if [ "$SIZE_BYTES" -lt 8589934592 ] 2>/dev/null; then
+            DATA_END="1501MiB"
+        fi
+
+        if parted -s "$DEV" mklabel gpt \
+            mkpart primary ext4 1MiB "$DATA_END" \
+            mkpart primary ext4 "$DATA_END" 100%; then
+            partprobe "$DEV" 2>/dev/null || true
+            udevadm settle --timeout=5 2>/dev/null || sleep 1
+
+            case "$DEV" in
+                *nvme*|*mmcblk*|*loop*)
+                    P1="${DEV}p1"
+                    P2="${DEV}p2"
+                    ;;
+                *)
+                    P1="${DEV}1"
+                    P2="${DEV}2"
+                    ;;
+            esac
+
+            if [ -b "$P1" ] && [ -b "$P2" ]; then
+                mkfs.ext4 -F -q -L MINDSET_DATA "$P1" || true
+                mkfs.ext4 -F -q -L persistence "$P2" || true
+
+                TMP_PERSIST="/mnt/mindset-persist-setup"
+                mkdir -p "$TMP_PERSIST"
+                if mount -t ext4 "$P2" "$TMP_PERSIST"; then
+                    echo "/ union" > "$TMP_PERSIST/persistence.conf"
+                    sync
+                    umount "$TMP_PERSIST" || true
+                fi
+                rmdir "$TMP_PERSIST" 2>/dev/null || true
+                DATA_DEV="$P1"
+                echo "[Provision] Provisioned MINDSET_DATA ($P1) and persistence ($P2)."
+                break
+            fi
+        fi
+    done
+fi
+
+# Mount MINDSET_DATA with automatic dirty-journal repair and fast 1s commit interval
+if [ -n "$DATA_DEV" ] && [ -b "$DATA_DEV" ]; then
+    echo "[Mount] Checking and mounting $DATA_DEV -> $PERSIST_MNT"
+    if command -v e2fsck >/dev/null 2>&1; then
+        e2fsck -p "$DATA_DEV" >/dev/null 2>&1 || true
+    fi
+
+    if ! mountpoint -q "$PERSIST_MNT"; then
+        mount -t ext4 -o rw,noatime,commit=1 "$DATA_DEV" "$PERSIST_MNT" || true
+    fi
+
+    if mountpoint -q "$PERSIST_MNT"; then
+        mkdir -p "$PERSIST_MNT/mindset-os/vault" "$PERSIST_MNT/mindset-os/capsules" "$PERSIST_MNT/mindset_data"
+
+        # Seed initial files if persistent folder doesn't have the DB yet
+        if [ ! -f "$PERSIST_MNT/mindset-os/mindset_os.db" ] && [ -d "$OS_DATA_DIR" ]; then
+            cp -an "$OS_DATA_DIR/." "$PERSIST_MNT/mindset-os/" 2>/dev/null || true
+        fi
+
+        if ! mountpoint -q "$OS_DATA_DIR"; then
+            mount --bind "$PERSIST_MNT/mindset-os" "$OS_DATA_DIR" || true
+        fi
+        if ! mountpoint -q "$VAULT_DATA_DIR"; then
+            mount --bind "$PERSIST_MNT/mindset_data" "$VAULT_DATA_DIR" || true
+        fi
+        echo "[Mount] Persistent student storage active at $OS_DATA_DIR"
+    fi
+fi
+
+if id -u live >/dev/null 2>&1; then
+    chown -R live:live "$LIVE_HOME/.local" "$VAULT_DATA_DIR" "$LIVE_HOME/.config/mindset-os" "$PERSIST_MNT" 2>/dev/null || true
+fi
+
+exit 0

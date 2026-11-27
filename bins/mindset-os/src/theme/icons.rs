@@ -12,6 +12,12 @@ pub enum MsIconKind {
     Settings,
     Wifi,
     Power,
+    Lock,
+    Unlock,
+    Key,
+    Shield,
+    Eye,
+    EyeOff,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -67,6 +73,92 @@ impl<Message> Program<Message, iced::Theme, iced::Renderer> for MsVectorIcon {
                 let mut b = canvas::path::Builder::new();
                 b.move_to(Point::new(w * 0.5, h * 0.16));
                 b.line_to(Point::new(w * 0.5, h * 0.50));
+                frame.stroke(&b.build(), stroke);
+            }
+            MsIconKind::Lock => {
+                let body = Path::rounded_rectangle(
+                    Point::new(w * 0.22, h * 0.44),
+                    Size::new(w * 0.56, h * 0.42),
+                    3.0.into(),
+                );
+                frame.stroke(&body, stroke);
+                let mut shackle = canvas::path::Builder::new();
+                shackle.move_to(Point::new(w * 0.33, h * 0.44));
+                shackle.line_to(Point::new(w * 0.33, h * 0.28));
+                shackle.line_to(Point::new(w * 0.38, h * 0.20));
+                shackle.line_to(Point::new(w * 0.62, h * 0.20));
+                shackle.line_to(Point::new(w * 0.67, h * 0.28));
+                shackle.line_to(Point::new(w * 0.67, h * 0.44));
+                frame.stroke(&shackle.build(), stroke);
+                let dot = Path::circle(Point::new(w * 0.50, h * 0.64), w * 0.06);
+                frame.fill(&dot, self.color);
+            }
+            MsIconKind::Unlock => {
+                let body = Path::rounded_rectangle(
+                    Point::new(w * 0.22, h * 0.44),
+                    Size::new(w * 0.56, h * 0.42),
+                    3.0.into(),
+                );
+                frame.stroke(&body, stroke);
+                let mut shackle = canvas::path::Builder::new();
+                shackle.move_to(Point::new(w * 0.33, h * 0.44));
+                shackle.line_to(Point::new(w * 0.33, h * 0.26));
+                shackle.line_to(Point::new(w * 0.40, h * 0.18));
+                shackle.line_to(Point::new(w * 0.62, h * 0.18));
+                shackle.line_to(Point::new(w * 0.67, h * 0.26));
+                frame.stroke(&shackle.build(), stroke);
+            }
+            MsIconKind::Key => {
+                let head = Path::circle(Point::new(w * 0.32, h * 0.50), w * 0.18);
+                frame.stroke(&head, stroke);
+                let mut shaft = canvas::path::Builder::new();
+                shaft.move_to(Point::new(w * 0.50, h * 0.50));
+                shaft.line_to(Point::new(w * 0.86, h * 0.50));
+                shaft.line_to(Point::new(w * 0.86, h * 0.66));
+                shaft.move_to(Point::new(w * 0.70, h * 0.50));
+                shaft.line_to(Point::new(w * 0.70, h * 0.62));
+                frame.stroke(&shaft.build(), stroke);
+            }
+            MsIconKind::Shield => {
+                let mut b = canvas::path::Builder::new();
+                b.move_to(Point::new(w * 0.50, h * 0.14));
+                b.line_to(Point::new(w * 0.82, h * 0.26));
+                b.line_to(Point::new(w * 0.80, h * 0.58));
+                b.line_to(Point::new(w * 0.50, h * 0.86));
+                b.line_to(Point::new(w * 0.20, h * 0.58));
+                b.line_to(Point::new(w * 0.18, h * 0.26));
+                b.close();
+                frame.stroke(&b.build(), stroke);
+                let mut chk = canvas::path::Builder::new();
+                chk.move_to(Point::new(w * 0.36, h * 0.50));
+                chk.line_to(Point::new(w * 0.46, h * 0.62));
+                chk.line_to(Point::new(w * 0.66, h * 0.38));
+                frame.stroke(&chk.build(), stroke);
+            }
+            MsIconKind::Eye => {
+                let mut b = canvas::path::Builder::new();
+                b.move_to(Point::new(w * 0.12, h * 0.50));
+                b.quadratic_curve_to(
+                    Point::new(w * 0.50, h * 0.18),
+                    Point::new(w * 0.88, h * 0.50),
+                );
+                b.quadratic_curve_to(
+                    Point::new(w * 0.50, h * 0.82),
+                    Point::new(w * 0.12, h * 0.50),
+                );
+                frame.stroke(&b.build(), stroke);
+                let pupil = Path::circle(Point::new(w * 0.50, h * 0.50), w * 0.11);
+                frame.fill(&pupil, self.color);
+            }
+            MsIconKind::EyeOff => {
+                let mut b = canvas::path::Builder::new();
+                b.move_to(Point::new(w * 0.14, h * 0.50));
+                b.quadratic_curve_to(
+                    Point::new(w * 0.50, h * 0.22),
+                    Point::new(w * 0.86, h * 0.50),
+                );
+                b.move_to(Point::new(w * 0.18, h * 0.82));
+                b.line_to(Point::new(w * 0.82, h * 0.18));
                 frame.stroke(&b.build(), stroke);
             }
         }

@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=MindSet OS
+Description=MindSet OS Windows-style animated emblem and orbital spinner boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/mindset
+ScriptFile=/usr/share/plymouth/themes/mindset/mindset.script

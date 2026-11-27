@@ -1,9 +1,9 @@
 # ==============================================================================
 # MindSet OS — Debian 13 (Trixie) amd64 Package List
-# Minimal Wayland Session (labwc + mindset-shell) + Bare-Metal Hardware Drivers
+# Minimal Wayland Session (labwc + mindset-shell) + X11 Safe Fallback + Plymouth
 # ==============================================================================
 
-# --- 1. Linux Kernel, Init & Live Boot ---
+# --- 1. Linux Kernel, Init, Live Boot & Crash-Resilient Storage ---
 linux-image-amd64
 locales
 live-boot
@@ -13,12 +13,24 @@ systemd
 systemd-sysv
 sudo
 polkitd
+e2fsprogs
+util-linux
+parted
+dosfstools
+btrfs-progs
+efibootmgr
 
-# --- 2. Wayland Compositor, Seat Management, Greeter & Graphics ---
+# --- 2. Animated Early Boot Splash (Plymouth) ---
+plymouth
+plymouth-themes
+
+# --- 3. Wayland Compositor, X11 Safe Fallback, Seat Management & Graphics ---
 labwc
 seatd
 xwayland
 greetd
+xinit
+openbox
 mesa-vulkan-drivers
 libvulkan1
 mesa-utils
@@ -36,7 +48,7 @@ xserver-xorg-core
 xserver-xorg-input-all
 xserver-xorg-video-all
 
-# --- 3. Core Linux Desktop Services, Audio & Fonts ---
+# --- 4. Core Linux Desktop Services, Audio & Fonts ---
 network-manager
 wpasupplicant
 wireless-regdb
@@ -58,7 +70,7 @@ fonts-noto-color-emoji
 fonts-noto-extra
 fontconfig
 
-# --- 4. Bare-Metal Laptop Wi-Fi, Audio & GPU Firmware ---
+# --- 5. Bare-Metal Laptop Wi-Fi, Audio, GPU Firmware & VM Helpers ---
 firmware-linux
 firmware-iwlwifi
 firmware-realtek
@@ -67,17 +79,14 @@ firmware-misc-nonfree
 firmware-amd-graphics
 firmware-intel-sound
 firmware-sof-signed
+qemu-guest-agent
+spice-vdagent
 
-# --- 5. Graphical Installer & Essential Student Runtimes ---
+# --- 6. Graphical Installer & Essential Student Runtimes ---
 calamares
 calamares-settings-debian
 chromium
 libsqlite3-0
 libssl3
-dosfstools
-e2fsprogs
-btrfs-progs
-parted
-efibootmgr
 curl
 ca-certificates

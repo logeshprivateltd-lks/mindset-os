@@ -1,0 +1,31 @@
+#!/bin/sh
+# ==============================================================================
+# MindSet OS Live Hook: 015-configure-plymouth.hook.chroot
+# Registers the animated MindSet OS Plymouth theme and rebuilds initramfs so the
+# Windows-style emblem + orbital spinner plays from early kernel boot.
+# ==============================================================================
+set -e
+
+echo "==> [MindSet Hook] Configuring MindSet OS Plymouth animated boot splash..."
+
+THEME_FILE="/usr/share/plymouth/themes/mindset/mindset.plymouth"
+if [ -f "$THEME_FILE" ]; then
+    if command -v update-alternatives >/dev/null 2>&1; then
+        update-alternatives --install \
+            /usr/share/plymouth/themes/default.plymouth \
+            default.plymouth \
+            "$THEME_FILE" \
+            200 || true
+        update-alternatives --set default.plymouth "$THEME_FILE" || true
+    fi
+
+    if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+        plymouth-set-default-theme mindset || true
+    fi
+
+    if command -v update-initramfs >/dev/null 2>&1; then
+        update-initramfs -u -k all || true
+    fi
+fi
+
+echo "==> [MindSet Hook] Plymouth boot animation configured."

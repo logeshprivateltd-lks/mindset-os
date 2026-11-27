@@ -295,7 +295,15 @@ impl StorageManager {
             }
         }
         let manager = Self { db_path };
-        let _ = manager.init_schema();
+        manager.recover_if_corrupted();
+        if let Err(err) = manager.init_schema() {
+            eprintln!(
+                "[MindSetStorage] Schema init retry after recovery due to: {}",
+                err
+            );
+            manager.quarantine_corrupted_db();
+            let _ = manager.init_schema();
+        }
         manager
     }
 
@@ -303,12 +311,58 @@ impl StorageManager {
         &self.db_path
     }
 
+    /// Checks DB integrity on startup so abrupt VM power-offs never leave an unopenable SQLite file.
+    fn recover_if_corrupted(&self) {
+        if !self.db_path.exists() {
+            return;
+        }
+        let is_healthy = (|| -> std::result::Result<bool, rusqlite::Error> {
+            let conn = Connection::open(&self.db_path)?;
+            conn.busy_timeout(std::time::Duration::from_millis(2000))?;
+            let status: String = conn.query_row("PRAGMA quick_check(1)", [], |r| r.get(0))?;
+            Ok(status.eq_ignore_ascii_case("ok"))
+        })();
+
+        if matches!(is_healthy, Ok(true)) {
+            return;
+        }
+
+        // First try stripping orphaned WAL/SHM sidecars left by unclean power loss
+        let wal = PathBuf::from(format!("{}-wal", self.db_path.display()));
+        let shm = PathBuf::from(format!("{}-shm", self.db_path.display()));
+        let _ = fs::remove_file(&wal);
+        let _ = fs::remove_file(&shm);
+
+        let recheck = (|| -> std::result::Result<bool, rusqlite::Error> {
+            let conn = Connection::open(&self.db_path)?;
+            let status: String = conn.query_row("PRAGMA quick_check(1)", [], |r| r.get(0))?;
+            Ok(status.eq_ignore_ascii_case("ok"))
+        })();
+
+        if !matches!(recheck, Ok(true)) {
+            self.quarantine_corrupted_db();
+        }
+    }
+
+    fn quarantine_corrupted_db(&self) {
+        let ts = chrono::Utc::now().timestamp();
+        let backup = PathBuf::from(format!("{}.corrupt.{}.bak", self.db_path.display(), ts));
+        let wal = PathBuf::from(format!("{}-wal", self.db_path.display()));
+        let shm = PathBuf::from(format!("{}-shm", self.db_path.display()));
+        let _ = fs::remove_file(wal);
+        let _ = fs::remove_file(shm);
+        if self.db_path.exists() {
+            let _ = fs::rename(&self.db_path, backup);
+        }
+    }
+
     pub fn open_connection(&self) -> Result<Connection> {
         let conn = Connection::open(&self.db_path)?;
-        // Enforce WAL mode and strict 2MB RAM cache ceiling
+        // Enforce WAL mode, synchronous=FULL durability against power cuts, and 2MB RAM cap
         conn.execute_batch(
-            "PRAGMA journal_mode = WAL;
-             PRAGMA synchronous = NORMAL;
+            "PRAGMA busy_timeout = 5000;
+             PRAGMA journal_mode = WAL;
+             PRAGMA synchronous = FULL;
              PRAGMA cache_size = -2000;
              PRAGMA temp_store = MEMORY;",
         )?;
@@ -556,6 +610,12 @@ impl StorageManager {
                     def.ram_profile,
                 ],
             );
+            if std::env::var("MINDSET_LOW_OVERHEAD").ok().as_deref() == Some("1") {
+                let _ = conn.execute(
+                    "UPDATE user_profile SET mild_motion_enabled = 0 WHERE id = 1",
+                    [],
+                );
+            }
         }
 
         // Self-healing: clamp legacy/corrupted target_score in user_profile
@@ -733,6 +793,7 @@ impl StorageManager {
              ON CONFLICT(id) DO UPDATE SET content = excluded.content, updated_at = excluded.updated_at",
             params![content, now],
         )?;
+        let _ = conn.execute_batch("PRAGMA wal_checkpoint(PASSIVE);");
         Ok(())
     }
 
@@ -1607,6 +1668,29 @@ mod tests {
         let loaded = storage.get_daily_checkin("2026-11-25").unwrap();
         assert_eq!(loaded.recommended_capsule_minutes, 18);
         assert_eq!(loaded.recommended_break_minutes, 8);
+
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
+
+    #[test]
+    fn test_corrupt_db_auto_recovery() {
+        let temp_dir = std::env::temp_dir().join(format!("mindset_test_{}", uuid::Uuid::new_v4()));
+        let _ = fs::create_dir_all(&temp_dir);
+        let db_path = temp_dir.join("corrupt.db");
+
+        // Write invalid bytes simulating abrupt VM power-off file corruption
+        fs::write(&db_path, b"NOT_A_VALID_SQLITE_HEADER_000000").unwrap();
+        let storage = StorageManager::with_path(db_path.clone());
+        let mut profile = storage.load_profile();
+        assert!(!profile.onboarding_completed);
+
+        profile.onboarding_completed = true;
+        profile.name = "RecoveredStudent".to_string();
+        assert!(storage.save_profile(&profile).is_ok());
+
+        let reloaded = storage.load_profile();
+        assert!(reloaded.onboarding_completed);
+        assert_eq!(reloaded.name, "RecoveredStudent");
 
         let _ = fs::remove_dir_all(&temp_dir);
     }

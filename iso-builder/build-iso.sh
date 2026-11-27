@@ -54,10 +54,14 @@ mkdir -p \
     config/includes.chroot/opt/mindset-os/assets/fonts \
     config/includes.chroot/opt/mindset-os/assets/icons \
     config/includes.chroot/etc/greetd \
+    config/includes.chroot/etc/plymouth \
+    config/includes.chroot/usr/share/plymouth/themes/mindset \
     config/includes.chroot/etc/skel/.config/mindset-os/labwc \
     config/includes.chroot/etc/NetworkManager \
     config/includes.chroot/etc/sudoers.d \
-    config/includes.chroot/etc/systemd/system/getty@tty1.service.d
+    config/includes.chroot/etc/systemd/system/getty@tty1.service.d \
+    config/includes.chroot/etc/systemd/system/greetd.service.d \
+    config/includes.chroot/etc/systemd/system.conf.d
 
 chmod +x auto/* 2>/dev/null || true
 chmod +x config/hooks/live/* 2>/dev/null || true

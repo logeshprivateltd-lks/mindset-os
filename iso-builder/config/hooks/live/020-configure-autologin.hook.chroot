@@ -2,11 +2,11 @@
 # ==============================================================================
 # MindSet OS Live Hook: 020-configure-autologin.hook.chroot
 # Provisions default 'live' student user with hardware groups & greetd Wayland
-# autologin directly into /usr/local/bin/mindset-session (labwc + mindset-shell).
+# autologin directly into /usr/local/bin/mindset-session (never depends on agreety).
 # ==============================================================================
 set -e
 
-echo "==> [MindSet Hook] Provisioning 'live' user & Wayland autologin..."
+echo "==> [MindSet Hook] Provisioning 'live' user & direct Wayland autologin..."
 
 if ! id -u live >/dev/null 2>&1; then
     useradd -m -s /bin/bash -c "MindSet Live Student" live
@@ -29,20 +29,24 @@ if [ -d /etc/skel ]; then
     cp -rT /etc/skel /home/live/
 fi
 
-mkdir -p /home/live/.local/share/mindset-os/vault /home/live/.local/share/mindset-os/capsules
+mkdir -p /home/live/.local/share/mindset-os/vault \
+    /home/live/.local/share/mindset-os/capsules \
+    /home/live/.mindset_data \
+    /var/lib/mindset-data
 chmod +x /home/live/.config/mindset-os/labwc/autostart 2>/dev/null || true
 chmod +x /etc/skel/.config/mindset-os/labwc/autostart 2>/dev/null || true
 chown -R live:live /home/live
 
-# Ensure greetd Wayland autologin is strictly configured for live user
+# Ensure greetd launches mindset-session directly on both initial & default sessions
+# so a session restart or unclean poweroff never triggers 'agreety: not found'.
 mkdir -p /etc/greetd
 cat << 'EOF' > /etc/greetd/config.toml
 [terminal]
 vt = 1
 
 [default_session]
-command = "agreety --cmd /usr/local/bin/mindset-session"
-user = "_greetd"
+command = "/usr/local/bin/mindset-session"
+user = "live"
 
 [initial_session]
 command = "/usr/local/bin/mindset-session"
@@ -50,6 +54,7 @@ user = "live"
 EOF
 
 systemctl enable greetd.service 2>/dev/null || true
+systemctl enable mindset-persist-init.service 2>/dev/null || true
 systemctl mask getty@tty1.service 2>/dev/null || true
 
-echo "==> [MindSet Hook] 'live' Wayland autologin configured."
+echo "==> [MindSet Hook] 'live' direct Wayland autologin configured."
