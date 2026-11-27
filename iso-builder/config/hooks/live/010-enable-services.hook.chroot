@@ -25,17 +25,17 @@ for svc in NetworkManager.service seatd.service bluetooth.service greetd.service
 done
 
 cat << 'EOF' > /etc/os-release
-PRETTY_NAME="MindSet OS 1.1 (by L.K.S)"
+PRETTY_NAME="MindSet OS V1.3 (by L.K.S)"
 NAME="MindSet OS"
-VERSION_ID="1.1"
-VERSION="1.1 (L.K.S Student Edition)"
+VERSION_ID="1.3"
+VERSION="V1.3 (L.K.S Student Edition)"
 ID=mindsetos
 HOME_URL="https://github.com/logeshprivateltd-lks/mindset-os"
 SUPPORT_URL="https://github.com/logeshprivateltd-lks/mindset-os"
 EOF
 
 cat << 'EOF' > /etc/issue
-MindSet OS 1.1 — Made by L.K.S Company \n \l
+MindSet OS V1.3 — Made by L.K.S Company \n \l
 
 EOF
 

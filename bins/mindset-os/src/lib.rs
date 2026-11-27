@@ -3815,7 +3815,7 @@ impl MindSetApp {
                         .spawn();
                     match res {
                         Ok(_) => self.core.toast_queue.push(
-                            "MindSet OS 1.1 Installer",
+                            "MindSet OS V1.3 Installer",
                             "Launching disk installer so your data persists across reboots."
                                 .to_string(),
                             "💿",
@@ -3832,7 +3832,7 @@ impl MindSetApp {
                 {
                     self.core.toast_queue.push(
                         "Disk Installer (Linux Live Only)",
-                        "Boot the MindSet OS 1.1 .iso on a VM or PC to install to disk."
+                        "Boot the MindSet OS V1.3 .iso on a VM or PC to install to disk."
                             .to_string(),
                         "💿",
                     );

@@ -284,7 +284,7 @@ impl<'a> Program<Message, iced::Theme, iced::Renderer> for BootSplashProgram<'a>
 
             let sub_y = hero_y + 30.0 * scale;
             frame.fill_text(Text {
-                content: "MindSet OS 1.1  •  Preparing Your Deep Focus Workspace".to_string(),
+                content: "MindSet OS V1.3  •  Preparing Your Deep Focus Workspace".to_string(),
                 position: Point::new(cx, sub_y),
                 color: Color::from_rgba(0.70, 0.77, 0.90, 0.85 * alpha),
                 size: iced::Pixels(13.0 * scale),

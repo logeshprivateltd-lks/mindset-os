@@ -88,7 +88,7 @@ show_diagnostic_screen() {
     {
         printf '\033[2J\033[H'
         echo "========================================================================"
-        echo "  MindSet OS 1.1 — Automatic Boot & Graphics Recovery Console"
+        echo "  MindSet OS V1.3 — Automatic Boot & Graphics Recovery Console"
         echo "========================================================================"
         echo "  Reason         : $REASON"
         echo "  Virtualization : $VIRT_ENV"
